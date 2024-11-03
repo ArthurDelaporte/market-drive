@@ -66,16 +66,19 @@ const ProductsPage = () => {
                 products.map((product) => (
                     <div key={product.id}
                          className="product-card p-4 border rounded-lg shadow-lg hover:shadow-xl transition-shadow">
-                        <Image
-                            src={product.imgurl}
-                            alt={product.name}
-                            width={200}
-                            height={0}
-                            style={{height: 'auto'}}
-                            className="rounded-md mb-4 object-cover w-full h-48"
-                        />
-                        <h2 className="text-xl font-semibold mb-2">{product.name}</h2>
-                        <p className="text-gray-600 mb-1">Unité : {product.unity}</p>
+                        <div className="flex items-center justify-center w-full" style={{height: '200px'}}>
+                            <Image
+                                src={product.imgurl}
+                                alt={product.name}
+                                width={200}
+                                height={0}
+                                style={{height: 'auto'}}
+                                className="rounded-md mb-4 object-cover h-48"
+                            />
+                        </div>
+                        <div className="h-14 flex items-center">
+                            <h2 className="text-xl font-semibold mb-2 line-clamp-two">{product.name}</h2>
+                        </div>
                         <p className="text-lg font-bold text-green-600 mb-2">{product.price} €</p>
 
                         <div className="flex justify-between items-center mt-4">
