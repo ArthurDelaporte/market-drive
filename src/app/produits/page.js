@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from "next/navigation";
 import Image from 'next/image';
-import { FaShoppingCart } from 'react-icons/fa';
+import { FaShoppingCart, FaEdit } from 'react-icons/fa';
 
 export default function BooksPage() {
     const router = useRouter();
@@ -11,6 +11,7 @@ export default function BooksPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [quantities, setQuantities] = useState({});
+    const [isEditMode, setIsEditMode] = useState(false);
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -73,6 +74,14 @@ export default function BooksPage() {
                 Créer un produit
             </button>
 
+            <button
+                type="button"
+                className={`p-2 rounded transition ${isEditMode ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-500 hover:bg-gray-600'} text-white`}
+                onClick={() => setIsEditMode(!isEditMode)}
+            >
+                {isEditMode ? "Désactiver le mode édition" : "Modifier les produits"}
+            </button>
+
             {loading ? (
                 <div className="text-center py-8 text-lg font-semibold">Chargement...</div>
             ) : error ? (
@@ -130,6 +139,16 @@ export default function BooksPage() {
                                         <FaShoppingCart className="h-8 w-8" />
                                     </button>
                                 </div>
+
+                                {isEditMode && (
+                                    <button
+                                        onClick={() => router.push(`/produits/edit/${product.id}`)}
+                                        className="bg-gray-500 text-white mt-4 py-2 px-4 rounded hover:bg-gray-600 transition-colors flex items-center justify-center w-full"
+                                    >
+                                        <FaEdit className="h-5 w-5 mr-2" />
+                                        Modifier
+                                    </button>
+                                )}
                             </div>
                         ))
                     ) : (
