@@ -42,6 +42,23 @@ export default function ProductsPage() {
         fetchProducts();
     }, []);
 
+    useEffect(() => {
+        if (tempMinPrice && tempMaxPrice && parseFloat(tempMinPrice) > parseFloat(tempMaxPrice)) {
+            setPriceError('Le prix minimum ne peut pas être supérieur au prix maximum');
+            toast.error('Le prix minimum ne peut pas être supérieur au prix maximum', {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
+        } else {
+            setPriceError(null);
+        }
+    }, [tempMinPrice, tempMaxPrice]);
+
     const handleQuantityChange = (productId, quantity) => {
         setQuantities((prev) => ({ ...prev, [productId]: Math.max(1, quantity) }));
     };
@@ -115,7 +132,7 @@ export default function ProductsPage() {
             <ToastContainer/>
             <h1 className="text-2xl font-bold text-center mb-8">Nos Produits</h1>
             <button type="button"
-                    className="bg-blue-500 text-white p-2 m-4 rounded hover:bg-blue-600 transition"
+                    className="bg-blue-500 text-white p-2 m-4 ml-0 rounded hover:bg-blue-600 transition"
                     onClick={() => {
                         router.push('/produits/create');
                     }}>
