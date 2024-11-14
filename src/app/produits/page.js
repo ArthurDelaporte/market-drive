@@ -157,7 +157,6 @@ export default function ProductsPage() {
                         className="w-[58vw] h-[42px] p-2 border border-gray-300 rounded"
                     />
                 </div>
-
                 <button
                     type="button"
                     className="bg-gray-500 text-white w-[10vw] h-[42px] mr-4 ml-4 rounded hover:bg-gray-600 transition flex items-center justify-center"
@@ -166,7 +165,6 @@ export default function ProductsPage() {
                     <FaSlidersH className="h-5 w-5 mr-2"/>
                     Filtres
                 </button>
-
                 <div className="">
                     <select
                         value={sortOption}
