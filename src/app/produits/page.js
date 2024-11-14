@@ -92,22 +92,22 @@ export default function ProductsPage() {
         setTempMaxPrice('');
     };
 
-    const addToCart = async (productId) => {
-        const quantity = quantities[productId] || 1;
-        try {
-            const res = await fetch('/api/carts/add', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ productId, quantity }),
-            });
-            if (!res.ok) throw new Error('Erreur lors de l\'ajout au panier');
-            alert(`Produit ajouté au panier (Quantité: ${quantity})`);
-        } catch (err) {
-            alert(`Erreur : ${err.message}`);
-        }
-    };
+    // const addToCart = async (productId) => {
+    //     // const quantity = quantities[productId] || 1;
+    //     // try {
+    //     //     const res = await fetch('/api/carts/add', {
+    //     //         method: 'POST',
+    //     //         headers: {
+    //     //             'Content-Type': 'application/json',
+    //     //         },
+    //     //         body: JSON.stringify({ productId, quantity }),
+    //     //     });
+    //     //     if (!res.ok) throw new Error('Erreur lors de l\'ajout au panier');
+    //     //     alert(`Produit ajouté au panier (Quantité: ${quantity})`);
+    //     // } catch (err) {
+    //     //     alert(`Erreur : ${err.message}`);
+    //     // }
+    // };
 
     const sortedProducts = [...products].sort((a, b) => {
         if (sortOption === 'price-asc') {
@@ -287,7 +287,7 @@ export default function ProductsPage() {
                                     </div>
 
                                     <button
-                                        onClick={() => addToCart(product.id)}
+                                        // onClick={() => addToCart(product.id)}
                                         className="bg-blue-500 text-white mr-4 py-2 px-4 rounded hover:bg-blue-600 transition-colors flex items-center justify-center"
                                     >
                                         <FaShoppingCart className="h-8 w-8"/>
