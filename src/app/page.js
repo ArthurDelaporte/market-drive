@@ -9,16 +9,6 @@ const router = useRouter();
 
 return (
   <div className="container mx-auto">
-    <Head>
-      <title>Drive Courses - Faites vos courses en ligne</title>
-      <meta name="description" content="Commandez vos courses en ligne et récupérez-les à votre drive. Livraison rapide et facile." />
-      <link rel="icon" href="/favicon.ico" />
-    </Head>
-
-    <header className="bg-teal-500 text-white p-8 text-center rounded-b-lg shadow-md">
-      <h1 className="text-4xl font-bold mb-4">Bienvenue sur le GIGA Drive !</h1>
-      <p className="text-lg mb-8">Vos courses en ligne, prêtes à être récupérées ou livrées en un clin d'œil.</p>
-    </header>
 
     <main className="py-12 px-4">
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">
@@ -39,9 +29,6 @@ return (
         </button>
       </section>
     </main>
-    <footer className={styles.footer}>
-        <p>Made with 🤬 by 🦧</p>
-    </footer>
     </div>
     
   )

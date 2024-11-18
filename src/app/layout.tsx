@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import "./globals.css";
+import './globals.css';
 import ClientWrapper from "./ClientWrapper";
 
 const geistSans = localFont({
@@ -26,11 +26,24 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <title>Drive Courses - Faites vos courses en ligne</title>
+          <meta name="description" content="Commandez vos courses en ligne et récupérez-les à votre drive. Livraison rapide et facile." />
+        <link rel="icon" href="/favicon.ico" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
       <ClientWrapper>
+      <header className="bg-teal-500 text-white p-8 text-center rounded-b-lg shadow-md">
+      <h1 className="text-4xl font-bold mb-4">Bienvenue sur le GIGA Drive !</h1>
+      <p className="text-lg mb-8">Vos courses en ligne, prêtes à être récupérées ou livrées en un clin d'œil.</p>
+    </header>
         {children}
+
+    <footer className='footer'>
+        <p>Made with 🤬 by 🦧</p>
+    </footer>
       </ClientWrapper>
       </body>
     </html>
