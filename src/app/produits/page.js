@@ -17,6 +17,7 @@ export default function ProductsPage() {
     const [isEditMode, setIsEditMode] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+    const [isApplyFilterButtonDisabled, setIsApplyFilterButtonDisabled] = useState(false);
     const [minPrice, setMinPrice] = useState('');
     const [maxPrice, setMaxPrice] = useState('');
     const [tempMinPrice, setTempMinPrice] = useState('');
@@ -54,6 +55,7 @@ export default function ProductsPage() {
                 draggable: true,
                 progress: undefined,
             });
+            setIsApplyFilterButtonDisabled(true);
         } else {
             setPriceError(null);
         }
@@ -180,9 +182,9 @@ export default function ProductsPage() {
 
             <Modal
                 isOpen={isFilterModalOpen}
-                onRequestClose={closeFilterModal}
+                onRequestClose={() => closeFilterModal}
+                ariaHideApp={false}
                 contentLabel="Filtres"
-                appElement={document.getElementById('__next') || document.body}
                 className="w-full max-w-md mx-auto mt-20 bg-white p-6 rounded-lg shadow-lg"
                 overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-start"
             >
@@ -228,6 +230,7 @@ export default function ProductsPage() {
                         type="button"
                         className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition"
                         onClick={applyFilters}
+                        disabled={isApplyFilterButtonDisabled}
                     >
                         Appliquer
                     </button>

@@ -1,8 +1,6 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import Head from 'next/head'
-import styles from './globals.css'
 
 export default function Accueil() {
 const router = useRouter(); 
@@ -21,7 +19,7 @@ return (
       <section className="mt-12 text-center">
         <h2 className="text-3xl font-bold text-teal-600">Prêt à faire vos courses ?</h2>
         <p className="text-lg text-gray-700 mt-2">Rejoignez notre service dès aujourd'hui et profitez de la simplicité d'un drive pour vos courses.</p>
-        <button
+        <button type="button"
           onClick={() => router.push('/produits')}
           className="bg-teal-600 text-white py-2 px-6 rounded-lg shadow-md hover:bg-teal-700 transition ease-in-out duration-300 transform hover:scale-105 mt-4"
         >
@@ -33,22 +31,3 @@ return (
     
   )
 }
-
-
-const Home = () => {
-    const router = useRouter()
-    return (
-        <div>
-            <button type="button"
-                    className="bg-blue-500 text-white p-2 m-4 rounded hover:bg-blue-600 transition"
-                    onClick={() => {
-                router.push('/produits');
-            }}>
-                Voir les produits
-            </button>
-        </div>
-    );
-};
-
-
-

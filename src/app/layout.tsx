@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import './globals.css';
-import ClientWrapper from "./ClientWrapper";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -34,17 +33,14 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-      <ClientWrapper>
-      <header className="bg-teal-500 text-white p-8 text-center rounded-b-lg shadow-md">
-      <h1 className="text-4xl font-bold mb-4">Bienvenue sur le GIGA Drive !</h1>
-      <p className="text-lg mb-8">Vos courses en ligne, prêtes à être récupérées ou livrées en un clin d'œil.</p>
-    </header>
+        <header className="bg-teal-500 text-white p-8 text-center rounded-b-lg shadow-md">
+          <h1 className="text-4xl font-bold mb-4">Bienvenue sur le GIGA Drive !</h1>
+          <p className="text-lg mb-8">Vos courses en ligne, prêtes à être récupérées ou livrées en un clin d'œil.</p>
+        </header>
         {children}
-
-    <footer className='footer'>
-        <p>Made with 🤬 by 🦧</p>
-    </footer>
-      </ClientWrapper>
+        <footer className='footer'>
+          <p>Made with 🤬 by 🦧</p>
+        </footer>
       </body>
     </html>
   );
