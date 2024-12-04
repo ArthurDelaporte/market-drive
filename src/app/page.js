@@ -21,7 +21,7 @@ return (
         <p className="text-lg text-gray-700 mt-2">Rejoignez notre service dès aujourd'hui et profitez de la simplicité d'un drive pour vos courses.</p>
         <button type="button"
           onClick={() => router.push('/produits')}
-          className="bg-teal-600 text-white py-2 px-6 rounded-lg shadow-md hover:bg-teal-700 transition ease-in-out duration-300 transform hover:scale-105 mt-4"
+          className="bg-teal-500 text-white py-2 px-6 rounded-lg shadow-md hover:bg-teal-700 transition ease-in-out duration-300 transform hover:scale-105 mt-4"
         >
           Voir les produits
         </button>
