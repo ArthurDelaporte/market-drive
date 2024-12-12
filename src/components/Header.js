@@ -60,7 +60,7 @@ export default function Header() {
                 <div className="flex space-x-4">
                     {/*<Link href="/panier">*/}
                         <button className="bg-white text-teal-500 px-4 py-2 rounded shadow hover:bg-gray-100 transition">
-                            Panier
+                            🧺 Panier
                         </button>
                     {/*</Link>*/}
                     {user ? (
