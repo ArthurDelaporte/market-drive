@@ -25,7 +25,6 @@ export default function LoginPage() {
                 return;
             }
 
-            alert('Connexion réussie !');
             router.push('/');
         } catch (error) {
             console.error('Erreur lors de la connexion :', error.message);

@@ -51,7 +51,6 @@ export default function SignupPage() {
             const data = await response.json();
 
             if (response.ok) {
-                alert("Inscription réussie ! Veuillez vérifier votre email pour valider votre compte.");
                 router.push("/connexion");
             } else {
                 alert(data.error || "Une erreur est survenue.");
