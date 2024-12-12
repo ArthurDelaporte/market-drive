@@ -70,7 +70,7 @@ export default function Header() {
                     ) : (
                         <Link href="/connexion">
                             <button className="bg-white text-teal-500 px-4 py-2 rounded shadow hover:bg-gray-100 transition">
-                                Connexion
+                                Se connecter
                             </button>
                         </Link>
                     )}
