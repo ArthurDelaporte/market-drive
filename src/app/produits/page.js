@@ -8,6 +8,8 @@ import Modal from 'react-modal';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Header from "../../components/Header";
+import { useCart } from "@/context/CartContext"; // Importation du hook du panier
+
 
 export default function ProductsPage() {
     const router = useRouter();
@@ -270,6 +272,13 @@ export default function ProductsPage() {
                                                 className="bg-gray-300 text-gray-700 px-2 py-1 rounded w-full"
                                             >
                                                 -
+                                            </button>
+                                            <button
+                                                onClick={() => addToCart({ ...product, quantity: quantities[product.id] || 1 })}
+                                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center"
+                                            >
+                                            <FaShoppingCart className="h-5 w-5 mr-1" />
+                                                Ajouter
                                             </button>
                                         </div>
 
