@@ -35,6 +35,7 @@ model products {
   created_at  DateTime?   @default(now()) @db.Timestamptz(6)
   price       Float?
   category_id String?     @db.Uuid
+  quantity    Float?      @default(1)
   categories  categories? @relation(fields: [category_id], references: [id], onUpdate: NoAction)
   stocks      stocks[]
 }
