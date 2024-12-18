@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Header from "../../components/Header";
 
 export default function SignupPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -19,6 +20,8 @@ export default function SignupPage() {
         number: false,
         special: false,
     });
+
+    const redirectTo = searchParams.get('redirect') || '/';
 
     const validatePassword = (password) => {
         return {
@@ -51,7 +54,7 @@ export default function SignupPage() {
             const data = await response.json();
 
             if (response.ok) {
-                router.push("/connexion");
+                router.push(`/connexion?redirect=${encodeURIComponent(redirectTo)}`);
             } else {
                 alert(data.error || "Une erreur est survenue.");
             }
@@ -150,7 +153,7 @@ export default function SignupPage() {
                 <p className="text-sm mt-2">
                     Déjà un compte ?{' '}
                     <span
-                        onClick={() => router.push('/connexion')}
+                        onClick={() => router.push(`/connexion?redirect=${encodeURIComponent(redirectTo)}`)}
                         className="text-blue-500 hover:underline"
                     >
                         Connectez-vous ici

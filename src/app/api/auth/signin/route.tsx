@@ -28,11 +28,6 @@ export async function POST(request: NextRequest) {
 
         // Ajout des cookies
         response.cookies.set('access_token', session.access_token, {
-            maxAge: 7200, // 2 heures
-            path: '/',
-        });
-        response.cookies.set('refresh_token', session.refresh_token, {
-            maxAge: 60 * 60 * 24 * 30, // 30 jours
             path: '/',
         });
 

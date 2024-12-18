@@ -36,7 +36,7 @@ export async function PUT(request: Request, context: { params: { productId: stri
     }
 
     try {
-        const { name, unity, imgurl, price } = await request.json();
+        const { name, unity, imgurl, price, quantity } = await request.json();
 
         if (!name || !unity || !imgurl || typeof price !== 'number') {
             return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
@@ -44,7 +44,13 @@ export async function PUT(request: Request, context: { params: { productId: stri
 
         const updatedProduct = await prisma.products.update({
             where: { id: productId },
-            data: { name, unity, imgurl, price },
+            data: {
+                name,
+                unity,
+                imgurl,
+                price,
+                quantity: quantity ?? 1
+            },
         });
 
         return NextResponse.json(updatedProduct, { status: 200 });
