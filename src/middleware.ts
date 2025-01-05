@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { jwtDecode } from "jwt-decode";
-import { PUBLIC_PAGES } from '@/config/constants';
+import { PUBLIC_PAGES } from "@/config/constants";
 
 export async function middleware(request: NextRequest) {
     const accessToken = request.cookies.get("access_token")?.value;
@@ -23,39 +22,57 @@ export async function middleware(request: NextRequest) {
 
     try {
         if (accessToken) {
-            // Déchiffrer le token pour vérifier son expiration
-            const decodedToken = jwtDecode<{ exp: number }>(accessToken);
-            const currentTime = Math.floor(Date.now() / 1000);
+            // Appeler l'API pour récupérer les informations utilisateur
+            const userResponse = await fetch(new URL("/api/auth/user", request.url), {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            });
 
-            if (decodedToken && decodedToken.exp > currentTime) {
-                // Token valide, accès autorisé
+            const data = await userResponse.json();
+
+            if (userResponse.ok) {
+
+                // Si l'utilisateur essaie d'accéder à une page admin
+                if (pathname.startsWith("/admin") && data.role !== "admin") {
+                    console.error("Non-admin user attempting to access admin page");
+                    return NextResponse.redirect(new URL("/", request.url)); // Rediriger les non-admins vers la page d'accueil
+                }
+
+                // Accès autorisé pour les autres pages
                 return NextResponse.next();
-            } else {
-                console.error("Access token expired, redirecting to login");
             }
+
+            // Si l'API retourne une erreur, rediriger vers la page de connexion
+            console.error("Error from /api/auth/user :", data.error);
+
+            const redirectUrl = new URL("/connexion", request.url);
+            redirectUrl.searchParams.set("redirect", pathname);
+            return NextResponse.redirect(redirectUrl);
         }
 
-        // Si l'accessToken est invalide ou absent
+        // Si l'utilisateur n'est pas connecté et tente d'accéder à une page non publique
         if (!PUBLIC_PAGES.includes(pathname)) {
             const redirectUrl = new URL("/connexion", request.url);
             redirectUrl.searchParams.set("redirect", pathname);
             return NextResponse.redirect(redirectUrl);
         }
 
-        // Pour les pages publiques
+        // Autoriser l'accès aux pages publiques
         return NextResponse.next();
     } catch (error) {
         console.error("Middleware error:", error);
-    }
 
-    // En cas d'erreur inattendue, rediriger vers la page de connexion si la page n'est pas publique
-    if (!PUBLIC_PAGES.includes(pathname)) {
-        const redirectUrl = new URL("/connexion", request.url);
-        redirectUrl.searchParams.set("redirect", pathname);
-        return NextResponse.redirect(redirectUrl);
-    }
+        // Rediriger vers la page de connexion en cas d'erreur inattendue
+        if (!PUBLIC_PAGES.includes(pathname)) {
+            const redirectUrl = new URL("/connexion", request.url);
+            redirectUrl.searchParams.set("redirect", pathname);
+            return NextResponse.redirect(redirectUrl);
+        }
 
-    return NextResponse.next();
+        return NextResponse.next();
+    }
 }
 
 // Configuration pour matcher toutes les routes
