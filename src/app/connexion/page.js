@@ -28,7 +28,16 @@ export default function LoginPage() {
                 return;
             }
 
-            router.push(redirectTo);
+            // Vérification du rôle de l'utilisateur
+            const userRole = data.user?.role;
+
+            if (userRole === 'admin') {
+                // Redirige vers le tableau de bord admin
+                router.push('/admin/dashboard');
+            } else {
+                // Redirige vers la page demandée ou la page d'accueil
+                router.push(redirectTo);
+            }
         } catch (error) {
             console.error('Erreur lors de la connexion :', error.message);
             alert('Erreur lors de la connexion.');
