@@ -246,7 +246,8 @@ export default function ProductsPage() {
                                     <div className="h-14 flex items-center">
                                         <h2 className="text-xl font-semibold mb-2 line-clamp-two">{product.name}</h2>
                                     </div>
-                                    <p className="text-lg font-bold text-green-600 mb-2">{product.price} €</p>
+                                    <p className="text-lg font-bold text-green-600 mb-2">{product.totalPrice} €</p>
+                                    <p className="text-lg font-bold text-blue-600 mb-2">{product.price} €/{product.unity}</p>
 
                                     <div className="flex justify-between items-center mt-4">
                                         <div className="flex flex-col items-center space-y-1 ml-4" style={{width: '70px'}}>
