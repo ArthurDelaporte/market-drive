@@ -3,6 +3,8 @@
 import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
+import { Search } from 'lucide-react';
 import LogoutButton from './LogoutButton';
 import { getCookie } from "typescript-cookie";
 import { PUBLIC_PAGES } from '@/config/constants';
@@ -13,10 +15,11 @@ export default function Header() {
     const router = useRouter();
     const pathname = usePathname();
     const [user, setUser] = useState(null);
-    const [hasCheckedAuth, setHasCheckedAuth] = useState(false); // Empêche les vérifications multiples
+    const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
-        if (hasCheckedAuth) return; // Vérifie si l'authentification a déjà été contrôlée
+        if (hasCheckedAuth) return;
         setHasCheckedAuth(true);
 
         const fetchUser = async () => {
@@ -64,28 +67,52 @@ export default function Header() {
         fetchUser();
     }, [hasCheckedAuth, pathname, router]);
 
+    const handleSearch = (e) => {
+        e.preventDefault();
+        // Implement search functionality here
+        console.log('Searching for:', searchQuery);
+    };
+
     return (
         <>
             <ToastContainer />
-            <header className="bg-teal-500 text-white p-8 rounded-b-lg shadow-md relative">
-                <div className="container mx-auto flex justify-between items-center">
-                    {user ? (
-                        <div>
-                            <span className="text-2xl">Bonjour {user.firstname} {user.lastname} !</span>
-                        </div>
-                    ) : (
-                        <div>
-                            <span className="text-2xl">Bonjour !</span>
-                        </div>
-                    )}
-                    <Link href="/" className="flex-1">
-                        <div className="text-center">
-                            <h1 className="text-4xl font-bold mb-2">Bienvenue sur le GIGA Drive !</h1>
-                            <p className="text-lg">Vos courses en ligne prêtes en un clin d'œil.</p>
-                        </div>
-                    </Link>
-                    <div className="flex space-x-4">
-                        <button className="bg-white text-teal-500 px-4 py-2 rounded shadow hover:bg-gray-100 transition">
+            <header className="bg-teal-500 text-white p-4 rounded-b-lg shadow-md relative">
+                <div className="container mx-auto flex items-center justify-between gap-4">
+                    {/* Left section with logo and greeting */}
+                    <div className="flex items-center gap-4">
+                        <Link href="/" className="flex-shrink-0">
+                            <Image
+                                src="/img/logo/logo.png"
+                                alt="GIGA Drive Logo"
+                                width={90}
+                                height={90}
+                                className="rounded-lg"
+                                priority
+                            />
+                        </Link>
+                    </div>
+
+                    {/* Center section with search */}
+                    <div className="flex-1 max-w-2xl">
+                        <form onSubmit={handleSearch} className="relative">
+                            <input
+                                type="search"
+                                placeholder="Rechercher un produit..."
+                                className="w-full px-4 py-2 text-gray-800 bg-white rounded-lg pl-10 focus:outline-none focus:ring-2 focus:ring-teal-600"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                aria-label="Rechercher un produit"
+                            />
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        </form>
+                    </div>
+
+                    {/* Right section with cart and auth */}
+                    <div className="flex items-center gap-3">
+                        <button 
+                            className="bg-white text-teal-500 px-4 py-2 rounded shadow hover:bg-gray-100 transition"
+                            aria-label="Voir mon panier"
+                        >
                             Mon Panier
                         </button>
                         {user ? (
