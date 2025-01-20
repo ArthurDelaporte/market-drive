@@ -6,17 +6,21 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Search } from 'lucide-react';
 import LogoutButton from './LogoutButton';
+import DialogCategory from './DialogCategory'; // Import du composant DialogCategory
 import { getCookie } from "typescript-cookie";
 import { PUBLIC_PAGES } from '@/config/constants';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { FaStream } from 'react-icons/fa';
 
 export default function Header() {
     const router = useRouter();
     const pathname = usePathname();
+
     const [user, setUser] = useState(null);
     const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
 
     useEffect(() => {
         if (hasCheckedAuth) return;
@@ -69,17 +73,18 @@ export default function Header() {
 
     const handleSearch = (e) => {
         e.preventDefault();
-        // Implement search functionality here
-        console.log('Searching for:', searchQuery);
+        if (searchQuery.trim()) {
+            router.push(`/produits?productName=${encodeURIComponent(searchQuery.trim())}`);
+        }
     };
 
     return (
         <>
             <ToastContainer />
-            <header className="bg-teal-500 text-white p-4 rounded-b-lg shadow-md relative">
+            <header className="bg-teal-500 text-white p-4 rounded-b-lg shadow-md fixed h-20 w-full z-50">
                 <div className="container mx-auto flex items-center justify-between gap-4">
-                    {/* Left section with logo and greeting */}
-                    <div className="flex items-center gap-4">
+                    {/* Left section with logo */}
+                    <div className="flex items-center">
                         <Link href="/" className="flex-shrink-0">
                             <Image
                                 src="/img/logo/logo.png"
@@ -93,7 +98,22 @@ export default function Header() {
                     </div>
 
                     {/* Center section with search */}
+                    <div className="flex items-center">
+                        {/* Categories Button */}
+                        <button
+                            onClick={() => {
+                                setIsCategoryDialogOpen(true);
+                            }}
+                            className="bg-white text-teal-500 px-4 py-2 rounded shadow hover:bg-gray-100 hover:text-teal-500 transition flex justify-center items-center gap-2"
+                        >
+                            <FaStream className="h-5 w-5"/>
+                            Rayons
+                        </button>
+                    </div>
+
+                    {/* Center section with search */}
                     <div className="flex-1 max-w-2xl">
+                        {/* Search bar */}
                         <form onSubmit={handleSearch} className="relative">
                             <input
                                 type="search"
@@ -109,17 +129,21 @@ export default function Header() {
 
                     {/* Right section with cart and auth */}
                     <div className="flex items-center gap-3">
-                        <button 
+                        {/* Cart Button */}
+                        <button
                             className="bg-white text-teal-500 px-4 py-2 rounded shadow hover:bg-gray-100 transition"
                             aria-label="Voir mon panier"
                         >
                             Mon Panier
                         </button>
+
+                        {/* Auth Button */}
                         {user ? (
-                            <LogoutButton />
+                            <LogoutButton/>
                         ) : (
                             <Link href="/connexion">
-                                <button className="bg-white text-teal-500 px-4 py-2 rounded shadow hover:bg-gray-100 transition">
+                                <button
+                                    className="bg-white text-teal-500 px-4 py-2 rounded shadow hover:bg-gray-100 transition">
                                     Se connecter
                                 </button>
                             </Link>
@@ -127,6 +151,12 @@ export default function Header() {
                     </div>
                 </div>
             </header>
+
+            {/* DialogCategory */}
+            <DialogCategory
+                isOpen={isCategoryDialogOpen}
+                onClose={() => setIsCategoryDialogOpen(false)}
+            />
         </>
     );
 }

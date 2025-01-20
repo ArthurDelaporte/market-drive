@@ -2,11 +2,33 @@
 
 import { NextResponse } from 'next/server';
 import prisma from '@/prismaClient';
+import {Prisma} from "@prisma/client";
+
+// Récupérer les catégories descendantes
+const getDescendantCategories = async (parentId: string): Promise<string[]> => {
+    const childCategories = await prisma.categories.findMany({
+        where: { category_parent: parentId },
+        select: { id: true },
+    });
+
+    const childIds = childCategories.map((child) => child.id);
+
+    // Récursivité : chercher les descendants des enfants
+    const descendantIds = await Promise.all(
+        childIds.map((childId) => getDescendantCategories(childId))
+    );
+
+    return [parentId, ...descendantIds.flat()];
+};
 
 // GET handler: Récupérer la liste des produits
-export async function GET() {
+export async function GET(req: Request) {
     try {
-        const products = await prisma.products.findMany({
+        const { searchParams } = new URL(req.url);
+        const categoryId = searchParams.get("categoryId");
+        const searchTerm = searchParams.get("productName");
+
+        const conditions: Prisma.productsFindManyArgs = {
             select: {
                 id: true,
                 name: true,
@@ -16,7 +38,32 @@ export async function GET() {
                 imgurl: true,
                 category_id: true,
             },
-        });
+        };
+
+        // Ajouter la condition pour la catégorie
+        if (categoryId) {
+            const allCategoryIds = await getDescendantCategories(categoryId);
+
+            conditions.where = {
+                ...conditions.where,
+                category_id: {
+                    in: allCategoryIds,
+                },
+            };
+        }
+
+        // Ajouter la condition pour le nom
+        if (searchTerm) {
+            conditions.where = {
+                ...conditions.where,
+                name: {
+                    contains: searchTerm,
+                    mode: "insensitive"
+                }
+            }
+        }
+
+        const products = await prisma.products.findMany(conditions);
 
         // Ajouter le champ `totalPrice` à chaque produit
         const productsWithTotalPrice = products.map((product) => ({

@@ -16,30 +16,26 @@ export default function EditProductPage() {
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        if (productId) {
-            const fetchProduct = async () => {
-                try {
-                    setLoading(true);
-                    const res = await fetch(`/api/products/${productId}`);
-                    if (!res.ok) throw new Error('Erreur de récupération du produit');
-                    const data = await res.json();
+        const fetchProduct = async () => {
+            try {
+                setLoading(true);
+                const res = await fetch(`/api/products/${productId}`);
+                if (!res.ok) throw new Error('Erreur de récupération du produit');
+                const data = await res.json();
 
-                    // Pré-remplir les champs avec les données du produit
-                    setName(data.name);
-                    setUnity(data.unity);
-                    setImgurl(data.imgurl);
-                    setPrice(data.price);
-                    setQuantity(data.quantity);
-                } catch (err) {
-                    setError(err.message);
-                } finally {
-                    setLoading(false);
-                }
-            };
-            fetchProduct();
-        } else {
-            console.log("productId is not available yet");
-        }
+                // Pré-remplir les champs avec les données du produit
+                setName(data.name);
+                setUnity(data.unity);
+                setImgurl(data.imgurl);
+                setPrice(data.price);
+                setQuantity(data.quantity);
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchProduct();
     }, [productId]);
 
 
