@@ -1,13 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Header from "../../components/Header";
 
 export default function LoginPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+
+    const redirectTo = searchParams.get('redirect') || '/';
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -25,7 +28,16 @@ export default function LoginPage() {
                 return;
             }
 
-            router.push('/');
+            // Vérification du rôle de l'utilisateur
+            const userRole = data.user?.role;
+
+            if (userRole === 'admin') {
+                // Redirige vers le tableau de bord admin
+                router.push('/admin/dashboard');
+            } else {
+                // Redirige vers la page demandée ou la page d'accueil
+                router.push(redirectTo);
+            }
         } catch (error) {
             console.error('Erreur lors de la connexion :', error.message);
             alert('Erreur lors de la connexion.');
@@ -68,7 +80,7 @@ export default function LoginPage() {
                 <p className="text-sm mt-2">
                     Pas encore de compte ?{' '}
                     <span
-                        onClick={() => router.push('/inscription')}
+                        onClick={() => router.push(`/inscription?redirect=${encodeURIComponent(redirectTo)}`)}
                         className="text-blue-500 hover:underline cursor-pointer"
                     >
                         Inscrivez-vous ici

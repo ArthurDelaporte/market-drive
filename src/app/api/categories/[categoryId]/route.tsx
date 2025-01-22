@@ -11,14 +11,15 @@ interface ContextParams {
 }
 
 // PUT handler: Modifier une catégorie
-export async function PUT(request: NextRequest, context: ContextParams) {
-    const { categoryId } = context.params;
-
-    if (!categoryId) {
-        return NextResponse.json({ error: 'Invalid category ID' }, { status: 400 });
-    }
+export async function PUT(request: NextRequest, context: { params: { categoryId: string } }) {
 
     try {
+        const { categoryId } = await context.params;
+
+        if (!categoryId) {
+            return NextResponse.json({ error: 'Invalid category ID' }, { status: 400 });
+        }
+
         const { name, category_parent }: { name: string; category_parent?: string } = await request.json();
 
         if (!name) {
@@ -38,14 +39,14 @@ export async function PUT(request: NextRequest, context: ContextParams) {
 }
 
 // DELETE handler: Supprimer une catégorie
-export async function DELETE(request: NextRequest, context: ContextParams) {
-    const { categoryId } = context.params;
-
-    if (!categoryId) {
-        return NextResponse.json({ error: 'Invalid category ID' }, { status: 400 });
-    }
-
+export async function DELETE(request: NextRequest, context: { params: { categoryId: string } }) {
     try {
+        const { categoryId } = await context.params;
+
+        if (!categoryId) {
+            return NextResponse.json({ error: 'Invalid category ID' }, { status: 400 });
+        }
+
         const deletedCategory = await prisma.categories.delete({
             where: { id: categoryId },
         });

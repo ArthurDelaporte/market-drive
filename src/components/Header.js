@@ -1,20 +1,38 @@
 'use client';
 
+import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
+import { Search } from 'lucide-react';
 import LogoutButton from './LogoutButton';
+import DialogCategory from './DialogCategory'; // Import du composant DialogCategory
 import { getCookie } from "typescript-cookie";
+import { PUBLIC_PAGES } from '@/config/constants';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { FaStream } from 'react-icons/fa';
 
 export default function Header() {
+    const router = useRouter();
+    const pathname = usePathname();
+
     const [user, setUser] = useState(null);
+    const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
 
     useEffect(() => {
+        if (hasCheckedAuth) return;
+        setHasCheckedAuth(true);
+
         const fetchUser = async () => {
             try {
                 const accessToken = getCookie('access_token');
 
                 if (!accessToken) {
-                    console.error('Access token missing');
+                    toast.error("Vous n'êtes pas connectés. Veuillez vous connecter.", { toastId: 'missing-token' });
+                    if (!PUBLIC_PAGES.includes(pathname)) router.push('/connexion');
                     return;
                 }
 
@@ -26,56 +44,119 @@ export default function Header() {
                 });
 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                    const errorData = await response.json();
+                    const errorMessage = errorData.error;
 
-                const userData = await response.json();
-                setUser(userData);
-            } catch {
-                console.error('Error fetching user:');
+                    if (errorMessage === 'Access token expired') {
+                        toast.error('Votre session a expiré. Veuillez vous reconnecter.', { toastId: 'session-expired' });
+                    } else if (errorMessage === 'Invalid access token') {
+                        toast.error('Token invalide. Veuillez vous reconnecter.', { toastId: 'invalid-token' });
+                    } else if (errorMessage === 'User not found in database') {
+                        toast.error('Utilisateur introuvable.', { toastId: 'user-not-found' });
+                    } else {
+                        toast.error('Une erreur inconnue est survenue.', { toastId: 'unknown-error' });
+                    }
+
+                    if (!PUBLIC_PAGES.includes(pathname)) router.push('/connexion');
+                } else {
+                    const userData = await response.json();
+                    setUser(userData);
+                }
+            } catch (error) {
+                toast.error('Une erreur est survenue lors de la récupération des données utilisateur.', { toastId: 'fetch-error' });
+                console.error('Error fetching user:', error);
             }
         };
 
         fetchUser();
-    }, []);
+    }, [hasCheckedAuth, pathname, router]);
+
+    const handleSearch = (e) => {
+        e.preventDefault();
+        if (searchQuery.trim()) {
+            router.push(`/produits?productName=${encodeURIComponent(searchQuery.trim())}`);
+        }
+    };
 
     return (
-        <header className="bg-teal-500 text-white p-8 rounded-b-lg shadow-md relative">
-            <div className="container mx-auto flex justify-between items-center">
-                {user ? (
-                        <div>
-                            <span className="text-2xl">Bonjour {user.firstname} {user.lastname} !</span>
-                        </div>
-                    ) :
-                    <div>
-                        <span className="text-2xl">Bonjour !</span>
+        <>
+            <ToastContainer />
+            <header className="bg-teal-500 text-white p-4 rounded-b-lg shadow-md fixed h-20 w-full z-50">
+                <div className="container mx-auto flex items-center justify-between gap-4">
+                    {/* Left section with logo */}
+                    <div className="flex items-center">
+                        <Link href="/" className="flex-shrink-0">
+                            <Image
+                                src="/img/logo/logo.png"
+                                alt="GIGA Drive Logo"
+                                width={90}
+                                height={90}
+                                className="rounded-lg"
+                                priority
+                            />
+                        </Link>
                     </div>
-                }
-                <Link href="/" className="flex-1">
-                    <div className="text-center">
-                        <h1 className="text-4xl font-bold mb-2">Bienvenue sur le GIGA Drive !</h1>
-                        <p className="text-lg">Vos courses en ligne prêtes en un clin d'œil.</p>
+
+                    {/* Center section with search */}
+                    <div className="flex items-center">
+                        {/* Categories Button */}
+                        <button
+                            onClick={() => {
+                                setIsCategoryDialogOpen(true);
+                            }}
+                            className="bg-white text-teal-500 px-4 py-2 rounded shadow hover:bg-gray-100 hover:text-teal-500 transition flex justify-center items-center gap-2"
+                        >
+                            <FaStream className="h-5 w-5"/>
+                            Rayons
+                        </button>
                     </div>
-                </Link>
-                <div className="flex space-x-4">
-                    {/*<Link href="/panier">*/}
-                        <button className="bg-white text-teal-500 px-4 py-2 rounded shadow hover:bg-gray-100 transition">
+
+                    {/* Center section with search */}
+                    <div className="flex-1 max-w-2xl">
+                        {/* Search bar */}
+                        <form onSubmit={handleSearch} className="relative">
+                            <input
+                                type="search"
+                                placeholder="Rechercher un produit..."
+                                className="w-full px-4 py-2 text-gray-800 bg-white rounded-lg pl-10 focus:outline-none focus:ring-2 focus:ring-teal-600"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                aria-label="Rechercher un produit"
+                            />
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        </form>
+                    </div>
+
+                    {/* Right section with cart and auth */}
+                    <div className="flex items-center gap-3">
+                        {/* Cart Button */}
+                        <button
+                            className="bg-white text-teal-500 px-4 py-2 rounded shadow hover:bg-gray-100 transition"
+                            aria-label="Voir mon panier"
+                        >
                             Mon Panier
                         </button>
-                    {/*</Link>*/}
-                    {user ? (
-                        <>
-                            <LogoutButton />
-                        </>
-                    ) : (
-                        <Link href="/connexion">
-                            <button className="bg-white text-teal-500 px-4 py-2 rounded shadow hover:bg-gray-100 transition">
-                                Se connecter
-                            </button>
-                        </Link>
-                    )}
+
+                        {/* Auth Button */}
+                        {user ? (
+                            <LogoutButton/>
+                        ) : (
+                            <Link href="/connexion">
+                                <button
+                                    className="bg-white text-teal-500 px-4 py-2 rounded shadow hover:bg-gray-100 transition">
+                                    Se connecter
+                                </button>
+                            </Link>
+                        )}
+                    </div>
                 </div>
-            </div>
-        </header>
+            </header>
+
+            {/* DialogCategory */}
+            <DialogCategory
+                isOpen={isCategoryDialogOpen}
+                onClose={() => setIsCategoryDialogOpen(false)}
+            />
+        </>
     );
 }

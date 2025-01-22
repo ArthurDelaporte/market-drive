@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from 'next/image';
 import { FaShoppingCart, FaEdit, FaSlidersH } from 'react-icons/fa';
 import Modal from 'react-modal';
@@ -13,12 +13,12 @@ import { useCart } from "@/context/CartContext"; // Importation du hook du panie
 
 export default function ProductsPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [quantities, setQuantities] = useState({});
     const [isEditMode, setIsEditMode] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
     const [isApplyFilterButtonDisabled, setIsApplyFilterButtonDisabled] = useState(false);
     const [minPrice, setMinPrice] = useState('');
@@ -28,11 +28,31 @@ export default function ProductsPage() {
     const [priceError, setPriceError] = useState(null);
     const [sortOption, setSortOption] = useState('');
 
+    // Récupérer le paramètre categoryId depuis l'URL
+    const categoryId = searchParams.get('categoryId');
+    const productName = searchParams.get('productName');
+
     useEffect(() => {
         const fetchProducts = async () => {
             try {
                 setLoading(true);
-                const res = await fetch('/api/products');
+
+                let url = `/api/products`;
+                const queryParams = new URLSearchParams();
+
+                if (categoryId) {
+                    queryParams.append("categoryId", categoryId);
+                }
+
+                if (productName) {
+                    queryParams.append("productName", productName);
+                }
+
+                if (queryParams.toString()) {
+                    url += `?${queryParams.toString()}`;
+                }
+
+                const res = await fetch(url);
                 if (!res.ok) throw new Error('Erreur de récupération des produits');
                 const data = await res.json();
                 setProducts(data);
@@ -44,7 +64,7 @@ export default function ProductsPage() {
         };
 
         fetchProducts();
-    }, []);
+    }, [categoryId, productName]);
 
     useEffect(() => {
         if (tempMinPrice && tempMaxPrice && parseFloat(tempMinPrice) > parseFloat(tempMaxPrice)) {
@@ -110,15 +130,14 @@ export default function ProductsPage() {
         const isInPriceRange =
             (!minPrice || product.price >= parseFloat(minPrice)) &&
             (!maxPrice || product.price <= parseFloat(maxPrice));
-        const matchesSearchTerm = product.name.toLowerCase().includes(searchTerm.toLowerCase());
 
-        return isInPriceRange && matchesSearchTerm;
+        return isInPriceRange;
     });
 
     return (
         <>
             <Header />
-            <div className="container mx-auto p-4">
+            <div className="ml-20 mr-20 pt-24 p-4">
                 <ToastContainer/>
                 <h1 className="text-2xl font-bold text-center mb-8">Nos Produits</h1>
                 <button type="button"
@@ -138,18 +157,9 @@ export default function ProductsPage() {
                 </button>
 
                 <div className="flex mb-6 w-full">
-                    <div className="">
-                        <input
-                            type="text"
-                            placeholder="Rechercher un produit..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-[58vw] h-[42px] p-2 border border-gray-300 rounded"
-                        />
-                    </div>
                     <button
                         type="button"
-                        className="bg-gray-500 text-white w-[10vw] h-[42px] mr-4 ml-4 rounded hover:bg-gray-600 transition flex items-center justify-center"
+                        className="bg-gray-500 text-white w-[8vw] h-[42px] mr-4 ml-4 rounded hover:bg-gray-600 transition flex items-center justify-center"
                         onClick={openFilterModal}
                     >
                         <FaSlidersH className="h-5 w-5 mr-2"/>
@@ -248,7 +258,8 @@ export default function ProductsPage() {
                                     <div className="h-14 flex items-center">
                                         <h2 className="text-xl font-semibold mb-2 line-clamp-two">{product.name}</h2>
                                     </div>
-                                    <p className="text-lg font-bold text-green-600 mb-2">{product.price} €</p>
+                                    <p className="text-lg font-bold text-green-600 mb-2">{product.totalPrice} €</p>
+                                    <p className="text-lg font-bold text-blue-600 mb-2">{product.price} €/{product.unity}</p>
 
                                     <div className="flex justify-between items-center mt-4">
                                         <div className="flex flex-col items-center space-y-1 ml-4" style={{width: '70px'}}>
