@@ -8,12 +8,12 @@ import Modal from 'react-modal';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Header from "../../components/Header";
-import { useCart } from "@/context/CartContext"; // Importation du hook du panier
-
+import { useCart } from "@/context/CartContext"; // Import du contexte panier
 
 export default function ProductsPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const { addToCart } = useCart(); // Extraction de addToCart
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -284,20 +284,15 @@ export default function ProductsPage() {
                                             >
                                                 -
                                             </button>
-                                            <button
-                                                onClick={() => addToCart({ ...product, quantity: quantities[product.id] || 1 })}
-                                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center"
-                                            >
-                                            <FaShoppingCart className="h-5 w-5 mr-1" />
-                                                Ajouter
-                                            </button>
                                         </div>
 
                                         <button
+                                            onClick={() => addToCart(product, quantities[product.id] || 1)}
                                             className="bg-blue-500 text-white mr-4 py-2 px-4 rounded hover:bg-blue-600 transition-colors flex items-center justify-center"
                                         >
                                             <FaShoppingCart className="h-8 w-8"/>
                                         </button>
+
                                     </div>
 
                                     {isEditMode && (
