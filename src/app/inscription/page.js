@@ -67,7 +67,7 @@ export default function SignupPage() {
     return (
         <>
             <Header />
-            <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100">
+            <div className="flex flex-col items-center justify-center min-h-screen p-4 pt-24">
                 <h1 className="text-2xl font-bold mb-4">Inscription</h1>
                 <form
                     onSubmit={handleSignup}

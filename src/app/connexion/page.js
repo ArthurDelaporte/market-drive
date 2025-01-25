@@ -47,7 +47,7 @@ export default function LoginPage() {
     return (
         <>
             <Header />
-            <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100">
+            <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] pt-20">
                 <h1 className="text-2xl font-bold mb-4">Connexion</h1>
                 <form onSubmit={handleLogin} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full max-w-md">
                     <div className="mb-4">

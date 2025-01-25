@@ -3,19 +3,19 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #F9F9F9;
+  --foreground: #424242;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #121212;
-    --foreground: #ededed;
+    --background: #424242;
+    --foreground: #F9F9F9;
   }
 }
 
 body {
-  color: var(--foreground);
+  color: #303030;
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
@@ -41,7 +41,7 @@ input[type='number'] {
 }
 
 header {
-  @apply bg-teal-500 text-white p-8 text-center rounded-b-lg shadow-md;
+  @apply bg-[#303030] text-white p-8 text-center rounded-b-lg shadow-md;
 }
 
 header h1 {
@@ -53,7 +53,7 @@ header p {
 }
 
 button {
-  @apply bg-teal-600 hover:bg-teal-500 text-white hover:text-black py-2 px-6 rounded-lg shadow-md transition ease-in-out duration-300;
+  @apply bg-[#303030] hover:bg-[#1d1d1d] text-white hover:text-[#F9F9F9] py-2 px-6 rounded-lg shadow-md transition ease-in-out duration-300;
 }
 
 button:hover {
@@ -81,7 +81,7 @@ button:hover {
 }
 
 footer {
-  @apply bg-gray-900 text-white py-6 text-center rounded-t-lg;
+  @apply bg-[#303030] text-white py-5 text-center rounded-t-lg fixed bottom-0 w-full;
 }
 
 footer p {
@@ -93,7 +93,7 @@ footer p {
 }
 
 .callToAction h2 {
-  @apply text-3xl font-bold text-teal-600;
+  @apply text-3xl font-bold text-[#F57C00];
 }
 
 .callToAction p {
@@ -117,15 +117,15 @@ footer p {
   @apply bg-gray-500
 }
 
+.closeDialogCategories {
+  @apply bg-white text-[#F57C00] hover:bg-[#F9F9F9] hover:text-[#E65100]
+}
+
 /* Adaptations pour le dark mode */
 @media (prefers-color-scheme: dark) {
   body {
-    background: #121212;
-    color: #e4e4e7;
-  }
-
-  .header {
-    @apply bg-teal-700;
+    background: var(--background);
+    color: #F9F9F9;
   }
 
   .feature {
@@ -133,7 +133,7 @@ footer p {
   }
 
   button {
-    @apply text-black hover:text-white bg-teal-600 hover:bg-teal-700;
+    @apply bg-white text-[#F57C00] hover:bg-[#F9F9F9] hover:text-[#E65100];
   }
 
   .dialog-category {
@@ -153,7 +153,11 @@ footer p {
     background: #3a3a3a;
   }
 
+  .closeDialogCategories {
+    @apply bg-[#424242] text-[#F57C00] hover:bg-[#616161] hover:text-[#E65100]
+  }
+
   footer {
-    @apply bg-gray-900;
+    @apply bg-[#303030];
   }
 }

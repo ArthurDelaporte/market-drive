@@ -82,7 +82,7 @@ export default function DialogCategory({ isOpen, onClose }) {
                 <div className="dialog-category p-6 rounded shadow-lg w-fit h-96 min-w-[300px]">
                     <div className="flex items-center justify-between">
                         <p className="font-bold text-lg w-full text-center">Rayons</p>
-                        <button onClick={closeAllDialogs} className="w-10 h-10 flex items-center justify-center ml-2.5">✖</button>
+                        <button onClick={closeAllDialogs} className="w-10 h-10 flex items-center justify-center ml-2.5 closeDialogCategories">✖</button>
                     </div>
                     <div className={`grid ${categoriesLevel0.length >= 7 ? 'grid-cols-2 gap-4' : 'space-y-4'}`}>
                         {categoriesLevel0.map((category) => (
@@ -100,7 +100,7 @@ export default function DialogCategory({ isOpen, onClose }) {
                     <div className="dialog-category p-6 rounded shadow-lg w-fit h-96 min-w-[300px]">
                         <div className="flex items-center justify-between">
                             <p className="font-bold text-lg w-full text-center">{currentCategoryLevel0?.name}</p>
-                            <button onClick={() => setIsLevel1DialogOpen(false)} className="w-10 h-10 flex items-center justify-center ml-2.5">✖</button>
+                            <button onClick={() => setIsLevel1DialogOpen(false)} className="w-10 h-10 flex items-center justify-center ml-2.5 closeDialogCategories">✖</button>
                         </div>
                         <div className={`grid ${categoriesLevel1.length >= 7 ? 'grid-cols-2 gap-4' : 'space-y-4'}`}>
                             {categoriesLevel1.map((category) => (
@@ -119,7 +119,7 @@ export default function DialogCategory({ isOpen, onClose }) {
                     <div className="dialog-category p-6 rounded shadow-lg w-fit h-96 min-w-[300px]">
                         <div className="flex items-center justify-between">
                             <p className="font-bold text-lg w-full text-center">{currentCategoryLevel1?.name}</p>
-                            <button onClick={() => setIsLevel2DialogOpen(false)} className="w-10 h-10 flex items-center justify-center ml-2.5">✖</button>
+                            <button onClick={() => setIsLevel2DialogOpen(false)} className="w-10 h-10 flex items-center justify-center ml-2.5 closeDialogCategories">✖</button>
                         </div>
                         <div className={`grid ${categoriesLevel2.length >= 7 ? (categoriesLevel2.length >= 11 ? 'grid-cols-3 gap-4' : 'grid-cols-2 gap-4') : 'space-y-4'}`}>
                             {categoriesLevel2.map((category) => (
