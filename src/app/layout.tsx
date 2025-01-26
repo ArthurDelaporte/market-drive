@@ -23,13 +23,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     return (
         <html lang="en">
             <head>
-                <link rel="icon" href="/favicon.ico" />
+                <link rel="icon" href="/favicon.ico"/>
             </head>
             <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-                {/* Réintégration du CartProvider */}
-                <CartProvider>
+<<<<<<< Panier_Sign
+                <main className="mb-16">
+                  {/* Réintégration du CartProvider */}
+                  <CartProvider>
+                      {children}
+                  </CartProvider>
+                </main>
+=======
+                <main className="mb-16">
                     {children}
-                </CartProvider>
+                </main>
+>>>>>>> master
                 <footer className="footer">
                     <p>Made with 🤬 by 🦧</p>
                 </footer>
