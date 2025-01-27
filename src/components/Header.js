@@ -4,7 +4,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Search, X } from 'lucide-react';
+import { Search } from 'lucide-react';
 import LogoutButton from './LogoutButton';
 import DialogCategory from './DialogCategory'; // Import du composant DialogCategory
 import { getCookie } from "typescript-cookie";
@@ -81,7 +81,7 @@ export default function Header() {
     return (
         <>
             <ToastContainer />
-            <header className="text-white p-4 rounded-b-lg shadow-md fixed h-20 w-full z-50">
+            <header className="bg-[#303030] text-white p-4 rounded-b-lg shadow-md fixed h-20 w-full z-50">
                 <div className="container mx-auto flex items-center justify-between gap-4">
                     {/* Left section with logo */}
                     <div className="flex items-center">
@@ -104,7 +104,7 @@ export default function Header() {
                             onClick={() => {
                                 setIsCategoryDialogOpen(true);
                             }}
-                            className="px-4 py-2 rounded shadow transition flex justify-center items-center gap-2 btn-header"
+                            className="bg-white text-[#F57C00] px-4 py-2 rounded shadow hover:bg-[#F9F9F9] hover:text-[#E65100] transition flex justify-center items-center gap-2"
                         >
                             <FaStream className="h-5 w-5"/>
                             Rayons
@@ -116,15 +116,14 @@ export default function Header() {
                         {/* Search bar */}
                         <form onSubmit={handleSearch} className="relative">
                             <input
-                                type="text"
+                                type="search"
                                 placeholder="Rechercher un produit..."
-                                className="w-full px-4 py-2 rounded-lg pl-10 focus:outline-none focus:ring-2 focus:ring-[#F57C00] search-bar-header"
+                                className="w-full px-4 py-2 text-gray-800 bg-white rounded-lg pl-10 focus:outline-none focus:ring-2 focus:ring-[#F57C00]"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 aria-label="Rechercher un produit"
                             />
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 search-bar-header w-4 h-4" />
-                            <X className="absolute right-3 top-1/2 transform -translate-y-1/2 search-bar-header w-4 h-4" onClick={() => setSearchQuery('')}/>
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                         </form>
                     </div>
 
@@ -132,7 +131,7 @@ export default function Header() {
                     <div className="flex items-center gap-3">
                         {/* Cart Button */}
                         <button
-                            className="px-4 py-2 rounded shadow transition btn-header"
+                            className="bg-white text-[#F57C00] px-4 py-2 rounded shadow hover:bg-[#F9F9F9] hover:text-[#E65100] transition"
                             aria-label="Voir mon panier"
                         >
                             Mon Panier
@@ -144,7 +143,7 @@ export default function Header() {
                         ) : (
                             <Link href="/connexion">
                                 <button
-                                    className="px-4 py-2 rounded shadow transition btn-header">
+                                    className="bg-white text-[#F57C00] px-4 py-2 rounded shadow hover:bg-[#F9F9F9] hover:text-[#E65100] transition">
                                     Se connecter
                                 </button>
                             </Link>

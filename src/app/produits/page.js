@@ -157,7 +157,7 @@ export default function ProductsPage() {
                 <div className="flex mb-6 w-full">
                     <button
                         type="button"
-                        className="bg-gray-500 text-white w-[8vw] h-[42px] mr-4 rounded hover:bg-gray-600 transition flex items-center justify-center"
+                        className="bg-gray-500 text-white w-[8vw] h-[42px] mr-4 ml-4 rounded hover:bg-gray-600 transition flex items-center justify-center"
                         onClick={openFilterModal}
                     >
                         <FaSlidersH className="h-5 w-5 mr-2"/>
@@ -167,7 +167,7 @@ export default function ProductsPage() {
                         <select
                             value={sortOption}
                             onChange={(e) => setSortOption(e.target.value)}
-                            className="w-[20vw] h-[42px] p-2 border border-gray-300 rounded text-[#212121]"
+                            className="w-[20vw] h-[42px] p-2 border border-gray-300 rounded"
                         >
                             <option value="">Trier par</option>
                             <option value="price-asc">Prix : Croissant</option>
@@ -273,7 +273,7 @@ export default function ProductsPage() {
                                                 value={quantities[product.id] || 1}
                                                 onChange={(e) => handleQuantityChange(product.id, parseInt(e.target.value) || 1)}
                                                 onFocus={(e) => e.target.select()}
-                                                className="border text-center w-full py-1 rounded text-[#212121]"
+                                                className="border text-center w-full py-1 rounded"
                                             />
                                             <button
                                                 onClick={() => decreaseQuantity(product.id)}
@@ -285,7 +285,7 @@ export default function ProductsPage() {
                                         </div>
 
                                         <button
-                                            className="mr-4 py-2 px-4 rounded transition-colors flex items-center justify-center"
+                                            className="bg-blue-500 text-white mr-4 py-2 px-4 rounded hover:bg-blue-600 transition-colors flex items-center justify-center"
                                         >
                                             <FaShoppingCart className="h-8 w-8"/>
                                         </button>
