@@ -18,24 +18,6 @@
   --btn-text-hover: #E65100;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #212121;
-    --foreground: #FAFAFA;
-    --header-footer-bg: #E9E9E9;
-    --header-footer-text: #212121;
-    --header-footer-btn-bg: #212121;
-    --header-footer-btn-bg-hover: #303030;
-    --header-footer-btn-text: #F57C00;
-    --header-footer-btn-text-hover: #E65100;
-    --text-color: #FAFAFA;
-    --btn-bg: #E9E9E9;
-    --btn-bg-hover: #E9E9E9;
-    --btn-text: #F57C00;
-    --btn-text-hover: #E65100;
-  }
-}
-
 body {
   color: var(--text-color);
   background: var(--background);
@@ -130,51 +112,4 @@ footer p {
 
 .category-2-selected:hover {
   @apply bg-gray-500
-}
-
-/* Adaptations pour le dark mode */
-@media (prefers-color-scheme: dark) {
-  body {
-    background: var(--background);
-    color: #F9F9F9;
-  }
-
-  .header {
-    @apply bg-[var(--header-footer-bg)] text-[var(--header-footer-text)];
-  }
-
-  .search-bar-header {
-    @apply bg-[var(--background)] text-[var(--text-color)];
-  }
-
-  .btn-header, .btn-footer {
-    @apply bg-[var(--header-footer-btn-bg)] text-[var(--header-footer-btn-text)]
-    hover:bg-[var(--header-footer-btn-bg-hover)] hover:text-[var(--header-footer-btn-text-hover)];
-  }
-
-  button {
-    @apply bg-white text-[#F57C00] hover:bg-[#F9F9F9] hover:text-[#E65100];
-  }
-
-  .dialog-category {
-    background: #121212;
-    box-shadow: 0 0 5px 5px rgba(237, 237, 237, 0.8);
-  }
-
-  .category-0-selected:hover {
-    background: #282828;
-  }
-
-  .category-1-selected:hover {
-    background: #323232;
-  }
-
-  .category-2-selected:hover {
-    background: #3a3a3a;
-  }
-
-  footer {
-    @apply bg-[var(--header-footer-bg)] text-[var(--header-footer-text)]
-    hover:bg-[var(--header-footer-btn-bg-hover)] hover:text-[var(--header-footer-btn-text-hover)];
-  }
 }
