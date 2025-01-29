@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import ProfileForm from '@/components/Profileform';
+import {getCookie} from "typescript-cookie";
 
 interface User {
   id: string;
@@ -21,8 +22,8 @@ export default function ProfilePage() {
 
   useEffect(() => {
     // You might want to get this token from your auth context or localStorage
-    const token = localStorage.getItem('accessToken');
-    setAccessToken(token);
+    const token = getCookie('access_token');
+    if (token) setAccessToken(token);
   }, []);
 
   useEffect(() => {
