@@ -2,45 +2,65 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import Header from "../../../components/Header";
 
 export default function CreateProductPage() {
     const [name, setName] = useState('');
     const [unity, setUnity] = useState('');
-    const [imgurl, setImgurl] = useState('');
     const [price, setPrice] = useState('');
     const [quantity, setQuantity] = useState('');
+    const [image, setImage] = useState(null);
+    const [preview, setPreview] = useState(null);
     const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(false);
+
     const router = useRouter();
 
+    // 📌 **Gérer la sélection d'image**
+    const handleImageChange = (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const validTypes = ["image/jpeg", "image/png", "image/webp"];
+            if (!validTypes.includes(file.type)) {
+                setError("Format d'image invalide. Utilisez JPG, PNG ou WebP.");
+                return;
+            }
+
+            setImage(file);
+            setPreview(URL.createObjectURL(file));
+            setError(null);
+        }
+    };
+
+    // 📌 **Gérer la soumission du formulaire**
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
 
-        if (!name || !unity || !imgurl || !price || !quantity) {
-            setError('Tous les champs sont obligatoires');
+        if (!name || !unity || !price || !quantity) {
+            setError("Tous les champs sont obligatoires.");
             return;
         }
 
         try {
-            const res = await fetch('/api/products', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    name,
-                    unity,
-                    imgurl,
-                    price: parseFloat(price)
-                }),
-            });
+            setLoading(true);
+            const formData = new FormData();
+            formData.append("name", name);
+            formData.append("unity", unity);
+            formData.append("price", price);
+            formData.append("quantity", quantity);
+            if (image) formData.append("image", image);
 
-            if (!res.ok) throw new Error('Erreur lors de la création du produit');
+            const res = await fetch('/api/products', { method: 'POST', body: formData });
+
+            if (!res.ok) throw new Error("Erreur lors de la création du produit");
 
             router.push('/produits');
         } catch (err) {
             setError(err.message);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -53,78 +73,62 @@ export default function CreateProductPage() {
 
                     {error && <p className="text-red-500 mb-4">{error}</p>}
 
-                    <form onSubmit={handleSubmit}>
-                        <div className="mb-4">
-                            <label className="block text-gray-700 font-medium mb-2">Nom</label>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <input
+                            type="text"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder="Nom du produit"
+                            required
+                            className="w-full p-2 border border-gray-300 rounded"
+                        />
+
+                        <input
+                            type="text"
+                            value={unity}
+                            onChange={(e) => setUnity(e.target.value)}
+                            placeholder="Unité (ex: kg, litre)"
+                            required
+                            className="w-full p-2 border border-gray-300 rounded"
+                        />
+
+                        <div className="grid grid-cols-2 gap-4">
                             <input
-                                type="text"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                className="w-full p-2 border border-gray-300 rounded"
-                                placeholder="Nom du produit"
+                                type="number"
+                                value={price}
+                                onChange={(e) => setPrice(e.target.value)}
+                                placeholder="Prix (€)"
                                 required
+                                className="w-full p-2 border border-gray-300 rounded"
+                            />
+
+                            <input
+                                type="number"
+                                value={quantity}
+                                onChange={(e) => setQuantity(e.target.value)}
+                                placeholder="Quantité"
+                                className="w-full p-2 border border-gray-300 rounded"
                             />
                         </div>
 
-                        <div className="mb-4">
-                            <label className="block text-gray-700 font-medium mb-2">Image URL</label>
-                            <input
-                                type="url"
-                                value={imgurl}
-                                onChange={(e) => setImgurl(e.target.value)}
-                                className="w-full p-2 border border-gray-300 rounded"
-                                placeholder="URL de l'image"
-                                required
-                            />
-                        </div>
+                        {/* 📌 **Champ Upload d'image** */}
+                        <div className="border p-4 rounded-lg bg-gray-50">
+                            <label className="block text-gray-700 font-medium mb-2">Image du produit</label>
+                            <input type="file" accept="image/*" onChange={handleImageChange} className="w-full p-2 border border-gray-300 rounded" />
 
-                        <div className="mb-4 grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-gray-700 font-medium mb-2">Prix unitaire (€)</label>
-                                <input
-                                    type="number"
-                                    value={price}
-                                    onChange={(e) => setPrice(e.target.value)}
-                                    className="w-full p-2 border border-gray-300 rounded"
-                                    placeholder="Prix du produit"
-                                    step="0.001"
-                                    min="0"
-                                    required
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-gray-700 font-medium mb-2">Quantité</label>
-                                <input
-                                    type="number"
-                                    value={quantity}
-                                    onChange={(e) => setQuantity(e.target.value)}
-                                    className="w-full p-2 border border-gray-300 rounded"
-                                    placeholder="Quantité du produit"
-                                    step="0.001"
-                                    min="0"
-                                    required
-                                />
-                            </div>
-                        </div>
-
-                        <div className="mb-4">
-                            <label className="block text-gray-700 font-medium mb-2">Unité</label>
-                            <input
-                                type="text"
-                                value={unity}
-                                onChange={(e) => setUnity(e.target.value)}
-                                className="w-full p-2 border border-gray-300 rounded"
-                                placeholder="Unité (ex: kg, litre)"
-                                required
-                            />
+                            {preview && (
+                                <div className="mt-4 flex justify-center">
+                                    <Image src={preview} alt="Aperçu" width={150} height={150} className="rounded-md" />
+                                </div>
+                            )}
                         </div>
 
                         <button
                             type="submit"
-                            className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition"
+                            disabled={loading}
+                            className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 hover:text-[#CFCFCF] transition flex items-center justify-center"
                         >
-                            Créer le produit
+                            {loading ? "Ajout en cours..." : "Créer le produit"}
                         </button>
                     </form>
                 </div>
