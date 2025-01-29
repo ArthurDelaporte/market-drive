@@ -11,8 +11,12 @@ export async function POST(request: NextRequest) {
         if (!email || !password || !firstname || !lastname || !birthdate) {
             return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
         }
-
+        console.log(email);
+        console.log(password);
+        console.log(supabase);
         const { data, error } = await supabase.auth.signUp({ email, password });
+        console.log(data);
+        console.log(error);
 
         if (error) {
             return NextResponse.json({ error: error.message }, { status: 401 });
