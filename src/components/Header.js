@@ -4,9 +4,9 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Search, X } from 'lucide-react';
+import { Search, X, User, LogOut } from 'lucide-react';
 import LogoutButton from './LogoutButton';
-import DialogCategory from './DialogCategory'; // Import du composant DialogCategory
+import DialogCategory from './DialogCategory';
 import { getCookie } from "typescript-cookie";
 import { PUBLIC_PAGES } from '@/config/constants';
 import { toast, ToastContainer } from 'react-toastify';
@@ -106,7 +106,7 @@ export default function Header() {
                             }}
                             className="px-4 py-2 rounded shadow transition flex justify-center items-center gap-2 btn-header"
                         >
-                            <FaStream className="h-5 w-5"/>
+                            <FaStream className="h-5 w-5" />
                             Rayons
                         </button>
                     </div>
@@ -118,13 +118,16 @@ export default function Header() {
                             <input
                                 type="text"
                                 placeholder="Rechercher un produit..."
-                                className="w-full px-4 py-2 rounded-lg pl-10 focus:outline-none focus:ring-2 focus:ring-[#F57C00] search-bar-header"
+                                className="w-full px-4 py-2 rounded-lg pl-10 focus:outline-none focus:ring-2 focus:ring-white search-bar-header"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 aria-label="Rechercher un produit"
                             />
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 search-bar-header w-4 h-4" />
-                            <X className="absolute right-3 top-1/2 transform -translate-y-1/2 search-bar-header w-4 h-4" onClick={() => setSearchQuery('')}/>
+                            <X
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 search-bar-header w-4 h-4"
+                                onClick={() => setSearchQuery('')}
+                            />
                         </form>
                     </div>
 
@@ -138,13 +141,29 @@ export default function Header() {
                             Mon Panier
                         </button>
 
-                        {/* Auth Button */}
+                        {/* Auth Buttons */}
                         {user ? (
-                            <LogoutButton/>
+                            <div className="flex items-center gap-2">
+                                <Link href="/profile">
+                                    <button className="px-4 py-2 rounded shadow transition btn-header mr-2">
+                                        <div className="flex items-center gap-2">
+                                            <User className="h-5 w-5" />
+                                            Mon profil
+                                        </div>
+                                    </button>
+                                </Link>
+                                <LogoutButton>
+                                    <button className="px-4 py-2 rounded shadow transition btn-header text-red-500">
+                                        <div className="flex items-center gap-2">
+                                            <LogOut className="h-5 w-5" />
+                                            Se déconnecter
+                                        </div>
+                                    </button>
+                                </LogoutButton>
+                            </div>
                         ) : (
                             <Link href="/connexion">
-                                <button
-                                    className="px-4 py-2 rounded shadow transition btn-header">
+                                <button className="px-4 py-2 rounded shadow transition btn-header">
                                     Se connecter
                                 </button>
                             </Link>
