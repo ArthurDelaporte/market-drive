@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
                     email,
                     firstname,
                     lastname,
-                    birthdate,
+                    birthdate: new Date(birthdate),
                     role: 'client',
                 },
             });
