@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PUBLIC_PAGES } from "@/config/constants";
+import {jwtDecode} from "jwt-decode";
 
 export async function middleware(request: NextRequest) {
     const accessToken = request.cookies.get("access_token")?.value;
@@ -22,6 +23,21 @@ export async function middleware(request: NextRequest) {
 
     try {
         if (accessToken) {
+            const exp = jwtDecode(accessToken).exp
+            const now = Date.now()/1000;
+
+            if (exp) {
+                if (exp < now) {
+                    if (!PUBLIC_PAGES.includes(pathname)) {
+                        const redirectUrl = new URL("/connexion", request.url);
+                        redirectUrl.searchParams.set("redirect", pathname);
+                        return NextResponse.redirect(redirectUrl);
+                    } else {
+                        return NextResponse.next();
+                    }
+                }
+            }
+
             // Appeler l'API pour récupérer les informations utilisateur
             const userResponse = await fetch(new URL("/api/auth/user", request.url), {
                 method: "GET",

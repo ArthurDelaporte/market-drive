@@ -6,12 +6,13 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Search, X, User, LogOut } from 'lucide-react';
 import LogoutButton from './LogoutButton';
-import DialogCategory from './DialogCategory';
-import { getCookie } from "typescript-cookie";
+import DialogCategory from './DialogCategory'; // Import du composant DialogCategory
+import {getCookie, removeCookie} from "typescript-cookie";
 import { PUBLIC_PAGES } from '@/config/constants';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { FaStream } from 'react-icons/fa';
+import {jwtDecode} from "jwt-decode";
 
 export default function Header() {
     const router = useRouter();
@@ -31,36 +32,46 @@ export default function Header() {
                 const accessToken = getCookie('access_token');
 
                 if (!accessToken) {
-                    toast.error("Vous n'êtes pas connectés. Veuillez vous connecter.", { toastId: 'missing-token' });
-                    if (!PUBLIC_PAGES.includes(pathname)) router.push('/connexion');
+                    if (!PUBLIC_PAGES.includes(pathname)) {
+                        toast.error("Vous n'êtes pas connectés. Veuillez vous connecter.", { toastId: 'missing-token' });
+                        router.push('/connexion');
+                    }
                     return;
                 }
 
-                const response = await fetch('/api/auth/user', {
-                    method: 'GET',
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                    },
-                });
+                const exp = jwtDecode(accessToken).exp;
+                const now = (new Date().getTime())/1000;
 
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    const errorMessage = errorData.error;
-
-                    if (errorMessage === 'Access token expired') {
-                        toast.error('Votre session a expiré. Veuillez vous reconnecter.', { toastId: 'session-expired' });
-                    } else if (errorMessage === 'Invalid access token') {
-                        toast.error('Token invalide. Veuillez vous reconnecter.', { toastId: 'invalid-token' });
-                    } else if (errorMessage === 'User not found in database') {
-                        toast.error('Utilisateur introuvable.', { toastId: 'user-not-found' });
-                    } else {
-                        toast.error('Une erreur inconnue est survenue.', { toastId: 'unknown-error' });
-                    }
-
-                    if (!PUBLIC_PAGES.includes(pathname)) router.push('/connexion');
+                if (exp && exp < now) {
+                    removeCookie('access_token');
+                    setUser(null)
                 } else {
-                    const userData = await response.json();
-                    setUser(userData);
+                    const response = await fetch('/api/auth/user', {
+                        method: 'GET',
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                        },
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        const errorMessage = errorData.error;
+
+                        if (errorMessage === 'Access token expired') {
+                            toast.error('Votre session a expiré. Veuillez vous reconnecter.', { toastId: 'session-expired' });
+                        } else if (errorMessage === 'Invalid access token') {
+                            toast.error('Token invalide. Veuillez vous reconnecter.', { toastId: 'invalid-token' });
+                        } else if (errorMessage === 'User not found in database') {
+                            toast.error('Utilisateur introuvable.', { toastId: 'user-not-found' });
+                        } else {
+                            toast.error('Une erreur inconnue est survenue.', { toastId: 'unknown-error' });
+                        }
+
+                        if (!PUBLIC_PAGES.includes(pathname)) router.push('/connexion');
+                    } else {
+                        const userData = await response.json();
+                        setUser(userData);
+                    }
                 }
             } catch (error) {
                 toast.error('Une erreur est survenue lors de la récupération des données utilisateur.', { toastId: 'fetch-error' });
