@@ -8,6 +8,8 @@ import Modal from 'react-modal';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Header from "../../components/Header";
+import { useCart } from "@/context/CartContext";
+
 
 export default function ProductsPage() {
     const router = useRouter();
@@ -25,6 +27,8 @@ export default function ProductsPage() {
     const [tempMaxPrice, setTempMaxPrice] = useState('');
     const [priceError, setPriceError] = useState(null);
     const [sortOption, setSortOption] = useState('');
+    const { addToCart } = useCart();
+
 
     // Récupérer le paramètre categoryId depuis l'URL
     const categoryId = searchParams.get('categoryId');
@@ -286,9 +290,15 @@ export default function ProductsPage() {
 
                                         <button
                                             className="mr-4 py-2 px-4 rounded transition-colors flex items-center justify-center"
+                                            onClick={() => {
+                                                console.log("Bouton Ajouter cliqué pour le produit :", product);
+                                                addToCart(product);
+                                            }}
                                         >
-                                            <FaShoppingCart className="h-8 w-8"/>
+                                            Ajouter
+                                                <FaShoppingCart className="h-8 w-8"/>
                                         </button>
+
                                     </div>
 
                                     {isEditMode && (

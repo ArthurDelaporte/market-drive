@@ -144,13 +144,15 @@ export default function Header() {
 
                     {/* Right section with cart and auth */}
                     <div className="flex items-center gap-3">
-                        {/* Cart Button */}
-                        <button
-                            className="px-4 py-2 rounded shadow transition btn-header"
-                            aria-label="Voir mon panier"
-                        >
-                            Mon Panier
-                        </button>
+                        {/* Cart Button avec lien vers le panier */}
+                        <Link href="/panier">
+                            <button
+                                className="px-4 py-2 rounded shadow transition btn-header"
+                                aria-label="Voir mon panier"
+                            >
+                                Mon Panier
+                            </button>
+                        </Link>
 
                         {/* Auth Buttons */}
                         {user ? (
