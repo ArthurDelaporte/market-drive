@@ -18,8 +18,8 @@ const supabase = createClient(
 const BUCKET_NAME = 'product_images';
 
 // 📌 **GET Handler: Récupérer un produit par ID**
-export async function GET(request: Request, { params }: { params: { productId: string } }) {
-    const { productId } = params;
+export async function GET(request: Request, context: { params: { productId: string } }) {
+    const { productId } = await context.params;
 
     if (!productId) {
         return NextResponse.json({ error: 'ID du produit invalide' }, { status: 400 });
@@ -40,8 +40,8 @@ export async function GET(request: Request, { params }: { params: { productId: s
 }
 
 // 📌 **PUT Handler: Modifier un produit (et gérer l’upload d’image)**
-export async function PUT(request: Request, { params }: { params: { productId: string } }) {
-    const { productId } = params;
+export async function PUT(request: Request, context: { params: { productId: string } }) {
+    const { productId } = context.params;
 
     if (!productId) {
         return NextResponse.json({ error: 'ID du produit invalide' }, { status: 400 });

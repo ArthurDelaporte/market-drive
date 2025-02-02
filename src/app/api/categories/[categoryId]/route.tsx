@@ -4,10 +4,28 @@ import { NextResponse } from 'next/server';
 import prisma from '@/prismaClient';
 import { NextRequest } from 'next/server';
 
-interface ContextParams {
-    params: {
-        categoryId: string;
-    };
+// 📌 **GET Handler** : Récupérer une catégorie par ID
+export async function GET(request: NextRequest, context: { params: { categoryId: string } }) {
+    try {
+        const { categoryId } = await context.params;
+
+        if (!categoryId) {
+            return NextResponse.json({ error: 'ID de catégorie invalide' }, { status: 400 });
+        }
+
+        const category = await prisma.categories.findUnique({
+            where: { id: categoryId },
+        });
+
+        if (!category) {
+            return NextResponse.json({ error: 'Catégorie introuvable' }, { status: 404 });
+        }
+
+        return NextResponse.json(category, { status: 200 });
+    } catch (error) {
+        console.error('Erreur lors de la récupération de la catégorie:', error);
+        return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
+    }
 }
 
 // PUT handler: Modifier une catégorie

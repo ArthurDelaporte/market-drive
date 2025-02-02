@@ -5,6 +5,8 @@ import prisma from '@/prismaClient';
 import { Prisma } from "@prisma/client";
 import { supabase } from '@/supabaseClient';
 
+const BUCKET_NAME = "product_images";
+
 // 📌 **GET Handler** : Récupérer la liste des produits
 export async function GET(req: Request) {
     try {
@@ -41,7 +43,7 @@ export async function GET(req: Request) {
         products = products.map((product) => ({
             ...product,
             imgurl: product.imgurl
-                ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/product_images/${product.imgurl}`
+                ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${BUCKET_NAME}/${product.imgurl}`
                 : null,
             totalPrice: parseFloat(((product.price || 1) * (product.quantity || 0)).toFixed(2)),
         }));
@@ -49,11 +51,11 @@ export async function GET(req: Request) {
         return NextResponse.json(products, { status: 200 });
     } catch (error) {
         console.error('Error fetching products:', error);
-        return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+        return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
     }
 }
 
-// 📌 **POST Handler** : Ajouter un produit avec upload d’image
+// 📌 **POST Handler** : Ajouter un produit et uploader l’image après insertion
 export async function POST(req: Request) {
     try {
         const formData = await req.formData();
@@ -61,37 +63,66 @@ export async function POST(req: Request) {
         const unity = formData.get("unity") as string;
         const price = Number(formData.get("price"));
         const quantity = Number(formData.get("quantity")) || 1;
+        const categoryId = formData.get("category_id") as string;
         const imageFile = formData.get("image") as File | null;
 
-        if (!name || !unity || price == null) {
-            return NextResponse.json({ error: 'Name, unity, and price are required' }, { status: 400 });
+        if (!name || !unity || isNaN(price) || !categoryId) {
+            return NextResponse.json({ error: 'Tous les champs sont obligatoires' }, { status: 400 });
         }
+
+        // ✅ **Vérifier que la catégorie existe**
+        const existingCategory = await prisma.categories.findUnique({ where: { id: categoryId } });
+        if (!existingCategory) {
+            return NextResponse.json({ error: "Catégorie introuvable." }, { status: 400 });
+        }
+
+        // ✅ **Créer le produit sans image**
+        const newProduct = await prisma.products.create({
+            data: {
+                name,
+                unity,
+                price,
+                quantity,
+                category_id: categoryId,
+                imgurl: null, // L'image sera ajoutée après
+            },
+        });
 
         let imgUrl: string | null = null;
 
-        // ✅ **Téléverser l'image sur Supabase**
+        // ✅ **Uploader l'image après la création du produit**
         if (imageFile) {
+            const allowedTypes = ["image/png", "image/jpeg", "image/webp", "image/jpg"];
+            if (!allowedTypes.includes(imageFile.type)) {
+                return NextResponse.json({ error: "Format d'image invalide. Utilisez PNG, JPG ou WEBP." }, { status: 400 });
+            }
+
             const fileExt = imageFile.name.split('.').pop();
-            const fileName = `${Date.now()}.${fileExt}`;
-            const filePath = `product_images/${fileName}`;
+            const fileName = `product_${newProduct.id}.${fileExt}`;
 
-            const { error } = await supabase.storage
-                .from("product_images")
-                .upload(filePath, imageFile, { contentType: imageFile.type });
+            // 🚀 **Uploader l’image sur Supabase**
+            const { error: uploadError } = await supabase.storage
+                .from(BUCKET_NAME)
+                .upload(fileName, imageFile, { contentType: imageFile.type });
 
-            if (error) throw new Error(`Erreur upload Supabase: ${error.message}`);
+            if (uploadError) {
+                console.error("Erreur upload Supabase:", uploadError.message);
+                return NextResponse.json({ error: "Erreur lors de l'upload de l'image" }, { status: 500 });
+            }
 
-            imgUrl = fileName; // On stocke le nom du fichier seulement
+            imgUrl = fileName; // On stocke uniquement le nom du fichier
+
+            // 📌 **Mettre à jour le produit avec l’image**
+            await prisma.products.update({
+                where: { id: newProduct.id },
+                data: { imgurl: imgUrl },
+            });
         }
 
-        // ✅ **Créer le produit dans la DB**
-        const newProduct = await prisma.products.create({
-            data: { name, unity, price, quantity, imgurl: imgUrl },
-        });
+        return NextResponse.json({ ...newProduct, imgurl: imgUrl }, { status: 201 });
 
-        return NextResponse.json(newProduct, { status: 201 });
     } catch (error) {
         console.error('Error creating product:', error);
-        return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+        return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
     }
 }
