@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Header from "../../../components/Header";
+import { PRODUCTS_UNITIES } from "@/config/constants";
 
 export default function CreateProductPage() {
     const [name, setName] = useState('');
-    const [unity, setUnity] = useState('');
+    const [unity, setUnity] = useState(null); // ✅ Sélection de l'unité par défaut
     const [price, setPrice] = useState('');
     const [quantity, setQuantity] = useState('');
     const [image, setImage] = useState(null);
@@ -39,47 +40,34 @@ export default function CreateProductPage() {
         fetchCategoriesLevel0();
     }, []);
 
-    // 📌 **Gérer le changement de catégorie de niveau 0**
-    const handleCategory0Change = async (e) => {
+    // 📌 **Gestion des catégories**
+    const handleCategoryChange = async (e, level) => {
         const categoryId = e.target.value;
-        setSelectedCategory0(categoryId);
-        setSelectedCategory1(null);
-        setSelectedCategory2(null);
-        setCategoriesLevel1([]);
-        setCategoriesLevel2([]);
 
-        if (!categoryId) return;
-
-        try {
-            const res = await fetch(`/api/categories/parent/${categoryId}`);
-            const data = await res.json();
-            setCategoriesLevel1(data);
-        } catch (err) {
-            setError("Erreur lors du chargement des sous-catégories");
+        if (level === 0) {
+            setSelectedCategory0(categoryId);
+            setSelectedCategory1(null);
+            setSelectedCategory2(null);
+            setCategoriesLevel1([]);
+            setCategoriesLevel2([]);
+        } else if (level === 1) {
+            setSelectedCategory1(categoryId);
+            setSelectedCategory2(null);
+            setCategoriesLevel2([]);
+        } else if (level === 2) {
+            setSelectedCategory2(categoryId);
         }
-    };
 
-    // 📌 **Gérer le changement de catégorie de niveau 1**
-    const handleCategory1Change = async (e) => {
-        const categoryId = e.target.value;
-        setSelectedCategory1(categoryId);
-        setSelectedCategory2(null);
-        setCategoriesLevel2([]);
-
-        if (!categoryId) return;
-
-        try {
-            const res = await fetch(`/api/categories/parent/${categoryId}`);
-            const data = await res.json();
-            setCategoriesLevel2(data);
-        } catch (err) {
-            setError("Erreur lors du chargement des sous-catégories");
+        if (categoryId && level < 2) {
+            try {
+                const res = await fetch(`/api/categories/parent/${categoryId}`);
+                const data = await res.json();
+                if (level === 0) setCategoriesLevel1(data);
+                if (level === 1) setCategoriesLevel2(data);
+            } catch (err) {
+                setError("Erreur lors du chargement des sous-catégories");
+            }
         }
-    };
-
-    // 📌 **Gérer le changement de catégorie de niveau 2**
-    const handleCategory2Change = (e) => {
-        setSelectedCategory2(e.target.value);
     };
 
     // 📌 **Gérer la sélection d'image**
@@ -145,9 +133,15 @@ export default function CreateProductPage() {
                         <input type="text" value={name} onChange={(e) => setName(e.target.value)}
                                placeholder="Nom du produit" required
                                className="w-full p-2 border border-gray-300 rounded"/>
-                        <input type="text" value={unity} onChange={(e) => setUnity(e.target.value)}
-                               placeholder="Unité (ex: kg, litre)" required
-                               className="w-full p-2 border border-gray-300 rounded"/>
+
+                        {/* 📌 **Sélection de l'unité** */}
+                        <select onChange={(e) => setUnity(e.target.value)}
+                                required className="w-full p-2 border border-gray-300 rounded">
+                            <option value="">--- Sélectionner une unité ---</option>
+                            {PRODUCTS_UNITIES.map(unit => (
+                                <option key={unit} value={unit}>{unit}</option>
+                            ))}
+                        </select>
 
                         <div className="grid grid-cols-2 gap-4">
                             <input type="number" value={price} onChange={(e) => setPrice(e.target.value)}
@@ -158,29 +152,26 @@ export default function CreateProductPage() {
                         </div>
 
                         {/* 📌 **Sélection des catégories** */}
-                        <select onChange={handleCategory0Change} required
-                                className="w-full p-2 border border-gray-300 rounded">
-                            <option value="">Sélectionner une catégorie</option>
-                            {categoriesLevel0.map((category) => (
+                        <select onChange={(e) => handleCategoryChange(e, 0)} required className="w-full p-2 border border-gray-300 rounded">
+                            <option value="">--- Sélectionner une catégorie ---</option>
+                            {categoriesLevel0.map(category => (
                                 <option key={category.id} value={category.id}>{category.name}</option>
                             ))}
                         </select>
 
                         {categoriesLevel1.length > 0 && (
-                            <select onChange={handleCategory1Change} required
-                                    className="w-full p-2 border border-gray-300 rounded">
-                                <option value="">Sélectionner une sous-catégorie</option>
-                                {categoriesLevel1.map((category) => (
+                            <select onChange={(e) => handleCategoryChange(e, 1)} required className="w-full p-2 border border-gray-300 rounded">
+                                <option value="">--- Sélectionner une sous-catégorie ---</option>
+                                {categoriesLevel1.map(category => (
                                     <option key={category.id} value={category.id}>{category.name}</option>
                                 ))}
                             </select>
                         )}
 
                         {categoriesLevel2.length > 0 && (
-                            <select onChange={handleCategory2Change} required
-                                    className="w-full p-2 border border-gray-300 rounded">
-                                <option value="">Sélectionner une sous-sous-catégorie</option>
-                                {categoriesLevel2.map((category) => (
+                            <select onChange={(e) => handleCategoryChange(e, 2)} required className="w-full p-2 border border-gray-300 rounded">
+                                <option value="">--- Sélectionner une sous-sous-catégorie ---</option>
+                                {categoriesLevel2.map(category => (
                                     <option key={category.id} value={category.id}>{category.name}</option>
                                 ))}
                             </select>

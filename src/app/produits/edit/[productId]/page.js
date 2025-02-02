@@ -5,13 +5,14 @@ import { useRouter, useParams } from "next/navigation";
 import Header from "../../../../components/Header";
 import Image from "next/image";
 import {getCookie} from "typescript-cookie";
+import { PRODUCTS_UNITIES } from "@/config/constants";
 
 export default function EditProductPage() {
     const router = useRouter();
     const { productId } = useParams();
 
     const [name, setName] = useState('');
-    const [unity, setUnity] = useState('');
+    const [unity, setUnity] = useState(null);
     const [price, setPrice] = useState('');
     const [quantity, setQuantity] = useState('');
     const [image, setImage] = useState(null);
@@ -202,14 +203,14 @@ export default function EditProductPage() {
                             className="w-full p-2 border border-gray-300 rounded"
                         />
 
-                        <input
-                            type="text"
-                            value={unity}
-                            onChange={(e) => setUnity(e.target.value)}
-                            placeholder="Unité (ex: kg, litre)"
-                            required
-                            className="w-full p-2 border border-gray-300 rounded"
-                        />
+                        {/* 📌 **Sélection de l'unité** */}
+                        <select onChange={(e) => setUnity(e.target.value)}
+                                required className="w-full p-2 border border-gray-300 rounded" value={unity}>
+                            <option value="">--- Sélectionner une unité ---</option>
+                            {PRODUCTS_UNITIES.map(unit => (
+                                <option key={unit} value={unit}>{unit}</option>
+                            ))}
+                        </select>
 
                         <div className="grid grid-cols-2 gap-4">
                             <input
@@ -233,14 +234,14 @@ export default function EditProductPage() {
                         {/* 📌 Sélection des catégories */}
                         <select onChange={handleCategory0Change} value={selectedCategory0}
                                 className="w-full p-2 border border-gray-300 rounded">
-                            <option value="">Sélectionner une catégorie</option>
+                            <option value="">--- Sélectionner une catégorie ---</option>
                             {categoriesLevel0.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                         </select>
 
                         {categoriesLevel1.length > 0 &&
                             <select onChange={handleCategory1Change} value={selectedCategory1}
                                     className="w-full p-2 border border-gray-300 rounded">
-                                <option value="">Sélectionner une sous-catégorie</option>
+                                <option value="">--- Sélectionner une sous-catégorie ---</option>
                                 {categoriesLevel1.map(cat =>
                                     <option key={cat.id} value={cat.id}>{cat.name}</option>
                                 )}
@@ -249,7 +250,7 @@ export default function EditProductPage() {
                         {categoriesLevel2.length > 0 &&
                             <select onChange={handleCategory2Change} value={selectedCategory2}
                                     className="w-full p-2 border border-gray-300 rounded">
-                                <option value="">Sélectionner une sous-sous-catégorie</option>
+                                <option value="">--- Sélectionner une sous-sous-catégorie ---</option>
                                 {categoriesLevel2.map(cat =>
                                     <option key={cat.id} value={cat.id}>{cat.name}</option>
                                 )}

@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/prismaClient';
 import { Prisma } from "@prisma/client";
 import { supabase } from '@/supabaseClient';
+import { PRODUCTS_UNITIES } from "@/config/constants";
 
 const BUCKET_NAME = "product_images";
 
@@ -42,6 +43,7 @@ export async function GET(req: Request) {
         // ✅ Générer une URL publique pour chaque image stockée dans Supabase
         products = products.map((product) => ({
             ...product,
+            unity: (product.unity && PRODUCTS_UNITIES.includes(product.unity)) ? product.unity : 'pièce',
             imgurl: product.imgurl
                 ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${BUCKET_NAME}/${product.imgurl}`
                 : null,
@@ -80,7 +82,7 @@ export async function POST(req: Request) {
         const newProduct = await prisma.products.create({
             data: {
                 name,
-                unity,
+                unity: PRODUCTS_UNITIES.includes(unity) ? unity : 'pièce',
                 price,
                 quantity,
                 category_id: categoryId,

@@ -3,6 +3,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/prismaClient';
 import { createClient } from '@supabase/supabase-js';
+import { PRODUCTS_UNITIES } from "@/config/constants";
 
 // ✅ Vérification des variables d'environnement
 if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
@@ -30,6 +31,8 @@ export async function GET(request: Request, context: { params: { productId: stri
 
         if (!product) {
             return NextResponse.json({ error: 'Produit introuvable' }, { status: 404 });
+        } else {
+            product.unity = (product.unity && PRODUCTS_UNITIES.includes(product.unity)) ? product.unity : 'pièce';
         }
 
         return NextResponse.json(product, { status: 200 });
@@ -111,7 +114,7 @@ export async function PUT(request: Request, context: { params: { productId: stri
             where: { id: productId },
             data: {
                 name,
-                unity,
+                unity: (unity && PRODUCTS_UNITIES.includes(unity)) ? unity : 'pièce',
                 price,
                 quantity,
                 imgurl: imgUrl

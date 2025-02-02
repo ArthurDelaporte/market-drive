@@ -5,3 +5,9 @@ export const PUBLIC_PAGES = [
     '/inscription',
     '/produits',
 ];
+
+export const PRODUCTS_UNITIES = [
+    'pièce',
+    'kg', 'g', 'mg',
+    'L', 'cL', 'mL',
+]
