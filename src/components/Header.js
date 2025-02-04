@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { Search, X, User, LogOut, Menu } from 'lucide-react';
 import LogoutButton from './LogoutButton';
 import DialogCategory from './DialogCategory';
-import { getCookie } from "typescript-cookie";
+import { getCookie, removeCookie } from "typescript-cookie";
 import { PUBLIC_PAGES } from '@/config/constants';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -27,51 +27,57 @@ export default function Header() {
     useEffect(() => {
         if (hasCheckedAuth) return;
         setHasCheckedAuth(true);
-
+    
         const fetchUser = async () => {
             try {
                 const accessToken = getCookie('access_token');
-
+    
                 if (!accessToken) {
-if (!PUBLIC_PAGES.includes(pathname)) {
-                    toast.error("Vous n'êtes pas connectés. Veuillez vous connecter.", { toastId: 'missing-token' });
-                    router.push('/connexion');
-}
+                    if (!PUBLIC_PAGES.includes(pathname)) {
+                        toast.error("Vous n'êtes pas connectés. Veuillez vous connecter.", { toastId: 'missing-token' });
+                        router.push('/connexion');
+                    }
                     return;
                 }
-
-const exp = jwtDecode(accessToken).exp;
-                const now = (new Date().getTime())/1000;
-
-                if (exp && exp < now) {
-                    removeCookie('access_token');
-                    setUser(null)
-                } else {
-                const response = await fetch('/api/auth/user', {
-                    method: 'GET',
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                    },
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    const errorMessage = errorData.error;
-
-                    if (errorMessage === 'Access token expired') {
-                        toast.error('Votre session a expiré. Veuillez vous reconnecter.', { toastId: 'session-expired' });
-                    } else if (errorMessage === 'Invalid access token') {
-                        toast.error('Token invalide. Veuillez vous reconnecter.', { toastId: 'invalid-token' });
-                    } else if (errorMessage === 'User not found in database') {
-                        toast.error('Utilisateur introuvable.', { toastId: 'user-not-found' });
+    
+                try {
+                    const exp = jwtDecode(accessToken).exp;
+                    const now = (new Date().getTime())/1000;
+    
+                    if (exp && exp < now) {
+                        removeCookie('access_token');
+                        setUser(null);
                     } else {
-                        toast.error('Une erreur inconnue est survenue.', { toastId: 'unknown-error' });
+                        const response = await fetch('/api/auth/user', {
+                            method: 'GET',
+                            headers: {
+                                Authorization: `Bearer ${accessToken}`,
+                            },
+                        });
+    
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            const errorMessage = errorData.error;
+    
+                            if (errorMessage === 'Access token expired') {
+                                toast.error('Votre session a expiré. Veuillez vous reconnecter.', { toastId: 'session-expired' });
+                            } else if (errorMessage === 'Invalid access token') {
+                                toast.error('Token invalide. Veuillez vous reconnecter.', { toastId: 'invalid-token' });
+                            } else if (errorMessage === 'User not found in database') {
+                                toast.error('Utilisateur introuvable.', { toastId: 'user-not-found' });
+                            } else {
+                                toast.error('Une erreur inconnue est survenue.', { toastId: 'unknown-error' });
+                            }
+    
+                            if (!PUBLIC_PAGES.includes(pathname)) router.push('/connexion');
+                        } else {
+                            const userData = await response.json();
+                            setUser(userData);
+                        }
                     }
-
-                    if (!PUBLIC_PAGES.includes(pathname)) router.push('/connexion');
-                } else {
-                    const userData = await response.json();
-                    setUser(userData);
+                } catch (decodeError) {
+                    toast.error('Erreur lors du décodage du token.', { toastId: 'token-decode-error' });
+                    console.error('Token decode error:', decodeError);
                 }
             } catch (error) {
                 toast.error('Une erreur est survenue lors de la récupération des données utilisateur.', { toastId: 'fetch-error' });
@@ -81,7 +87,6 @@ const exp = jwtDecode(accessToken).exp;
         
         fetchUser();
     }, [hasCheckedAuth, pathname, router]);
-
     const handleSearch = (e) => {
         e.preventDefault();
         if (searchQuery.trim()) {
@@ -184,8 +189,8 @@ const exp = jwtDecode(accessToken).exp;
                             <Image
                                 src="/img/logo/logo.png"
                                 alt="GIGA Drive Logo"
-                                width={70}
-                                height={70}
+                                width={90}
+                                height={90}
                                 className="rounded-lg"
                                 priority
                             />
@@ -193,15 +198,15 @@ const exp = jwtDecode(accessToken).exp;
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={() => setIsCategoryDialogOpen(true)}
-                                className="px-2 py-2 rounded shadow transition btn-header"
+                                className="px-5 py-3 rounded shadow transition btn-header"
                             >
-                                <FaStream className="h-5 w-5" />
+                                <FaStream className="h-6 w-7" />
                             </button>
                             <button
                                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                                className="px-2 py-2 rounded shadow transition btn-header"
+                                className="px-5 py-3 rounded shadow transition btn-header"
                             >
-                                <Menu className="h-5 w-5" />
+                                <Menu className="h-6 w-7" />
                             </button>
                         </div>
                     </div>
