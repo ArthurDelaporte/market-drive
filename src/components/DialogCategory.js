@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from "next/navigation";
 
-export default function DialogCategory({ isOpen, onClose }) {
+export default function DialogCategory({ isOpen, onClose, isAdmin }) {
     const router = useRouter();
 
     const [categoriesLevel0, setCategoriesLevel0] = useState([]);
@@ -68,7 +68,7 @@ export default function DialogCategory({ isOpen, onClose }) {
                 await handleCategoryClick(category, 2);
             }
         } else {
-            router.push(`/produits?categoryId=${category.id}`);
+            router.push(`${isAdmin ?('/admin') : ''}/produits?categoryId=${category.id}`);
             closeAllDialogs();
         }
     };

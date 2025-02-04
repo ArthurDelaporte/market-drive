@@ -187,6 +187,7 @@ export default function Header() {
             <DialogCategory
                 isOpen={isCategoryDialogOpen}
                 onClose={() => setIsCategoryDialogOpen(false)}
+                isAdmin={false}
             />
         </>
     );

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Search, X, User, LogOut } from 'lucide-react';
 import LogoutButton from './LogoutButton';
-import AdminDialogCategory from './AdminDialogCategory';
+import DialogCategory from './DialogCategory';
 import {getCookie, removeCookie} from "typescript-cookie";
 import { PUBLIC_PAGES } from '@/config/constants';
 import { toast, ToastContainer } from 'react-toastify';
@@ -191,10 +191,11 @@ export default function Header() {
                 </div>
             </header>
 
-            {/* AdminDialogCategory */}
-            <AdminDialogCategory
+            {/* DialogCategory */}
+            <DialogCategory
                 isOpen={isCategoryDialogOpen}
                 onClose={() => setIsCategoryDialogOpen(false)}
+                isAdmin={true}
             />
         </>
     );
