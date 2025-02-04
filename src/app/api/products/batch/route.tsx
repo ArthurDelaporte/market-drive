@@ -1,3 +1,5 @@
+// /api/products/batch
+
 import { NextResponse } from 'next/server';
 import prisma from '@/prismaClient';
 
@@ -5,6 +7,8 @@ import prisma from '@/prismaClient';
 export async function DELETE(request: Request) {
     try {
         const { productIds } = await request.json();
+
+        console.log(productIds);
 
         if (!productIds || !Array.isArray(productIds) || productIds.length === 0) {
             return NextResponse.json({ error: 'Aucun produit sélectionné' }, { status: 400 });

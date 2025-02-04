@@ -85,16 +85,18 @@ export default function ProductsPage() {
 
     // 📌 **Gestion du mode suppression**
     const toggleProductSelection = (productId) => {
-        const newSelection = new Set(selectedProducts);
-        if (newSelection.has(productId)) {
-            newSelection.delete(productId);
-        } else {
-            newSelection.add(productId);
-        }
-        setSelectedProducts(newSelection);
+        setSelectedProducts((prevSelected) => {
+            const newSelection = new Set(prevSelected);
+            if (newSelection.has(productId)) {
+                newSelection.delete(productId);
+            } else {
+                newSelection.add(productId);
+            }
+            return newSelection;
+        });
     };
 
-    const resetSelection = () => setSelectedProducts(new Set());
+    const resetSelection = () => setSelectedProducts(new Set([]));
 
     const handleDeleteSelectedProducts = async () => {
         if (selectedProducts.size === 0) return;
@@ -312,7 +314,7 @@ export default function ProductsPage() {
                                         <input
                                             type="checkbox"
                                             className="h-5 w-5 mb-2"
-                                            checked={selectedProducts.has(product.id)}
+                                            checked={selectedProducts?.has(product.id) || false}
                                             onChange={() => toggleProductSelection(product.id)}
                                         />
                                     )}
