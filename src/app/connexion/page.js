@@ -20,22 +20,28 @@ export default function LoginPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),
             });
-
+    
             const data = await res.json();
-
+    
             if (!res.ok) {
                 alert(data.error);
                 return;
             }
-
+    
+            // ✅ Récupération immédiate de l'utilisateur après connexion
+            await fetch('/api/auth/user', {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${data.user.access_token}`,
+                },
+            });
+    
             // Vérification du rôle de l'utilisateur
             const userRole = data.user?.role;
-
+    
             if (userRole === 'admin') {
-                // Redirige vers le tableau de bord admin
                 router.push('/admin/dashboard');
             } else {
-                // Redirige vers la page demandée ou la page d'accueil
                 router.push(redirectTo);
             }
         } catch (error) {

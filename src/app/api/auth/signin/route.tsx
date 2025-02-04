@@ -21,6 +21,10 @@ export async function POST(request: NextRequest) {
 
         const { session, user } = data;
 
+        console.log("📌 [Auth API] Session reçue :", session);
+        console.log("📌 [Auth API] Access token reçu :", session?.access_token);
+
+
         if (!session || !user) {
             return NextResponse.json({ error: 'Authentication failed' }, { status: 401 });
         }
@@ -36,6 +40,8 @@ export async function POST(request: NextRequest) {
             },
         });
 
+        console.log("🔍 ID trouvé dans la table users :", dbUser?.id);
+
         if (!dbUser) {
             return NextResponse.json({ error: 'User not found in database' }, { status: 404 });
         }
@@ -45,10 +51,13 @@ export async function POST(request: NextRequest) {
             user: { id: dbUser.id, role: dbUser.role },
         });
 
-        // Ajout des cookies
-        response.cookies.set('access_token', session.access_token, {
-            path: '/',
-        });
+        // ✅ Ajouter le cookie access_token
+        response.cookies.set('access_token', session.access_token, { path: '/' });
+
+        // ✅ Forcer Supabase à rafraîchir la session après connexion
+        await supabase.auth.getSession();
+
+        console.log("✅ [Auth API] Connexion réussie et session mise à jour.");
 
         return response;
     } catch (error) {

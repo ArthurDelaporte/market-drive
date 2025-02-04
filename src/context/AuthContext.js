@@ -15,50 +15,65 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        console.log("🟢 [AuthContext] useEffect lancé !");
+        console.log("🟢 [AuthContext] Vérification de la session en cours...");
 
-        const fetchUser = async () => {
-            console.log("🔄 [AuthContext] Tentative de récupération de session...");
+        const checkSessionAndLogin = async () => {
             const { data: { session }, error } = await supabase.auth.getSession();
 
-            if (error) {
-                console.error("❌ [AuthContext] Erreur récupération session :", error);
+            if (error || !session) {
+                console.warn("⚠️ [AuthContext] Aucune session active détectée.");
+                setUser(null);
+                setLoading(false);
                 return;
             }
 
-            console.log("📌 [AuthContext] Session trouvée :", session);
+            console.log("✅ [AuthContext] Session active détectée :", session);
 
-            if (session) {
-                setUser(session.user);
-                console.log("✅ [AuthContext] Utilisateur connecté :", session.user.id);
+            const { data: userData, error: userError } = await supabase.auth.getUser();
+
+            if (userError || !userData?.user) {
+                console.warn("⚠️ [AuthContext] Impossible de récupérer l'utilisateur.");
+                setUser(null);
             } else {
-                console.warn("⚠️ [AuthContext] Aucun utilisateur connecté !");
+                console.log("✅ [AuthContext] Utilisateur reconnecté :", userData.user.id);
+                setUser(userData.user);
             }
 
             setLoading(false);
         };
 
-        fetchUser();
+        checkSessionAndLogin();
 
+        // Écoute les changements d'état d'authentification
         const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
             console.log("🔄 [AuthContext] Changement d'état de l'auth :", event, session);
-
-            if (session) {
-                setUser(session.user);
+        
+            if (session?.user) {
                 console.log("✅ [AuthContext] Connexion détectée, utilisateur :", session.user.id);
+                setUser(session.user);
             } else {
-                setUser(null);
                 console.warn("⚠️ [AuthContext] Déconnexion détectée !");
+                setUser(null);
             }
         });
+        
+        console.log("🛑 [AuthContext] Listener sur l'authentification initialisé !");
+        
+        
+        
 
-        return () => {
-            authListener.subscription.unsubscribe();
-        };
+        return () => authListener.subscription.unsubscribe();
     }, []);
 
+    // 🚀 Fonction pour gérer la déconnexion proprement
+    const signOut = async () => {
+        await supabase.auth.signOut();
+        setUser(null);
+        console.log("🚪 [AuthContext] Utilisateur déconnecté et token supprimé !");
+    };
+
     return (
-        <AuthContext.Provider value={{ user, loading }}>
+        <AuthContext.Provider value={{ user, loading, signOut }}>
             {children}
         </AuthContext.Provider>
     );
