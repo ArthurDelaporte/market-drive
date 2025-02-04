@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import Header from "../../../components/Header";
+import AdminHeader from "../../../../components/AdminHeader";
 import { PRODUCTS_UNITIES } from "@/config/constants";
 
 export default function CreateProductPage() {
@@ -64,7 +64,7 @@ export default function CreateProductPage() {
                 const data = await res.json();
                 if (level === 0) setCategoriesLevel1(data);
                 if (level === 1) setCategoriesLevel2(data);
-            } catch (err) {
+            } catch {
                 setError("Erreur lors du chargement des sous-catégories");
             }
         }
@@ -112,7 +112,7 @@ export default function CreateProductPage() {
 
             if (!res.ok) throw new Error("Erreur lors de la création du produit");
 
-            router.push('/produits');
+            router.push('/admin/produits');
         } catch (err) {
             setError(err.message);
         } finally {
@@ -122,7 +122,7 @@ export default function CreateProductPage() {
 
     return (
         <>
-            <Header />
+            <AdminHeader />
             <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] p-auto m-auto pt-20">
                 <div className="py-4 px-12 bg-white rounded-lg shadow-md w-full max-w-md">
                     <h1 className="text-2xl font-bold mb-6 text-center text-[#424242]">Créer un produit</h1>

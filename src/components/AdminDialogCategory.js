@@ -68,7 +68,7 @@ export default function DialogCategory({ isOpen, onClose }) {
                 await handleCategoryClick(category, 2);
             }
         } else {
-            router.push(`/produits?categoryId=${category.id}`);
+            router.push(`/admin/produits?categoryId=${category.id}`);
             closeAllDialogs();
         }
     };

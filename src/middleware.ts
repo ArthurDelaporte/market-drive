@@ -21,6 +21,12 @@ export async function middleware(request: NextRequest) {
         return NextResponse.next();
     }
 
+    const redirectToLogin = () => {
+        const redirectUrl = new URL("/connexion", request.url);
+        redirectUrl.searchParams.set("redirect", pathname.startsWith("/admin") ? "/" : pathname);
+        return NextResponse.redirect(redirectUrl);
+    };
+
     try {
         if (accessToken) {
             const exp = jwtDecode(accessToken).exp
@@ -29,9 +35,7 @@ export async function middleware(request: NextRequest) {
             if (exp) {
                 if (exp < now) {
                     if (!PUBLIC_PAGES.includes(pathname)) {
-                        const redirectUrl = new URL("/connexion", request.url);
-                        redirectUrl.searchParams.set("redirect", pathname);
-                        return NextResponse.redirect(redirectUrl);
+                        return redirectToLogin();
                     } else {
                         return NextResponse.next();
                     }
@@ -63,16 +67,12 @@ export async function middleware(request: NextRequest) {
             // Si l'API retourne une erreur, rediriger vers la page de connexion
             console.error("Error from /api/auth/user :", data.error);
 
-            const redirectUrl = new URL("/connexion", request.url);
-            redirectUrl.searchParams.set("redirect", pathname);
-            return NextResponse.redirect(redirectUrl);
+            return redirectToLogin();
         }
 
         // Si l'utilisateur n'est pas connecté et tente d'accéder à une page non publique
         if (!PUBLIC_PAGES.includes(pathname)) {
-            const redirectUrl = new URL("/connexion", request.url);
-            redirectUrl.searchParams.set("redirect", pathname);
-            return NextResponse.redirect(redirectUrl);
+            return redirectToLogin();
         }
 
         // Autoriser l'accès aux pages publiques
@@ -82,9 +82,7 @@ export async function middleware(request: NextRequest) {
 
         // Rediriger vers la page de connexion en cas d'erreur inattendue
         if (!PUBLIC_PAGES.includes(pathname)) {
-            const redirectUrl = new URL("/connexion", request.url);
-            redirectUrl.searchParams.set("redirect", pathname);
-            return NextResponse.redirect(redirectUrl);
+            return redirectToLogin();
         }
 
         return NextResponse.next();

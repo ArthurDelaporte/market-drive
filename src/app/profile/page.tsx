@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import ProfileForm from '@/components/Profileform';
 import {getCookie} from "typescript-cookie";
+import Header from "@/components/Header";
+import AdminHeader from "@/components/AdminHeader";
 
 interface User {
   id: string;
@@ -81,13 +83,22 @@ export default function ProfilePage() {
   if (!user) return <div className="text-center p-8">No profile data found</div>;
 
   return (
-    <div className="main">
-      <h1 className="text-2xl font-bold text-center mb-8">My Profile</h1>
-        <ProfileForm 
-          user={user} 
-          onSubmit={handleProfileUpdate}
-          isAdmin={user?.role === 'admin'} 
-        />
-    </div>
+      <>
+        {user?.role === 'admin' ? (
+            <AdminHeader/>
+        ) : (
+            <Header/>
+        )}
+        <div className="main container mx-auto">
+          <div className="mt-12">
+            <h1 className="text-2xl font-bold text-center mb-8">My Profile</h1>
+            <ProfileForm
+                user={user}
+                onSubmit={handleProfileUpdate}
+                isAdmin={user?.role === 'admin'}
+            />
+          </div>
+        </div>
+      </>
   );
 }
