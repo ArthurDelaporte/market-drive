@@ -33,7 +33,7 @@ export default function LoginPage() {
 
             if (userRole === 'admin') {
                 // Redirige vers le tableau de bord admin
-                router.push('/admin/dashboard');
+                router.push('/admin');
             } else {
                 // Redirige vers la page demandée ou la page d'accueil
                 router.push(redirectTo);

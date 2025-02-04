@@ -101,8 +101,8 @@ const exp = jwtDecode(accessToken).exp;
                             <Image
                                 src="/img/logo/logo.png"
                                 alt="GIGA Drive Logo"
-                                width={90}
-                                height={90}
+                                width={80}
+                                height={80}
                                 className="rounded-lg"
                                 priority
                             />
@@ -268,6 +268,7 @@ const exp = jwtDecode(accessToken).exp;
             <DialogCategory
                 isOpen={isCategoryDialogOpen}
                 onClose={() => setIsCategoryDialogOpen(false)}
+                isAdmin={false}
             />
         </>
     );

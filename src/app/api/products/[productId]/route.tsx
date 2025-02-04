@@ -3,6 +3,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/prismaClient';
 import { createClient } from '@supabase/supabase-js';
+import { PRODUCTS_UNITIES } from "@/config/constants";
 
 // ✅ Vérification des variables d'environnement
 if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
@@ -18,8 +19,8 @@ const supabase = createClient(
 const BUCKET_NAME = 'product_images';
 
 // 📌 **GET Handler: Récupérer un produit par ID**
-export async function GET(request: Request, { params }: { params: { productId: string } }) {
-    const { productId } = params;
+export async function GET(request: Request, context: { params: { productId: string } }) {
+    const { productId } = await context.params;
 
     if (!productId) {
         return NextResponse.json({ error: 'ID du produit invalide' }, { status: 400 });
@@ -30,6 +31,8 @@ export async function GET(request: Request, { params }: { params: { productId: s
 
         if (!product) {
             return NextResponse.json({ error: 'Produit introuvable' }, { status: 404 });
+        } else {
+            product.unity = (product.unity && PRODUCTS_UNITIES.includes(product.unity)) ? product.unity : 'pièce';
         }
 
         return NextResponse.json(product, { status: 200 });
@@ -40,8 +43,8 @@ export async function GET(request: Request, { params }: { params: { productId: s
 }
 
 // 📌 **PUT Handler: Modifier un produit (et gérer l’upload d’image)**
-export async function PUT(request: Request, { params }: { params: { productId: string } }) {
-    const { productId } = params;
+export async function PUT(request: Request, context: { params: { productId: string } }) {
+    const { productId } = context.params;
 
     if (!productId) {
         return NextResponse.json({ error: 'ID du produit invalide' }, { status: 400 });
@@ -111,7 +114,7 @@ export async function PUT(request: Request, { params }: { params: { productId: s
             where: { id: productId },
             data: {
                 name,
-                unity,
+                unity: (unity && PRODUCTS_UNITIES.includes(unity)) ? unity : 'pièce',
                 price,
                 quantity,
                 imgurl: imgUrl
@@ -123,5 +126,25 @@ export async function PUT(request: Request, { params }: { params: { productId: s
     } catch (error) {
         console.error('Erreur mise à jour produit:', error);
         return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
+    }
+}
+
+// DELETE handler: Supprimer un produit
+export async function DELETE(request: Request, context: { params: { productId: string } }) {
+    try {
+        const { productId } = await context.params;
+
+        if (!productId) {
+            return NextResponse.json({ error: 'Invalid product ID' }, { status: 400 });
+        }
+
+        const deletedProduct = await prisma.products.delete({
+            where: { id: productId },
+        });
+
+        return NextResponse.json(deletedProduct, { status: 200 });
+    } catch (error) {
+        console.error('Unhandled error deleting product:', error);
+        return NextResponse.json({ error: (error as Error).message }, { status: 500 });
     }
 }
