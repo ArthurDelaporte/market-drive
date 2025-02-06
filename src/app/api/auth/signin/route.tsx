@@ -1,5 +1,3 @@
-// /api/auth/signin
-
 import { NextResponse } from 'next/server';
 import { supabase } from '@/supabaseClient';
 import prisma from '@/prismaClient';

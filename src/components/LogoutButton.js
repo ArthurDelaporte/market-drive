@@ -24,7 +24,6 @@ export default function LogoutButton() {
     
             // 3️⃣ Supprimer les cookies d'authentification (frontend)
             removeCookie("access_token");
-            removeCookie("refresh_token");
     
             // 4️⃣ Mettre à jour le state global pour supprimer l'utilisateur
             setUser(null);

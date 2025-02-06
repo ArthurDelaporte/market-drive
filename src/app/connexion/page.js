@@ -3,10 +3,16 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Header from "../../components/Header";
+import { useAuth } from "@/context/AuthContext";
+import { useCart } from "@/context/CartContext";
 
 export default function LoginPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
+
+    const { user, loading } = useAuth();
+    const { fetchCart, setCart } = useCart();
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
@@ -20,32 +26,45 @@ export default function LoginPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),
             });
-    
+
             const data = await res.json();
-    
+
             if (!res.ok) {
                 alert(data.error);
                 return;
             }
-    
+
+            console.log("✅ [Connexion] Connexion réussie, récupération de l'utilisateur...");
+
             // ✅ Récupération immédiate de l'utilisateur après connexion
-            await fetch('/api/auth/user', {
+            const userResponse = await fetch('/api/auth/user', {
                 method: 'GET',
                 headers: {
                     Authorization: `Bearer ${data.user.access_token}`,
                 },
             });
-    
-            // Vérification du rôle de l'utilisateur
-            const userRole = data.user?.role;
-    
-            if (userRole === 'admin') {
-                router.push('/admin/dashboard');
+
+            const userData = await userResponse.json();
+
+            if (userResponse.ok) {
+                console.log("✅ [Connexion] Utilisateur récupéré :", userData);
+
+                // ✅ Réinitialiser et charger le panier
+                setCart([]);
+                fetchCart(userData.id);
+
+                // ✅ Redirection en fonction du rôle
+                if (userData.role === 'admin') {
+                    router.push('/admin/dashboard');
+                } else {
+                    router.push(redirectTo);
+                }
             } else {
-                router.push(redirectTo);
+                console.error("❌ [Connexion] Erreur récupération utilisateur après connexion :", userData.error);
+                alert("Erreur lors de la récupération des informations utilisateur.");
             }
         } catch (error) {
-            console.error('Erreur lors de la connexion :', error.message);
+            console.error('❌ [Connexion] Erreur lors de la connexion :', error.message);
             alert('Erreur lors de la connexion.');
         }
     };

@@ -139,25 +139,33 @@ export const CartProvider = ({ children }) => {
 
     // ✅ useEffect pour charger le panier après connexion manuelle
     useEffect(() => {
-        if (loading || !user || !user.id || hasCheckedCart) return;
-
-        console.log("🔄 [CartContext] Utilisateur détecté :", user.id);
-
-        (async () => {
-            const dbUserId = await fetchUserFromDatabase(user.id);
-            if (dbUserId) {
-                setUserId(dbUserId);
+        if (loading) return;
     
-                // Vérification avant de créer un panier
-                await ensureUserCartExists(dbUserId);
-                await fetchCart(dbUserId);
-
-                setHasCheckedCart(true);
-            } else {
-                console.error("⚠️ [CartContext] Impossible de récupérer l'ID utilisateur.");
-            }
-        })();
+        if (!user) {
+            console.log("🚪 [CartContext] Utilisateur déconnecté, réinitialisation du panier !");
+            setCart([]);  // Vider le panier en local
+            setUserId(null);
+            setHasCheckedCart(false);
+            return;
+        }
+    
+        if (user && !hasCheckedCart) {
+            console.log("🔄 [CartContext] Utilisateur détecté :", user.id);
+            
+            (async () => {
+                const dbUserId = await fetchUserFromDatabase(user.id);
+                if (dbUserId) {
+                    setUserId(dbUserId);
+                    await ensureUserCartExists(dbUserId);
+                    await fetchCart(dbUserId);
+                    setHasCheckedCart(true);
+                } else {
+                    console.error("⚠️ [CartContext] Impossible de récupérer l'ID utilisateur.");
+                }
+            })();
+        }
     }, [user, loading]);
+    
 
     // 🛒 Ajouter un produit au panier
     const addToCart = async (product, quantity = 1) => {
@@ -190,7 +198,29 @@ export const CartProvider = ({ children }) => {
             updatedCart.push({ product_id: product.id, quantity });
         }
 
-        const totalAmount = updatedCart.reduce((sum, item) => sum + product.price * item.quantity, 0);
+        // Récupérer les IDs des produits dans le panier
+        const productIds = updatedCart.map(item => item.product_id);
+
+        // Aller chercher les prix des produits en base de données
+        const { data: productPrices, error: priceError } = await supabase
+            .from("products")
+            .select("id, price")
+            .in("id", productIds);
+
+        if (priceError) {
+            console.error("❌ [CartContext] Erreur récupération prix :", priceError);
+            return;
+        }
+
+        // Construire un dictionnaire des prix
+        const priceMap = productPrices.reduce((acc, p) => {
+            acc[p.id] = p.price;
+            return acc;
+        }, {});
+
+        // Calculer le total
+        const totalAmount = updatedCart.reduce((sum, item) => sum + (priceMap[item.product_id] || 0) * item.quantity, 0);
+
 
         console.log("📦 [CartContext] Mise à jour panier :", updatedCart);
         console.log("💰 [CartContext] Nouveau total :", totalAmount);
@@ -209,7 +239,7 @@ export const CartProvider = ({ children }) => {
     };
 
     return (
-        <CartContext.Provider value={{ cart, addToCart }}>
+        <CartContext.Provider value={{ cart, setCart, fetchCart, addToCart }}>
             {children}
         </CartContext.Provider>
     );
