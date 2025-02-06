@@ -2,14 +2,21 @@ import { NextResponse } from "next/server";
 import prisma from "@/prismaClient";
 import { supabase } from "@/supabaseClient";
 import { jwtDecode } from "jwt-decode";
+import { cookies } from "next/headers";
 
 export async function GET(request: Request) {
     try {
-        // ✅ 1️⃣ Récupérer l'access_token depuis les cookies (CORRIGÉ)
-        const accessToken = request.cookies.get("access_token")?.value;
+
+        console.log("📌 [Auth API] Test cookies() :", cookies());
+
+        // ✅ 1️⃣ Récupérer l'access_token depuis les cookies
+        const cookieStore = cookies(); // ✅ PAS BESOIN DE AWAIT
+        const accessToken = cookieStore.get("access_token")?.value || request.headers.get("Authorization")?.split(" ")[1];
+
+        console.log("📌 [Auth API] Cookies reçus :", cookieStore.getAll()); // Debug
 
         if (!accessToken) {
-            console.error("❌ [Auth API] Aucun access_token trouvé dans les cookies !");
+            console.error("❌ [Auth API] Aucun access_token trouvé !");
             return NextResponse.json({ error: "Access token missing" }, { status: 401 });
         }
 

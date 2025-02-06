@@ -4,35 +4,105 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Search, X, User, LogOut } from 'lucide-react';
+import { Search, X, User, LogOut, Menu } from 'lucide-react';
 import LogoutButton from './LogoutButton';
-import DialogCategory from './DialogCategory'; // Import du composant DialogCategory
+import DialogCategory from './DialogCategory';
+import { getCookie, removeCookie } from "typescript-cookie";
 import { PUBLIC_PAGES } from '@/config/constants';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { FaStream } from 'react-icons/fa';
-import { useAuth } from "@/context/AuthContext"; // ✅ Utilisation du contexte Auth
-
+import { jwtDecode } from "jwt-decode";
 
 export default function Header() {
     const router = useRouter();
     const pathname = usePathname();
 
-    const { user, loading, signOut } = useAuth();
-
+    const [user, setUser] = useState(null);
     const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     useEffect(() => {
-        if (!user && !loading) {
-            if (!PUBLIC_PAGES.includes(pathname)) {
-                toast.error("Vous devez être connecté pour accéder à cette page.", { toastId: 'auth-required' });
-                router.push('/connexion');
-            }
-        }
-    }, [user, loading, pathname, router]);
+        if (hasCheckedAuth) return;
+        setHasCheckedAuth(true);
     
+        const fetchUser = async () => {
+            try {
+                const accessToken = getCookie('access_token');
+
+                console.log("🔍 [Header] Access Token trouvé dans cookies:", accessToken ? "OUI" : "NON");
+
+                if (!accessToken) {
+                    console.warn("⚠️ [Header] Aucun token trouvé, utilisateur considéré comme déconnecté.");
+                    setUser(null);
+
+                    if (!PUBLIC_PAGES.includes(pathname)) {
+                        toast.error("Vous n'êtes pas connectés. Veuillez vous connecter.", { toastId: 'missing-token' });
+                        router.push('/connexion');
+                    }
+                    return;
+                }
+
+                try {
+                    const exp = jwtDecode(accessToken).exp;
+                    const now = (new Date().getTime()) / 1000;
+
+                    console.log("⏳ [Header] Expiration du token:", exp, "| Heure actuelle:", now);
+
+                    if (exp && exp < now) {
+                        console.warn("❌ [Header] Token expiré, suppression et déconnexion.");
+                        removeCookie('access_token');
+                        setUser(null);
+                    } else {
+                        console.log("✅ [Header] Token valide, récupération de l'utilisateur...");
+
+                        const response = await fetch('/api/auth/user', {
+                            method: 'GET',
+                            headers: {
+                                Authorization: `Bearer ${accessToken}`,
+                            },
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            const errorMessage = errorData.error;
+
+                            console.error("❌ [Header] Erreur API user:", errorMessage);
+
+                            if (errorMessage === 'Access token expired') {
+                                toast.error('Votre session a expiré. Veuillez vous reconnecter.', { toastId: 'session-expired' });
+                            } else if (errorMessage === 'Invalid access token') {
+                                toast.error('Token invalide. Veuillez vous reconnecter.', { toastId: 'invalid-token' });
+                            } else if (errorMessage === 'User not found in database') {
+                                toast.error('Utilisateur introuvable.', { toastId: 'user-not-found' });
+                            } else {
+                                toast.error('Une erreur inconnue est survenue.', { toastId: 'unknown-error' });
+                            }
+
+                            removeCookie('access_token');
+                            setUser(null);
+
+                            if (!PUBLIC_PAGES.includes(pathname)) router.push('/connexion');
+                        } else {
+                            const userData = await response.json();
+                            console.log("✅ [Header] Utilisateur trouvé :", userData);
+                            setUser(userData);
+                        }
+                    }
+                } catch (decodeError) {
+                    console.error('❌ [Header] Erreur décodage token:', decodeError);
+                    toast.error('Erreur lors du décodage du token.', { toastId: 'token-decode-error' });
+                }
+            } catch (error) {
+                console.error("❌ [Header] Erreur récupération utilisateur:", error);
+                toast.error('Une erreur est survenue lors de la récupération des données utilisateur.', { toastId: 'fetch-error' });
+            }
+        };
+        
+        fetchUser();
+    }, [hasCheckedAuth, pathname, router]);
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -44,39 +114,28 @@ export default function Header() {
     return (
         <>
             <ToastContainer />
-            <header className="text-white p-4 rounded-b-lg shadow-md fixed h-20 w-full z-50">
+            <header className="text-white p-4 rounded-b-lg shadow-md fixed w-full z-50">
                 <div className="container mx-auto flex items-center justify-between gap-4">
-                    {/* Left section with logo */}
-                    <div className="flex items-center">
-                        <Link href="/" className="flex-shrink-0">
-                            <Image
-                                src="/img/logo/logo.png"
-                                alt="GIGA Drive Logo"
-                                width={90}
-                                height={90}
-                                className="rounded-lg"
-                                priority
-                            />
-                        </Link>
-                    </div>
+                    <Link href="/" className="flex-shrink-0">
+                        <Image
+                            src="/img/logo/logo.png"
+                            alt="GIGA Drive Logo"
+                            width={80}
+                            height={80}
+                            className="rounded-lg"
+                            priority
+                        />
+                    </Link>
 
-                    {/* Center section with search */}
-                    <div className="flex items-center">
-                        {/* Categories Button */}
-                        <button
-                            onClick={() => {
-                                setIsCategoryDialogOpen(true);
-                            }}
-                            className="px-4 py-2 rounded shadow transition flex justify-center items-center gap-2 btn-header"
-                        >
-                            <FaStream className="h-5 w-5" />
-                            Rayons
-                        </button>
-                    </div>
+                    <button
+                        onClick={() => setIsCategoryDialogOpen(true)}
+                        className="px-4 py-2 rounded shadow transition flex justify-center items-center gap-2 btn-header"
+                    >
+                        <FaStream className="h-5 w-5" />
+                        Rayons
+                    </button>
 
-                    {/* Center section with search */}
                     <div className="flex-1 max-w-2xl">
-                        {/* Search bar */}
                         <form onSubmit={handleSearch} className="relative">
                             <input
                                 type="text"
@@ -94,35 +153,21 @@ export default function Header() {
                         </form>
                     </div>
 
-                    {/* Right section with cart and auth */}
                     <div className="flex items-center gap-3">
-                        {/* Cart Button avec lien vers le panier */}
                         <Link href="/panier">
-                            <button
-                                className="px-4 py-2 rounded shadow transition btn-header"
-                                aria-label="Voir mon panier"
-                            >
+                            <button className="px-4 py-2 rounded shadow transition btn-header">
                                 Mon Panier
                             </button>
                         </Link>
 
-                        {/* Auth Buttons */}
                         {user ? (
                             <div className="flex items-center gap-2">
                                 <Link href="/profile">
-                                    <button className="px-4 py-2 rounded shadow transition btn-header mr-2">
-                                        <div className="flex items-center gap-2">
-                                            <User className="h-5 w-5" />
-                                            Mon profil
-                                        </div>
+                                    <button className="px-4 py-2 rounded shadow transition btn-header">
+                                        <User className="h-5 w-5" /> Mon profil
                                     </button>
                                 </Link>
-                                <button onClick={signOut} className="px-4 py-2 rounded shadow transition btn-header text-red-500">
-                                    <div className="flex items-center gap-2">
-                                        <LogOut className="h-5 w-5" />
-                                        Se déconnecter
-                                    </div>
-                                </button>
+                                <LogoutButton />
                             </div>
                         ) : (
                             <Link href="/connexion">
@@ -135,11 +180,7 @@ export default function Header() {
                 </div>
             </header>
 
-            {/* DialogCategory */}
-            <DialogCategory
-                isOpen={isCategoryDialogOpen}
-                onClose={() => setIsCategoryDialogOpen(false)}
-            />
+            <DialogCategory isOpen={isCategoryDialogOpen} onClose={() => setIsCategoryDialogOpen(false)} />
         </>
     );
 }
