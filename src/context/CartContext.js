@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { useAuth } from "@/context/AuthContext"; // ✅ Intégration du contexte Auth
+import { useAuth } from "@/context/AuthContext";
 
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -13,11 +13,11 @@ const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
     const { user, loading } = useAuth();
-    const [cart, setCart] = useState([]);
+    const [cart, setCart] = useState([]); 
     const [userId, setUserId] = useState(null);
     const [hasCheckedCart, setHasCheckedCart] = useState(false);
 
-    // ✅ Récupérer l'ID de l'utilisateur depuis la table `users`
+    // ✅ Récupérer `userId` depuis la table `users`
     const fetchUserFromDatabase = async (authUserId) => {
         if (!authUserId) return null;
         
@@ -28,94 +28,50 @@ export const CartProvider = ({ children }) => {
             .single();
 
         if (error) {
-            console.error("❌ [CartContext] Erreur récupération utilisateur :", error);
+            console.error("❌ [CartContext] Erreur récupération utilisateur DB :", error);
             return null;
         }
 
-        return userRecord ? userRecord.id : null;
+        return userRecord?.id || null;
     };
 
-    // 🚀 Nettoyer les paniers en double avant de créer un nouveau
-    const cleanDuplicateCarts = async (userId) => {
-        const { data: carts, error } = await supabase
-            .from("carts")
-            .select("*")
-            .eq("user_id", userId);
-
-        if (error) {
-            console.error("⚠️ [CartContext] Erreur récupération paniers :", error);
-            return;
-        }
-
-        const waitingCarts = carts.filter(cart => cart.status === "waiting");
-
-        if (waitingCarts.length > 1) {
-            console.log("🛑 [CartContext] Trop de paniers 'waiting', suppression des doublons...");
-
-            const cartsToDelete = waitingCarts.slice(1).map(cart => cart.id);
-
-            await supabase
-                .from("carts")
-                .delete()
-                .in("id", cartsToDelete);
-
-            console.log("✅ [CartContext] Doublons supprimés !");
-        }
-    };
-
-    // 🛒 Vérifier et créer un panier si besoin
+    // ✅ Vérifier et créer un panier si besoin (éviter les doublons)
     const ensureUserCartExists = async (userId) => {
         if (!userId) return;
-    
-        console.log("🔍 [CartContext] Vérification des paniers pour :", userId);
-    
-        const { data: carts, error } = await supabase
+
+        console.log("🔍 [CartContext] Vérification du panier pour :", userId);
+
+        const { data: existingCart, error } = await supabase
             .from("carts")
-            .select("*")
-            .eq("user_id", userId);
-    
-        if (error) {
-            console.error("⚠️ [CartContext] Erreur récupération paniers :", error);
-            return;
-        }
-
-        const existingWaitingCarts = carts.filter(cart => cart.status === "waiting");
-
-        if (existingWaitingCarts.length > 1) {
-            console.log("🛑 [CartContext] Trop de paniers 'waiting', suppression...");
-            await cleanDuplicateCarts(userId);
-        }
-
-        // Vérification après nettoyage
-        const { data: refreshedCarts } = await supabase
-            .from("carts")
-            .select("*")
-            .eq("user_id", userId);
-    
-        const updatedWaitingCarts = refreshedCarts.filter(cart => cart.status === "waiting");
-
-        if (updatedWaitingCarts.length > 0) {
-            console.log("✅ [CartContext] Panier 'waiting' déjà existant :", updatedWaitingCarts[0]);
-            return;
-        }
-
-        console.log("🛒 [CartContext] Aucun panier trouvé, création d'un nouveau...");
-
-        // 🚀 Créer un seul panier "waiting"
-        const { data: newCart, error: createError } = await supabase
-            .from("carts")
-            .insert([{ user_id: userId, products: [], status: "waiting", amount: 0 }])
-            .select()
+            .select("id")
+            .eq("user_id", userId)
             .single();
 
-        if (createError) {
-            console.error("❌ [CartContext] Erreur création panier:", createError);
+        if (error) {
+            console.error("❌ [CartContext] Erreur récupération panier :", error);
+        }
+
+        if (!existingCart) {
+            console.log("🚨 [CartContext] Aucun panier trouvé, création...");
+
+            const { data: newCart, error: createError } = await supabase
+                .from("carts")
+                .insert([{ user_id: userId, products: [], status: "waiting", amount: 0 }])
+                .select()
+                .single();
+
+            if (createError) {
+                console.error("❌ [CartContext] Erreur création panier :", createError);
+                return;
+            }
+
+            console.log("✅ [CartContext] Panier créé !");
         } else {
-            console.log("✅ [CartContext] Nouveau panier créé :", newCart);
+            console.log("✅ [CartContext] Panier déjà existant :", existingCart);
         }
     };
 
-    // 🛍 Charger le panier après connexion manuelle
+    // ✅ Charger le panier utilisateur
     const fetchCart = async (userId) => {
         if (!userId) return;
 
@@ -129,45 +85,36 @@ export const CartProvider = ({ children }) => {
             if (error) throw error;
 
             if (data) {
-                console.log("📦 [CartContext] Panier récupéré depuis la base :", data.products);
+                console.log("📦 [CartContext] Panier récupéré :", data.products);
                 setCart(data.products || []);
             }
         } catch (err) {
-            console.error("⚠️ [CartContext] Erreur récupération panier:", err);
+            console.error("⚠️ [CartContext] Erreur récupération panier :", err);
         }
     };
 
-    // ✅ useEffect pour charger le panier après connexion manuelle
+    // ✅ useEffect pour gérer le panier après connexion
     useEffect(() => {
-        if (loading) return;
-    
-        if (!user) {
-            console.log("🚪 [CartContext] Utilisateur déconnecté, réinitialisation du panier !");
-            setCart([]);  // Vider le panier en local
-            setUserId(null);
-            setHasCheckedCart(false);
-            return;
-        }
-    
-        if (user && !hasCheckedCart) {
-            console.log("🔄 [CartContext] Utilisateur détecté :", user.id);
-            
-            (async () => {
-                const dbUserId = await fetchUserFromDatabase(user.id);
-                if (dbUserId) {
-                    setUserId(dbUserId);
-                    await ensureUserCartExists(dbUserId);
-                    await fetchCart(dbUserId);
-                    setHasCheckedCart(true);
-                } else {
-                    console.error("⚠️ [CartContext] Impossible de récupérer l'ID utilisateur.");
-                }
-            })();
-        }
-    }, [user, loading]);
-    
+        if (loading || !user || !user.id || hasCheckedCart) return;
 
-    // 🛒 Ajouter un produit au panier
+        console.log("🔄 [CartContext] Utilisateur détecté :", user.id);
+
+        (async () => {
+            const dbUserId = await fetchUserFromDatabase(user.id);
+            if (dbUserId) {
+                setUserId(dbUserId);
+
+                await ensureUserCartExists(dbUserId);
+                await fetchCart(dbUserId);
+
+                setHasCheckedCart(true);
+            } else {
+                console.error("⚠️ [CartContext] Impossible de récupérer l'ID utilisateur.");
+            }
+        })();
+    }, [user, loading]);
+
+    // ✅ Ajouter un produit au panier
     const addToCart = async (product, quantity = 1) => {
         if (!userId) {
             alert("❌ Vous devez être connecté pour ajouter un produit.");
@@ -198,10 +145,7 @@ export const CartProvider = ({ children }) => {
             updatedCart.push({ product_id: product.id, quantity });
         }
 
-        // Récupérer les IDs des produits dans le panier
         const productIds = updatedCart.map(item => item.product_id);
-
-        // Aller chercher les prix des produits en base de données
         const { data: productPrices, error: priceError } = await supabase
             .from("products")
             .select("id, price")
@@ -212,15 +156,12 @@ export const CartProvider = ({ children }) => {
             return;
         }
 
-        // Construire un dictionnaire des prix
         const priceMap = productPrices.reduce((acc, p) => {
             acc[p.id] = p.price;
             return acc;
         }, {});
 
-        // Calculer le total
         const totalAmount = updatedCart.reduce((sum, item) => sum + (priceMap[item.product_id] || 0) * item.quantity, 0);
-
 
         console.log("📦 [CartContext] Mise à jour panier :", updatedCart);
         console.log("💰 [CartContext] Nouveau total :", totalAmount);
@@ -239,7 +180,7 @@ export const CartProvider = ({ children }) => {
     };
 
     return (
-        <CartContext.Provider value={{ cart, setCart, fetchCart, addToCart }}>
+        <CartContext.Provider value={{ cart, setCart, addToCart, fetchCart }}>
             {children}
         </CartContext.Provider>
     );
