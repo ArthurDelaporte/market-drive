@@ -120,7 +120,6 @@ export default function ProfilePage() {
               user={user}
               onSubmit={handleProfileUpdate}
               isAdmin={user?.role === 'admin'}
-              className="space-y-4 sm:space-y-6"
             />
           </div>
         </div>

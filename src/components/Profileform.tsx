@@ -22,7 +22,7 @@ export default function ProfileForm({ user, onSubmit, isAdmin = false }: Profile
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-md mx-auto p-6 bg-white rounded-xl shadow-lg">
+    <form onSubmit={handleSubmit} className="max-w-md mx-auto p-6 bg-white rounded-xl shadow-lg space-y-4 sm:space-y-6">
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium mb-1">First Name</label>
