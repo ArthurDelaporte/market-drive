@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import ProfileForm from '@/components/Profileform';
-import {getCookie} from "typescript-cookie";
-import Header from "@/components/Header";
-import AdminHeader from "@/components/AdminHeader";
+import { getCookie } from 'typescript-cookie';
+import Header from '@/components/Header';
+import AdminHeader from '@/components/AdminHeader';
 
 interface User {
   id: string;
@@ -16,14 +16,21 @@ interface User {
   created_at: Date;
 }
 
+interface ProfileFormProps {
+  user: User;
+  onSubmit: (data: any) => Promise<void>;
+  isAdmin: boolean;
+  className?: string; 
+  [key: string]: any;
+}
+
 export default function ProfilePage() {
-  const [user, setUser] = useState<User | null>(null);  
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
   useEffect(() => {
-    // You might want to get this token from your auth context or localStorage
     const token = getCookie('access_token');
     if (token) setAccessToken(token);
   }, []);
@@ -42,11 +49,9 @@ export default function ProfilePage() {
           Authorization: `Bearer ${accessToken}`,
         },
       });
-
       if (!response.ok) {
         throw new Error('Failed to fetch profile');
       }
-      
       const data = await response.json();
       setUser(data);
     } catch (error) {
@@ -66,39 +71,60 @@ export default function ProfilePage() {
         },
         body: JSON.stringify(data),
       });
-      
       if (!response.ok) {
         throw new Error('Failed to update profile');
       }
-      
       await fetchProfile(); // Refresh data after successful update
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to update profile');
     }
   };
 
-  if (!accessToken) return <div className="text-center p-8">Please log in to view your profile</div>;
-  if (loading) return <div className="text-center p-8">Loading...</div>;
-  if (error) return <div className="text-center p-8 text-red-500">{error}</div>;
-  if (!user) return <div className="text-center p-8">No profile data found</div>;
+  
+  // Improved loading and error states with responsive design
+  if (!accessToken) return (
+    <div className="min-h-screen flex items-center justify-center p-4 text-center">
+      <p className="text-lg text-gray-600">Please log in to view your profile</p>
+    </div>
+  );
+
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-blue-500"></div>
+    </div>
+  );
+
+  if (error) return (
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <p className="text-lg text-red-500">{error}</p>
+    </div>
+  );
+
+  if (!user) return (
+    <div className="min-h-screen flex items-center justify-center p-4 text-center">
+      <p className="text-lg text-gray-600">No profile data found</p>
+    </div>
+  );
 
   return (
-      <>
-        {user?.role === 'admin' ? (
-            <AdminHeader/>
-        ) : (
-            <Header/>
-        )}
-        <div className="main container mx-auto">
-          <div className="mt-12">
-            <h1 className="text-2xl font-bold text-center mb-8">My Profile</h1>
+    <div className="min-h-screen bg-gray-50">
+      {user?.role === 'admin' ? <AdminHeader /> : <Header />}
+      
+      <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8 pt-20">
+        <div className="max-w-xl mx-auto bg-white shadow-md rounded-lg overflow-hidden">
+          <div className="p-6 sm:p-8">
+            <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8 text-gray-800">
+              Mon Profil
+            </h1>
             <ProfileForm
-                user={user}
-                onSubmit={handleProfileUpdate}
-                isAdmin={user?.role === 'admin'}
+              user={user}
+              onSubmit={handleProfileUpdate}
+              isAdmin={user?.role === 'admin'}
+              className="space-y-4 sm:space-y-6"
             />
           </div>
         </div>
-      </>
+      </div>
+    </div>
   );
 }

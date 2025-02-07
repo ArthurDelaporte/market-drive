@@ -58,9 +58,14 @@ export default function AdminHomePage() {
                 <main className="py-12 px-4">
                     {/* Stats Grid */}
                     <div className="mt-12">
-                        <button className="mb-5" onClick={() => router.push(`/admin/produits`)}>
+                        <button className="mb-5 mr-2" onClick={() => router.push(`/admin/produits`)}>
                             <p>Voir les produits</p>
                         </button>
+                        <button className="mb-5 mt-5"
+                                onClick={() => router.push(`/admin/users`)}
+                            >
+                                Voir les utilisateurs
+                            </button>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                             <div className="bg-white p-6 rounded-lg shadow-sm">
                                 <div className="flex justify-between items-center mb-4">
