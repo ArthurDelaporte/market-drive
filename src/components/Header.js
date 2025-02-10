@@ -4,13 +4,12 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Search, X, User, LogOut, Menu } from 'lucide-react';
+import { Search, X, User, LogOut, Menu, ShoppingBag } from 'lucide-react';
 import LogoutButton from './LogoutButton';
 import DialogCategory from './DialogCategory';
 import { getCookie, removeCookie } from "typescript-cookie";
 import { PUBLIC_PAGES } from '@/config/constants';
 import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import { FaStream } from 'react-icons/fa';
 import { jwtDecode } from "jwt-decode";
 
@@ -26,79 +25,80 @@ export default function Header() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
 
+    // Gestion du clic en dehors du menu
     useEffect(() => {
-        if (hasCheckedAuth) return;
-        setHasCheckedAuth(true);
-
         const handleClickOutside = (event) => {
             if (menuRef.current && !menuRef.current.contains(event.target)) {
                 setIsDesktopMenuOpen(false);
             }
         };
 
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
+
+    // Chargement des données utilisateur au montage du composant
+    useEffect(() => {
+        if (hasCheckedAuth) return;
 
         const fetchUser = async () => {
             try {
-                const accessToken = getCookie('access_token');
+                const accessToken = getCookie("access_token");
 
                 if (!accessToken) {
                     if (!PUBLIC_PAGES.includes(pathname)) {
-                        toast.error("Vous n'êtes pas connectés. Veuillez vous connecter.", { toastId: 'missing-token' });
-                        router.push('/connexion');
+                        toast.error("Vous n'êtes pas connectés. Veuillez vous connecter.", { toastId: "missing-token" });
+                        router.push("/connexion");
                     }
                     return;
                 }
 
                 try {
-                    const exp = jwtDecode(accessToken).exp;
-                    const now = (new Date().getTime()) / 1000;
+                    const { exp } = jwtDecode(accessToken);
+                    const now = Date.now() / 1000;
 
                     if (exp && exp < now) {
-                        removeCookie('access_token');
+                        removeCookie("access_token");
                         setUser(null);
-                    } else {
-                        const response = await fetch('/api/auth/user', {
-                            method: 'GET',
-                            headers: {
-                                Authorization: `Bearer ${accessToken}`,
-                            },
-                        });
-
-                        if (!response.ok) {
-                            const errorData = await response.json();
-                            const errorMessage = errorData.error;
-
-                            if (errorMessage === 'Access token expired') {
-                                toast.error('Votre session a expiré. Veuillez vous reconnecter.', { toastId: 'session-expired' });
-                            } else if (errorMessage === 'Invalid access token') {
-                                toast.error('Token invalide. Veuillez vous reconnecter.', { toastId: 'invalid-token' });
-                            } else if (errorMessage === 'User not found in database') {
-                                toast.error('Utilisateur introuvable.', { toastId: 'user-not-found' });
-                            } else {
-                                toast.error('Une erreur inconnue est survenue.', { toastId: 'unknown-error' });
-                            }
-
-                            if (!PUBLIC_PAGES.includes(pathname)) router.push('/connexion');
-                        } else {
-                            const userData = await response.json();
-                            setUser(userData);
-                        }
+                        return;
                     }
+
+                    const response = await fetch("/api/auth/user", {
+                        method: "GET",
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                        },
+                    });
+
+                    if (!response.ok) {
+                        const { error } = await response.json();
+                        const messages = {
+                            "Access token expired": "Votre session a expiré. Veuillez vous reconnecter.",
+                            "Invalid access token": "Token invalide. Veuillez vous reconnecter.",
+                            "User not found in database": "Utilisateur introuvable.",
+                        };
+
+                        toast.error(messages[error] || "Une erreur inconnue est survenue.", { toastId: error || "unknown-error" });
+
+                        if (!PUBLIC_PAGES.includes(pathname)) router.push("/connexion");
+                        return;
+                    }
+
+                    const userData = await response.json();
+                    setUser(userData);
+                    setHasCheckedAuth(true);
                 } catch (decodeError) {
-                    toast.error('Erreur lors du décodage du token.', { toastId: 'token-decode-error' });
-                    console.error('Token decode error:', decodeError);
+                    toast.error("Erreur lors du décodage du token.", { toastId: "token-decode-error" });
+                    console.error("Token decode error:", decodeError);
                 }
             } catch (error) {
-                toast.error('Une erreur est survenue lors de la récupération des données utilisateur.', { toastId: 'fetch-error' });
-                console.error('Error fetching user:', error);
+                toast.error("Une erreur est survenue lors de récupération des données utilisateur.", { toastId: "fetch-error" });
+                console.error("Error fetching user:", error);
             }
         };
 
         fetchUser();
-    [hasCheckedAuth, pathname, router];
+    }, [hasCheckedAuth, pathname, router]);
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -173,6 +173,12 @@ export default function Header() {
                                                 <button className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-2">
                                                     <User className="h-5 w-5" />
                                                     Mon profil
+                                                </button>
+                                            </Link>
+                                            <Link href="/commandes" className="block">
+                                                <button className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-2">
+                                                    <ShoppingBag className="h-5 w-5" />
+                                                    Mes commandes
                                                 </button>
                                             </Link>
                                             <LogoutButton>
@@ -257,6 +263,14 @@ export default function Header() {
                                             <div className="flex items-center gap-2">
                                                 <User className="h-5 w-5" />
                                                 Mon profil
+                                            </div>
+                                        </button>
+                                    </Link>
+                                    <Link href="/commandes">
+                                        <button className="px-4 py-2 rounded shadow transition btn-header w-full">
+                                            <div className="flex items-center gap-2">
+                                                <ShoppingBag className="h-5 w-5" />
+                                                Mes commandes
                                             </div>
                                         </button>
                                     </Link>
