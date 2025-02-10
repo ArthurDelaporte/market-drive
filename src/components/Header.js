@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Search, X, User, LogOut, Menu } from 'lucide-react';
@@ -12,26 +12,38 @@ import { PUBLIC_PAGES } from '@/config/constants';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { FaStream } from 'react-icons/fa';
-import {jwtDecode} from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 
 export default function Header() {
     const router = useRouter();
     const pathname = usePathname();
+    const menuRef = useRef(null);
 
     const [user, setUser] = useState(null);
     const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
 
     useEffect(() => {
         if (hasCheckedAuth) return;
         setHasCheckedAuth(true);
-    
+
+        const handleClickOutside = (event) => {
+            if (menuRef.current && !menuRef.current.contains(event.target)) {
+                setIsDesktopMenuOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
         const fetchUser = async () => {
             try {
                 const accessToken = getCookie('access_token');
-    
+
                 if (!accessToken) {
                     if (!PUBLIC_PAGES.includes(pathname)) {
                         toast.error("Vous n'êtes pas connectés. Veuillez vous connecter.", { toastId: 'missing-token' });
@@ -39,11 +51,11 @@ export default function Header() {
                     }
                     return;
                 }
-    
+
                 try {
                     const exp = jwtDecode(accessToken).exp;
-                    const now = (new Date().getTime())/1000;
-    
+                    const now = (new Date().getTime()) / 1000;
+
                     if (exp && exp < now) {
                         removeCookie('access_token');
                         setUser(null);
@@ -54,11 +66,11 @@ export default function Header() {
                                 Authorization: `Bearer ${accessToken}`,
                             },
                         });
-    
+
                         if (!response.ok) {
                             const errorData = await response.json();
                             const errorMessage = errorData.error;
-    
+
                             if (errorMessage === 'Access token expired') {
                                 toast.error('Votre session a expiré. Veuillez vous reconnecter.', { toastId: 'session-expired' });
                             } else if (errorMessage === 'Invalid access token') {
@@ -68,7 +80,7 @@ export default function Header() {
                             } else {
                                 toast.error('Une erreur inconnue est survenue.', { toastId: 'unknown-error' });
                             }
-    
+
                             if (!PUBLIC_PAGES.includes(pathname)) router.push('/connexion');
                         } else {
                             const userData = await response.json();
@@ -84,9 +96,10 @@ export default function Header() {
                 console.error('Error fetching user:', error);
             }
         };
-        
+
         fetchUser();
-    }, [hasCheckedAuth, pathname, router]);
+    [hasCheckedAuth, pathname, router];
+
     const handleSearch = (e) => {
         e.preventDefault();
         if (searchQuery.trim()) {
@@ -99,35 +112,21 @@ export default function Header() {
             <ToastContainer />
             <header className="text-white p-4 rounded-b-lg shadow-md fixed w-full z-50">
                 {/* Desktop Navigation */}
-                <div className="container mx-auto hidden md:flex items-center justify-between gap-4">
-                    {/* Left section with logo */}
-                    <div className="flex items-center">
+                <div className="container mx-auto hidden md:block"/>
+                    <div className="flex items-center justify-between gap-10 ml-10 mr-10">
                         <Link href="/" className="flex-shrink-0">
                             <Image
                                 src="/img/logo/logo.png"
                                 alt="GIGA Drive Logo"
-                                width={80}
-                                height={80}
+                                width={90}
+                                height={90}
                                 className="rounded-lg"
                                 priority
                             />
                         </Link>
-                    </div>
 
-                    {/* Center section with categories */}
-                    <div className="flex items-center">
-                        <button
-                            onClick={() => setIsCategoryDialogOpen(true)}
-                            className="px-4 py-2 rounded shadow transition flex justify-center items-center gap-2 btn-header"
-                        >
-                            <FaStream className="h-5 w-5" />
-                            Rayons
-                        </button>
-                    </div>
-
-                    {/* Search bar */}
-                    <div className="flex-1 max-w-2xl">
-                        <form onSubmit={handleSearch} className="relative">
+                        {/* Search Bar */}
+                        <form onSubmit={handleSearch} className="flex-grow mx-4 relative">
                             <input
                                 type="text"
                                 placeholder="Rechercher un produit..."
@@ -142,45 +141,58 @@ export default function Header() {
                                 onClick={() => setSearchQuery('')}
                             />
                         </form>
-                    </div>
 
-                    {/* Right section with cart and auth */}
-                    <div className="flex items-center gap-3">
-                        <button
-                            className="px-4 py-2 rounded shadow transition btn-header"
-                            aria-label="Voir mon panier"
-                        >
-                            Mon Panier
-                        </button>
+                      <div className="flex items-center gap-3 relative" ref={menuRef}>
+                            <button
+                                onClick={() => setIsCategoryDialogOpen(true)}
+                                className="px-5 py-3 rounded shadow transition btn-header flex items-center gap-2"
+                            >
+                                <FaStream className="h-6 w-7" />
+                                Rayons
+                            </button>
+                            <button
+                                onClick={() => setIsDesktopMenuOpen(!isDesktopMenuOpen)}
+                                className="px-5 py-3 rounded shadow transition btn-header"
+                            >
+                                <Menu className="h-6 w-7" />
+                            </button>
 
-                        {user ? (
-                            <div className="flex items-center gap-2">
-                                <Link href="/profile">
-                                    <button className="px-4 py-2 rounded shadow transition btn-header mr-2">
-                                        <div className="flex items-center gap-2">
-                                            <User className="h-5 w-5" />
-                                            Mon profil
-                                        </div>
+                            {/* Dropdown Modal */}
+                            {isDesktopMenuOpen && (
+                                <div className="absolute top-full right-0 mt-2 w-64 bg-white text-black rounded-lg shadow-lg border">
+                                    <button
+                                        className="w-full px-4 py-2 text-left hover:bg-gray-100"
+                                        aria-label="Voir mon panier"        
+                                    >
+                                        Mon Panier
                                     </button>
-                                </Link>
-                                <LogoutButton>
-                                    <button className="px-4 py-2 rounded shadow transition btn-header text-red-500">
-                                        <div className="flex items-center gap-2">
-                                            <LogOut className="h-5 w-5" />
-                                            Se déconnecter
-                                        </div>
-                                    </button>
-                                </LogoutButton>
-                            </div>
-                        ) : (
-                            <Link href="/connexion">
-                                <button className="px-4 py-2 rounded shadow transition btn-header">
-                                    Se connecter
-                                </button>
-                            </Link>
-                        )}
+
+                                    {user ? (
+                                        <>
+                                            <Link href="/profile" className="block">
+                                                <button className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-2">
+                                                    <User className="h-5 w-5" />
+                                                    Mon profil
+                                                </button>
+                                            </Link>
+                                            <LogoutButton>
+                                                <button className="w-full px-4 py-2 text-left hover:bg-gray-100 text-red-500 flex items-center gap-2">
+                                                    <LogOut className="h-5 w-5" />
+                                                    Se déconnecter
+                                                </button>
+                                            </LogoutButton>
+                                        </>
+                                    ) : (
+                                        <Link href="/connexion" className="block">
+                                            <button className="w-full px-4 py-2 text-left hover:bg-gray-100">
+                                                Se connecter
+                                            </button>
+                                        </Link>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </div>
 
                 {/* Mobile Navigation */}
                 <div className="md:hidden">
@@ -233,7 +245,7 @@ export default function Header() {
                         <div className="flex flex-col gap-2">
                             <button
                                 className="px-4 py-2 rounded shadow transition btn-header"
-                                aria-label="Voir mon panier"
+                                aria-label="Voir mon panier"        
                             >
                                 Mon Panier
                             </button>

@@ -1,28 +1,29 @@
 import { useState } from 'react';
 
+
 interface ProfileFormProps {
   user: any; // We'll use the type from your API response
   onSubmit: (data: any) => void;
   isAdmin?: boolean;
 }
 
-export default function ProfileForm({ user, onSubmit, isAdmin = false }: ProfileFormProps) {
-  const [formData, setFormData] = useState(user);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const changedData = Object.entries(formData).reduce((acc, [key, value]) => {
-      if (value !== user[key]) {
-        acc[key] = value;
-      }
-      return acc;
-    }, {} as any);
-    
-    onSubmit(changedData);
-  };
+export default function ProfileForm({ user, onSubmit, isAdmin = false  }: 
+    ProfileFormProps) {
+    const [formData, setFormData] = useState(user);
+    const handleSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      const changedData = Object.entries(formData).reduce((acc, [key, value]) => {
+        if (value !== user[key]) {
+          acc[key] = value;
+        }
+        return acc;
+      }, {} as any);
+     
+      onSubmit(changedData);
+    };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-md mx-auto p-6 bg-white rounded-xl shadow-lg">
+    <form onSubmit={handleSubmit} className="max-w-md mx-auto p-6 bg-white rounded-xl shadow-lg space-y-4 sm:space-y-6">
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium mb-1">First Name</label>
