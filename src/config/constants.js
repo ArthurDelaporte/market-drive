@@ -4,6 +4,7 @@ export const PUBLIC_PAGES = [
     '/connexion',
     '/inscription',
     '/produits',
+    '/contact',
 ];
 
 export const PRODUCTS_UNITIES = [

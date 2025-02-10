@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import './globals.css';
+import Link from 'next/link';
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -24,13 +25,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <head>
                 <link rel="icon" href="/favicon.ico"/>
             </head>
-            <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-                <main className="mb-16">
+            <body className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}>
+                <main className="flex-grow mb-16">
                     {children}
                 </main>
-                <footer className="footer">
-                    <p>Made with 🤬 by 🦧</p>
-                </footer>
+                <footer className="bg-gray-1000 text-white py-4">
+   <div className="container mx-auto px-4 text-center">
+       <Link href="/contact" className="hover:text-blue-400 text-base">Nous Contacter</Link>
+   </div>
+</footer>
             </body>
         </html>
     );
