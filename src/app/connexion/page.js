@@ -11,7 +11,7 @@ export default function LoginPage() {
     const searchParams = useSearchParams();
 
     const { user, loading } = useAuth();
-    const { fetchCart, setCart } = useCart();
+    const { fetchCart, setCart, ensureUserCartExists } = useCart();
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -26,16 +26,16 @@ export default function LoginPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),
             });
-
+    
             const data = await res.json();
-
+    
             if (!res.ok) {
                 alert(data.error);
                 return;
             }
-
+    
             console.log("✅ [Connexion] Connexion réussie, récupération de l'utilisateur...");
-
+    
             // ✅ Récupération immédiate de l'utilisateur après connexion
             const userResponse = await fetch('/api/auth/user', {
                 method: 'GET',
@@ -43,16 +43,20 @@ export default function LoginPage() {
                     Authorization: `Bearer ${data.user.access_token}`,
                 },
             });
-
+    
             const userData = await userResponse.json();
-
+    
             if (userResponse.ok) {
                 console.log("✅ [Connexion] Utilisateur récupéré :", userData);
-
+    
+                // 🔵 Appel forcé de ensureUserCartExists
+                console.log("🔵 [Connexion] Appel forcé de ensureUserCartExists avec userId:", userData.id);
+                await ensureUserCartExists(userData.id);
+    
                 // ✅ Réinitialiser et charger le panier
                 setCart([]);
                 fetchCart(userData.id);
-
+    
                 // ✅ Redirection en fonction du rôle
                 if (userData.role === 'admin') {
                     router.push('/admin/dashboard');
@@ -68,6 +72,7 @@ export default function LoginPage() {
             alert('Erreur lors de la connexion.');
         }
     };
+    
 
     return (
         <>

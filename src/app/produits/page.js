@@ -9,7 +9,44 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Header from "../../components/Header";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 
+const fetchUserWithToken = async () => {
+    try {
+        const cookies = document.cookie.split("; ").reduce((acc, cookie) => {
+            const [name, value] = cookie.split("=");
+            acc[name] = value;
+            return acc;
+        }, {});
+
+        const accessToken = cookies["access_token"];
+        console.log("📌 [Produits] Access token récupéré :", accessToken);
+
+        if (!accessToken) {
+            console.error("❌ [Produits] Aucun access token trouvé !");
+            return null;
+        }
+
+        const response = await fetch("/api/auth/user", {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        });
+
+        if (!response.ok) {
+            console.error("❌ [Produits] Erreur lors de la récupération de l'utilisateur");
+            return null;
+        }
+
+        const userData = await response.json();
+        console.log("✅ [Produits] Utilisateur récupéré via token :", userData);
+        return userData;
+    } catch (error) {
+        console.error("❌ [Produits] Erreur fetchUserWithToken :", error);
+        return null;
+    }
+};
 
 export default function ProductsPage() {
     const router = useRouter();
@@ -27,8 +64,61 @@ export default function ProductsPage() {
     const [tempMaxPrice, setTempMaxPrice] = useState('');
     const [priceError, setPriceError] = useState(null);
     const [sortOption, setSortOption] = useState('');
-    const { addToCart } = useCart();
+    const { addToCart, fetchCart } = useCart();
+    const { user, loading: authLoading } = useAuth();
+    const [authUser, setAuthUser] = useState(null);
 
+    const handleAddToCart = (product) => {
+        if (authLoading) {
+            console.log("⏳ [Produits] Attente que l'auth se charge...");
+            return;
+        }
+
+        if (!user && !authUser) {
+            console.log("❌ [Produits] L'utilisateur est encore NULL, on bloque l'ajout !");
+            alert("Vous devez être connecté pour ajouter un produit.");
+            return;
+        }
+
+        const userId = user ? user.id : authUser.id;
+
+        console.log("🛒 [Produits] Ajout au panier pour userId :", userId);
+        addToCart(product);
+    };
+
+    useEffect(() => {
+        console.log("[Produits] Changement en cours : ", authLoading);
+        console.log("[Produits] Utilisateur détecté :", user);
+        console.log("[Produits] Utilisateur via token :", authUser);
+    }, [authLoading, user, authUser]);
+    
+
+    useEffect(() => {
+        if (!user && !authLoading && !authUser) {
+            console.log("🔄 [Produits] Tentative de récupération de l'utilisateur via le token...");
+            fetchUserWithToken().then((fetchedUser) => {
+                if (fetchedUser) {
+                    setAuthUser(fetchedUser);
+                    console.log("✅ [Produits] Utilisateur défini :", fetchedUser);
+                } else {
+                    console.log("❌ [Produits] Impossible de récupérer l'utilisateur.");
+                }
+            });
+        }
+    }, [user, authLoading, authUser]);
+    
+
+    useEffect(() => {
+        if (user || authUser) {
+            const userId = user ? user.id : authUser.id;
+            console.log("🔄 [Produits] fetchCart appelé avec userId :", userId);
+            fetchCart(userId);
+        }
+    }, [user, authUser]);
+    
+
+    console.log("🔍 [Produits] Utilisateur détecté :", user);
+    console.log("🔄 [Produits] Chargement en cours :", loading);
 
     // Récupérer le paramètre categoryId depuis l'URL
     const categoryId = searchParams.get('categoryId');
@@ -135,6 +225,11 @@ export default function ProductsPage() {
 
         return isInPriceRange;
     });
+
+    useEffect(() => {
+        console.log("[Produits] Changement détecté - Utilisateur :", user);
+    }, [user]);
+    
 
     return (
         <>
@@ -290,13 +385,10 @@ export default function ProductsPage() {
 
                                         <button
                                             className="mr-4 py-2 px-4 rounded transition-colors flex items-center justify-center"
-                                            onClick={() => {
-                                                console.log("Bouton Ajouter cliqué pour le produit :", product);
-                                                addToCart(product);
-                                            }}
+                                            onClick={() => handleAddToCart(product)}
                                         >
                                             Ajouter
-                                                <FaShoppingCart className="h-8 w-8"/>
+                                            <FaShoppingCart className="h-8 w-8"/>
                                         </button>
 
                                     </div>

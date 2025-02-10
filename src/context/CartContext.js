@@ -19,6 +19,7 @@ export const CartProvider = ({ children }) => {
 
     // ✅ Récupérer `userId` depuis la table `users`
     const fetchUserFromDatabase = async (authUserId) => {
+        console.log("🔍 [CartContext] fetchUserFromDatabase - authUserId reçu :", authUserId);
         if (!authUserId) return null;
         
         const { data: userRecord, error } = await supabase
@@ -32,6 +33,7 @@ export const CartProvider = ({ children }) => {
             return null;
         }
 
+        console.log("✅ [CartContext] userId trouvé :", userRecord?.id);
         return userRecord?.id || null;
     };
 
@@ -43,36 +45,50 @@ export const CartProvider = ({ children }) => {
 
         const { data: existingCart, error } = await supabase
             .from("carts")
-            .select("id")
+            .select("*")
             .eq("user_id", userId)
-            .single();
+            .eq("status", "waiting")
+            .maybeSingle();
 
         if (error) {
             console.error("❌ [CartContext] Erreur récupération panier :", error);
+            return;
         }
 
-        if (!existingCart) {
-            console.log("🚨 [CartContext] Aucun panier trouvé, création...");
-
-            const { data: newCart, error: createError } = await supabase
-                .from("carts")
-                .insert([{ user_id: userId, products: [], status: "waiting", amount: 0 }])
-                .select()
-                .single();
-
-            if (createError) {
-                console.error("❌ [CartContext] Erreur création panier :", createError);
-                return;
-            }
-
-            console.log("✅ [CartContext] Panier créé !");
-        } else {
+        if (existingCart) {
             console.log("✅ [CartContext] Panier déjà existant :", existingCart);
+            return existingCart;
         }
+
+        console.log("🚨 [CartContext] Aucun panier 'waiting' trouvé, création d'un nouveau...");
+
+        console.log("🚀 [CartContext] Création d'un nouveau panier pour userId:", userId);
+
+        const { data: newCart, error: createError } = await supabase
+            .from("carts")
+            .insert([{ 
+                user_id: userId, 
+                products: [], 
+                status: "waiting", 
+                amount: 0, 
+                payment_id: null, 
+                created_at: new Date().toISOString()
+            }])
+            .select()
+            .single();
+
+        if (createError) {
+            console.error("❌ [CartContext] Erreur création panier :", createError);
+            return null;
+        }
+
+        console.log("✅ [CartContext] Nouveau panier créé :", newCart);
+        return newCart;
     };
 
     // ✅ Charger le panier utilisateur
     const fetchCart = async (userId) => {
+        console.log("📌 [CartContext] fetchCart exécuté avec userId :", userId);
         if (!userId) return;
 
         try {
@@ -80,39 +96,54 @@ export const CartProvider = ({ children }) => {
                 .from("carts")
                 .select("products")
                 .eq("user_id", userId)
-                .single();
+                .eq("status", "waiting")
+                .maybeSingle();
 
             if (error) throw error;
 
             if (data) {
                 console.log("📦 [CartContext] Panier récupéré :", data.products);
                 setCart(data.products || []);
+            } else {
+                console.warn("⚠️ [CartContext] Aucun panier 'waiting' trouvé !");
             }
         } catch (err) {
             console.error("⚠️ [CartContext] Erreur récupération panier :", err);
         }
     };
 
-    // ✅ useEffect pour gérer le panier après connexion
+    // ✅ useEffect pour bien récupérer userId depuis la BDD
     useEffect(() => {
-        if (loading || !user || !user.id || hasCheckedCart) return;
+        if (loading || !user || !user.id || userId) return;
 
-        console.log("🔄 [CartContext] Utilisateur détecté :", user.id);
+        console.log("🔄 [CartContext] Tentative récupération userId depuis DB pour :", user.id);
 
         (async () => {
             const dbUserId = await fetchUserFromDatabase(user.id);
             if (dbUserId) {
+                console.log("✅ [CartContext] userId mis à jour :", dbUserId);
                 setUserId(dbUserId);
-
-                await ensureUserCartExists(dbUserId);
-                await fetchCart(dbUserId);
-
-                setHasCheckedCart(true);
             } else {
                 console.error("⚠️ [CartContext] Impossible de récupérer l'ID utilisateur.");
             }
         })();
     }, [user, loading]);
+
+    // ✅ useEffect pour gérer le panier après récupération de userId
+    useEffect(() => {
+
+        console.log("🟢 [CartContext] useEffect userId déclenché ! userId:", userId, "hasCheckedCart:", hasCheckedCart);
+
+        if (!userId || hasCheckedCart) return;
+
+        console.log("📌 [CartContext] Appel de ensureUserCartExists avec userId:", userId); 
+
+        (async () => {
+            await ensureUserCartExists(userId);
+            await fetchCart(userId);
+            setHasCheckedCart(true);
+        })();
+    }, [userId]);
 
     // ✅ Ajouter un produit au panier
     const addToCart = async (product, quantity = 1) => {
@@ -129,6 +160,7 @@ export const CartProvider = ({ children }) => {
             .from("carts")
             .select("id, products, amount")
             .eq("user_id", userId)
+            .eq("status", "waiting")
             .single();
 
         if (error || !cart) {
@@ -169,7 +201,8 @@ export const CartProvider = ({ children }) => {
         const { error: updateError } = await supabase
             .from("carts")
             .update({ products: updatedCart, amount: totalAmount })
-            .eq("user_id", userId);
+            .eq("user_id", userId)
+            .eq("status", "waiting");
 
         if (updateError) {
             console.error("❌ [CartContext] Erreur mise à jour panier :", updateError);
@@ -180,7 +213,7 @@ export const CartProvider = ({ children }) => {
     };
 
     return (
-        <CartContext.Provider value={{ cart, setCart, addToCart, fetchCart }}>
+        <CartContext.Provider value={{ cart, setCart, addToCart, fetchCart, ensureUserCartExists }}>
             {children}
         </CartContext.Provider>
     );

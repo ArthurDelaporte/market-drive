@@ -21,13 +21,13 @@ export async function POST(request: NextRequest) {
 
         console.log("📌 [Auth API] Session reçue :", session);
         console.log("📌 [Auth API] Access token reçu :", session?.access_token);
-
+        console.log("📌 [Auth API] Refresh token reçu :", session?.refresh_token);
 
         if (!session || !user) {
             return NextResponse.json({ error: 'Authentication failed' }, { status: 401 });
         }
 
-        // Récupération des informations utilisateur depuis Prisma
+        // 🔹 Récupération des informations utilisateur depuis Prisma
         const dbUser = await prisma.users.findUnique({
             where: { id: user.id },
             select: {
@@ -44,18 +44,19 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'User not found in database' }, { status: 404 });
         }
 
+        // ✅ Créer la réponse JSON avec le `access_token` et `refresh_token`
         const response = NextResponse.json({
             message: 'Login successful',
             user: { id: dbUser.id, role: dbUser.role },
+            access_token: session.access_token,
+            refresh_token: session.refresh_token, // 🔹 On renvoie aussi le refresh_token côté client
         });
 
-        // ✅ Ajouter le cookie access_token
-        response.cookies.set('access_token', session.access_token, { path: '/' });
+        // ✅ Ajouter le `access_token` et `refresh_token` dans les cookies (⚠️ HttpOnly désactivé)
+        response.cookies.set('access_token', session.access_token, { path: '/', maxAge: 3600 }); // 1h
+        response.cookies.set('refresh_token', session.refresh_token, { path: '/', maxAge: 2592000 }); // 30 jours
 
-        // ✅ Forcer Supabase à rafraîchir la session après connexion
-        await supabase.auth.getSession();
-
-        console.log("✅ [Auth API] Connexion réussie et session mise à jour.");
+        console.log("✅ [Auth API] Connexion réussie et tokens stockés en cookies.");
 
         return response;
     } catch (error) {

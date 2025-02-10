@@ -2,15 +2,15 @@
 
 import { createContext, useContext, useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { getCookie, removeCookie } from "typescript-cookie";
+import { getCookie, removeCookie, setCookie } from "typescript-cookie";
 import { useRouter } from "next/navigation";
 
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
-        persistSession: false, // 🔹 Désactiver la persistance automatique
-        autoRefreshToken: false, // 🔹 Supprimer toute gestion automatique de refresh token
+        persistSession: false, // Désactive la persistance automatique
+        autoRefreshToken: false, // On gère nous-mêmes le refresh token
     }
 );
 
@@ -19,13 +19,64 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const router = useRouter();
+
+    // ✅ Fonction pour rafraîchir le token
+    const refreshAccessToken = async () => {
+        try {
+            console.log("🔄 [AuthContext] Tentative de rafraîchissement du token...");
+
+            const refreshToken = getCookie("refresh_token");
+            if (!refreshToken) {
+                console.warn("⚠️ [AuthContext] Aucun refresh token trouvé, déconnexion...");
+                signOut();
+                return;
+            }
+
+            const response = await fetch("/api/auth/refresh", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ refresh_token: refreshToken }),
+            });
+
+            if (!response.ok) {
+                console.error("❌ [AuthContext] Erreur lors du rafraîchissement du token");
+                signOut();
+                return;
+            }
+
+            const data = await response.json();
+            console.log("✅ [AuthContext] Token rafraîchi avec succès :", data.access_token);
+
+            // 🔹 Mettre à jour les cookies
+            setCookie("access_token", data.access_token, { path: "/" });
+
+            await supabase.auth.setSession({
+                access_token: data.access_token,
+                refresh_token: getCookie("refresh_token") || "", // Récupérer le refresh token si disponible
+            });
+
+            // 🔹 Mettre à jour l’utilisateur avec Supabase
+            const { data: { user }, error } = await supabase.auth.getUser();
+            if (error || !user) {
+                console.error("❌ [AuthContext] Erreur lors de la récupération de l'utilisateur");
+                signOut();
+                return;
+            }
+
+            setUser(user);
+            console.log("✅ [AuthContext] Utilisateur mis à jour :", user.id);
+        } catch (error) {
+            console.error("❌ [AuthContext] Erreur inattendue :", error);
+            signOut();
+        }
+    };
 
     useEffect(() => {
         console.log("🟢 [AuthContext] Vérification de la session en cours...");
 
         const checkSessionAndLogin = async () => {
             try {
-                // 🔍 Vérifier si un access_token est stocké en cookie
                 const accessToken = getCookie("access_token");
 
                 if (!accessToken) {
@@ -37,15 +88,14 @@ export const AuthProvider = ({ children }) => {
 
                 console.log("✅ [AuthContext] Access token détecté :", accessToken);
 
-                // 🔄 Récupérer l'utilisateur avec Supabase
+                // 🔄 Vérifier l'utilisateur avec Supabase
                 const { data: { user }, error } = await supabase.auth.getUser();
 
                 if (error || !user) {
-                    console.error("❌ [AuthContext] Session expirée ou invalide. L'utilisateur doit se reconnecter.");
-                    removeCookie("access_token"); // 🔹 Supprimer le cookie expiré
-                    setUser(null);
+                    console.warn("⚠️ [AuthContext] Token expiré, tentative de rafraîchissement...");
+                    await refreshAccessToken();
                 } else {
-                    console.log("✅ [AuthContext] Utilisateur valide :", user.id);
+                    console.log("✅ [AuthContext] Utilisateur connecté :", user.id);
                     setUser(user);
                 }
             } catch (err) {
@@ -58,36 +108,20 @@ export const AuthProvider = ({ children }) => {
 
         checkSessionAndLogin();
 
-        // 🚀 Écoute les changements d'état d'authentification
-        const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-            console.log("🔄 [AuthContext] Changement d'état :", event);
+        // 🚀 Vérifier régulièrement si le token doit être rafraîchi
+        const interval = setInterval(() => {
+            refreshAccessToken();
+        }, 30 * 60 * 1000); // 🔄 Rafraîchir toutes les 10 minutes
 
-            if (session?.user) {
-                console.log("✅ [AuthContext] Connexion détectée :", session.user.id);
-                setUser(session.user);
-            } else {
-                console.warn("⚠️ [AuthContext] Déconnexion détectée !");
-                removeCookie("access_token");
-                setUser(null);
-            }
-        });
-
-        console.log("🛑 [AuthContext] Listener sur l'authentification initialisé !");
-
-        return () => {
-            if (authListener && authListener.subscription) {
-                authListener.subscription.unsubscribe();
-                console.log("🔌 [AuthContext] Listener nettoyé.");
-            }
-        };
+        return () => clearInterval(interval);
     }, []);
 
-    // 🚪 Fonction propre pour gérer la déconnexion
+    // 🚪 Fonction pour gérer la déconnexion
     const signOut = async () => {
         try {
-            const router = useRouter();
             await supabase.auth.signOut();
             removeCookie("access_token");
+            removeCookie("refresh_token");
             setUser(null);
             console.log("🚪 [AuthContext] Déconnexion réussie !");
             router.replace("/connexion");
