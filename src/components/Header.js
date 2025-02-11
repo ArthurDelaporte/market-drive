@@ -181,12 +181,14 @@ export default function Header() {
                                                     Mes commandes
                                                 </button>
                                             </Link>
-                                            <LogoutButton>
-                                                <button className="w-full px-4 py-2 text-left hover:bg-gray-100 text-red-500 flex items-center gap-2">
+                                        <div className='block test'>
+                                            <LogoutButton className="logoutbutton">
+                                                <button className="logoutbutton w-full px-4 py-2 text-left hover:bg-gray-100 text-red-500 flex items-center gap-2">
                                                     <LogOut className="h-5 w-5" />
                                                     Se déconnecter
                                                 </button>
                                             </LogoutButton>
+                                            </div>
                                         </>
                                     ) : (
                                         <Link href="/connexion" className="block">
