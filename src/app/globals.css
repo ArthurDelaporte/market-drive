@@ -113,3 +113,10 @@ footer p {
 .category-2-selected:hover {
   @apply bg-gray-500
 }
+
+.logoutbutton{
+  width: -moz-available;
+  width: -webkit-fill-available;
+  border-radius: 0.5rem;
+  margin-top: 0.1rem;
+}
