@@ -112,7 +112,7 @@ export default function Header() {
             <ToastContainer />
             <header className="text-white p-4 rounded-b-lg shadow-md fixed w-full z-50">
                 {/* Desktop Navigation */}
-                <div className="container mx-auto hidden md:block"/>
+                <div className="container mx-auto hidden md:block">
                     <div className="flex items-center justify-between gap-10 ml-10 mr-10">
                         <Link href="/" className="flex-shrink-0">
                             <Image
@@ -142,7 +142,7 @@ export default function Header() {
                             />
                         </form>
 
-                      <div className="flex items-center gap-3 relative" ref={menuRef}>
+                        <div className="flex items-center gap-3 relative" ref={menuRef}>
                             <button
                                 onClick={() => setIsCategoryDialogOpen(true)}
                                 className="px-5 py-3 rounded shadow transition btn-header flex items-center gap-2"
@@ -160,12 +160,14 @@ export default function Header() {
                             {/* Dropdown Modal */}
                             {isDesktopMenuOpen && (
                                 <div className="absolute top-full right-0 mt-2 w-64 bg-white text-black rounded-lg shadow-lg border">
-                                    <button
-                                        className="w-full px-4 py-2 text-left hover:bg-gray-100"
-                                        aria-label="Voir mon panier"        
-                                    >
-                                        Mon Panier
-                                    </button>
+                                    <Link href="/panier">
+                                        <button
+                                            className="w-full px-4 py-2 text-left hover:bg-gray-100"
+                                            aria-label="Voir mon panier"
+                                        >
+                                            Mon Panier
+                                        </button>
+                                    </Link>
 
                                     {user ? (
                                         <>
@@ -199,9 +201,10 @@ export default function Header() {
                             )}
                         </div>
                     </div>
+                </div>
 
                 {/* Mobile Navigation */}
-                <div className="md:hidden">
+                <div className="container mx-auto md:hidden">
                     <div className="flex justify-between items-center mb-4">
                         <Link href="/" className="flex-shrink-0">
                             <Image
