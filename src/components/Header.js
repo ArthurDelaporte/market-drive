@@ -206,7 +206,7 @@ export default function Header() {
                 </div>
 
                 {/* Mobile Navigation */}
-                <div className="container mx-auto md:hidden">
+                <div className="container mx-auto md:hidden block">
                     <div className="flex justify-between items-center mb-4">
                         <Link href="/" className="flex-shrink-0">
                             <Image
