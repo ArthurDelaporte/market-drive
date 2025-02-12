@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import prisma from "@/prismaClient";
-import { getUserFromToken } from "@/utils/auth";
 
 // 📌 **Récupérer le panier**
 export async function GET(req) {

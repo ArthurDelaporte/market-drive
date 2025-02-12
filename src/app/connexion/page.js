@@ -3,16 +3,10 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Header from "../../components/Header";
-import { useAuth } from "@/context/AuthContext";
-import { useCart } from "@/context/CartContext";
 
 export default function LoginPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
-
-    const { user, loading } = useAuth();
-    const { fetchCart, setCart, ensureUserCartExists } = useCart();
-
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
@@ -26,53 +20,29 @@ export default function LoginPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),
             });
-    
+
             const data = await res.json();
-    
+
             if (!res.ok) {
                 alert(data.error);
                 return;
             }
-    
-            console.log("✅ [Connexion] Connexion réussie, récupération de l'utilisateur...");
-    
-            // ✅ Récupération immédiate de l'utilisateur après connexion
-            const userResponse = await fetch('/api/auth/user', {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${data.user.access_token}`,
-                },
-            });
-    
-            const userData = await userResponse.json();
-    
-            if (userResponse.ok) {
-                console.log("✅ [Connexion] Utilisateur récupéré :", userData);
-    
-                // 🔵 Appel forcé de ensureUserCartExists
-                console.log("🔵 [Connexion] Appel forcé de ensureUserCartExists avec userId:", userData.id);
-                await ensureUserCartExists(userData.id);
-    
-                // ✅ Réinitialiser et charger le panier
-                setCart([]);
-                fetchCart(userData.id);
-    
-                // ✅ Redirection en fonction du rôle
-                if (userData.role === 'admin') {
-                    router.push('/admin/dashboard');
-                } else {
-                    router.push(redirectTo);
-                }
+
+            // Vérification du rôle de l'utilisateur
+            const userRole = data.user?.role;
+
+            if (userRole === 'admin') {
+                // Redirige vers le tableau de bord admin
+                router.push('/admin');
             } else {
-                console.error("❌ [Connexion] Erreur récupération utilisateur après connexion :", userData.error);
-                alert("Erreur lors de la récupération des informations utilisateur.");
+                // Redirige vers la page demandée ou la page d'accueil
+                router.push(redirectTo);
             }
         } catch (error) {
-            console.error('❌ [Connexion] Erreur lors de la connexion :', error.message);
+            console.error('Erreur lors de la connexion :', error.message);
             alert('Erreur lors de la connexion.');
         }
     };
-    
 
     return (
         <>

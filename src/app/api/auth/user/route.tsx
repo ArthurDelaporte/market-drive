@@ -6,18 +6,17 @@ import { cookies } from "next/headers";
 
 export async function GET(request: Request) {
     try {
+        console.log("📌 [Auth API] Test cookies()");
 
-        console.log("📌 [Auth API] Test cookies() :", cookies());
-
-        // ✅ 1️⃣ Récupérer l'access_token depuis les cookies
-        const cookieStore = cookies(); // ✅ PAS BESOIN DE AWAIT
+        // ✅ 1️⃣ Récupérer l'access_token depuis les cookies (AVEC AWAIT)
+        const cookieStore = await cookies(); // ✅ SOLUTION Next.js 15
         const accessToken = cookieStore.get("access_token")?.value || request.headers.get("Authorization")?.split(" ")[1];
 
         console.log("📌 [Auth API] Cookies reçus :", cookieStore.getAll()); // Debug
 
-        if (!accessToken) {
-            console.error("❌ [Auth API] Aucun access_token trouvé !");
-            return NextResponse.json({ error: "Access token missing" }, { status: 401 });
+        if (!accessToken || typeof accessToken !== "string") {
+            console.error("❌ [Auth API] Aucun access_token valide trouvé !");
+            return NextResponse.json({ error: "Access token missing or invalid" }, { status: 401 });
         }
 
         console.log("📌 [Auth API] Access token détecté :", accessToken);
@@ -27,8 +26,8 @@ export async function GET(request: Request) {
             const decodedToken = jwtDecode<{ exp: number }>(accessToken);
             const currentTime = Math.floor(Date.now() / 1000);
 
-            if (decodedToken.exp <= currentTime) {
-                console.warn("⚠️ [Auth API] Token expiré !");
+            if (!decodedToken || !decodedToken.exp || decodedToken.exp <= currentTime) {
+                console.warn("⚠️ [Auth API] Token expiré ou invalide !");
                 return NextResponse.json({ error: "Access token expired" }, { status: 401 });
             }
         } catch (decodeError) {

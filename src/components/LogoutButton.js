@@ -1,7 +1,6 @@
 'use client';
 
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext"; // Assurez-vous d'utiliser le contexte d'auth
 import { removeCookie } from "typescript-cookie"; 
 import { createClient } from "@supabase/supabase-js";
 
@@ -12,7 +11,6 @@ const supabase = createClient(
 
 export default function LogoutButton() {
     const router = useRouter();
-    const { setUser } = useAuth(); // Utiliser le contexte d'auth pour mettre à jour l'état utilisateur
 
     const handleLogout = async () => {
         try {
@@ -24,9 +22,6 @@ export default function LogoutButton() {
     
             // 3️⃣ Supprimer les cookies d'authentification (frontend)
             removeCookie("access_token");
-    
-            // 4️⃣ Mettre à jour le state global pour supprimer l'utilisateur
-            setUser(null);
     
             // 5️⃣ Rediriger vers la page de connexion
             router.replace("/connexion");

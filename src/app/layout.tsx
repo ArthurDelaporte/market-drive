@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import { AuthProvider } from "@/context/AuthContext"; // ✅ Ajout de AuthProvider
-import { CartProvider } from "@/context/CartContext"; 
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -28,11 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" href="/favicon.ico" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <AuthProvider>  {/* ✅ AuthProvider englobe toute l'application */}
-          <CartProvider>  
-            <main className="mb-16">{children}</main>
-          </CartProvider>
-        </AuthProvider>
+        <main className="mb-16">{children}</main>
         <footer className="footer">
           <p>Made with 🤬 by 🦧</p>
         </footer>

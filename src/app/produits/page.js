@@ -8,45 +8,10 @@ import Modal from 'react-modal';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Header from "../../components/Header";
-import { useCart } from "@/context/CartContext";
-import { useAuth } from "@/context/AuthContext";
+import {auto} from "openai/_shims/registry";
+import { getCookie } from "typescript-cookie";
+import { jwtDecode } from "jwt-decode";
 
-const fetchUserWithToken = async () => {
-    try {
-        const cookies = document.cookie.split("; ").reduce((acc, cookie) => {
-            const [name, value] = cookie.split("=");
-            acc[name] = value;
-            return acc;
-        }, {});
-
-        const accessToken = cookies["access_token"];
-        console.log("📌 [Produits] Access token récupéré :", accessToken);
-
-        if (!accessToken) {
-            console.error("❌ [Produits] Aucun access token trouvé !");
-            return null;
-        }
-
-        const response = await fetch("/api/auth/user", {
-            method: "GET",
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-        });
-
-        if (!response.ok) {
-            console.error("❌ [Produits] Erreur lors de la récupération de l'utilisateur");
-            return null;
-        }
-
-        const userData = await response.json();
-        console.log("✅ [Produits] Utilisateur récupéré via token :", userData);
-        return userData;
-    } catch (error) {
-        console.error("❌ [Produits] Erreur fetchUserWithToken :", error);
-        return null;
-    }
-};
 
 export default function ProductsPage() {
     const router = useRouter();
@@ -55,7 +20,6 @@ export default function ProductsPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [quantities, setQuantities] = useState({});
-    const [isEditMode, setIsEditMode] = useState(false);
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
     const [isApplyFilterButtonDisabled, setIsApplyFilterButtonDisabled] = useState(false);
     const [minPrice, setMinPrice] = useState('');
@@ -64,61 +28,96 @@ export default function ProductsPage() {
     const [tempMaxPrice, setTempMaxPrice] = useState('');
     const [priceError, setPriceError] = useState(null);
     const [sortOption, setSortOption] = useState('');
-    const { addToCart, fetchCart } = useCart();
-    const { user, loading: authLoading } = useAuth();
-    const [authUser, setAuthUser] = useState(null);
+    const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
+    const [user, setUser] = useState(null);
 
-    const handleAddToCart = (product) => {
-        if (authLoading) {
-            console.log("⏳ [Produits] Attente que l'auth se charge...");
-            return;
-        }
-
-        if (!user && !authUser) {
-            console.log("❌ [Produits] L'utilisateur est encore NULL, on bloque l'ajout !");
-            alert("Vous devez être connecté pour ajouter un produit.");
-            return;
-        }
-
-        const userId = user ? user.id : authUser.id;
-
-        console.log("🛒 [Produits] Ajout au panier pour userId :", userId);
-        addToCart(product);
-    };
 
     useEffect(() => {
-        console.log("[Produits] Changement en cours : ", authLoading);
-        console.log("[Produits] Utilisateur détecté :", user);
-        console.log("[Produits] Utilisateur via token :", authUser);
-    }, [authLoading, user, authUser]);
-    
+        if (hasCheckedAuth) return;
 
-    useEffect(() => {
-        if (!user && !authLoading && !authUser) {
-            console.log("🔄 [Produits] Tentative de récupération de l'utilisateur via le token...");
-            fetchUserWithToken().then((fetchedUser) => {
-                if (fetchedUser) {
-                    setAuthUser(fetchedUser);
-                    console.log("✅ [Produits] Utilisateur défini :", fetchedUser);
-                } else {
-                    console.log("❌ [Produits] Impossible de récupérer l'utilisateur.");
+        const fetchUser = async () => {
+            try {
+                const accessToken = getCookie("access_token");
+
+                if (!accessToken) {
+                    toast.error("Vous n'êtes pas connectés. Veuillez vous connecter.", { toastId: "missing-token" });
+                    return;
                 }
+
+                try {
+                    const { exp } = jwtDecode(accessToken);
+                    const now = Date.now() / 1000;
+
+                    if (exp && exp < now) {
+                        removeCookie("access_token");
+                        setUser(null);
+                        return;
+                    }
+
+                    const response = await fetch("/api/auth/user", {
+                        method: "GET",
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                        },
+                    });
+
+                    if (!response.ok) {
+                        const { error } = await response.json();
+                        const messages = {
+                            "Access token expired": "Votre session a expiré. Veuillez vous reconnecter.",
+                            "Invalid access token": "Token invalide. Veuillez vous reconnecter.",
+                            "User not found in database": "Utilisateur introuvable.",
+                        };
+
+                        toast.error(messages[error] || "Une erreur inconnue est survenue.", { toastId: error || "unknown-error" });
+                        return;
+                    }
+
+                    const userData = await response.json();
+                    setUser(userData);
+                    setHasCheckedAuth(true);
+                } catch (decodeError) {
+                    toast.error("Erreur lors du décodage du token.", { toastId: "token-decode-error" });
+                    console.error("Token decode error:", decodeError);
+                }
+            } catch (error) {
+                toast.error("Erreur lors de la récupération de l'utilisateur.", { toastId: "fetch-error" });
+                console.error("Error fetching user:", error);
+            }
+        };
+
+        fetchUser();
+    }, [hasCheckedAuth]);
+
+
+    const addToCart = async (productId) => {
+        try {
+            if (!user) {
+                toast.error("Vous devez être connecté pour ajouter un produit au panier !");
+                return;
+            }
+    
+            const quantity = quantities[productId] || 1;
+    
+            const response = await fetch(`/api/user/${user.id}/carts`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ product_id: productId, quantity }),
             });
-        }
-    }, [user, authLoading, authUser]);
     
-
-    useEffect(() => {
-        if (user || authUser) {
-            const userId = user ? user.id : authUser.id;
-            console.log("🔄 [Produits] fetchCart appelé avec userId :", userId);
-            fetchCart(userId);
-        }
-    }, [user, authUser]);
+            if (!response.ok) {
+                const { error } = await response.json();
+                toast.error(`Erreur : ${error}`);
+                return;
+            }
     
+            toast.success("Produit ajouté au panier !");
+        } catch (error) {
+            console.error("❌ Erreur lors de l'ajout au panier :", error);
+            toast.error("Une erreur est survenue. Réessayez plus tard.");
+        }
+    };    
 
-    console.log("🔍 [Produits] Utilisateur détecté :", user);
-    console.log("🔄 [Produits] Chargement en cours :", loading);
 
     // Récupérer le paramètre categoryId depuis l'URL
     const categoryId = searchParams.get('categoryId');
@@ -154,6 +153,8 @@ export default function ProductsPage() {
                 setLoading(false);
             }
         };
+
+
 
         fetchProducts();
     }, [categoryId, productName]);
@@ -226,32 +227,12 @@ export default function ProductsPage() {
         return isInPriceRange;
     });
 
-    useEffect(() => {
-        console.log("[Produits] Changement détecté - Utilisateur :", user);
-    }, [user]);
-    
-
     return (
         <>
             <Header />
             <div className="ml-20 mr-20 pt-24 p-4">
                 <ToastContainer/>
                 <h1 className="text-2xl font-bold text-center mb-8">Nos Produits</h1>
-                <button type="button"
-                        className="bg-blue-500 text-white p-2 m-4 ml-0 rounded hover:bg-blue-600 transition"
-                        onClick={() => {
-                            router.push('/produits/create');
-                        }}>
-                    Créer un produit
-                </button>
-
-                <button
-                    type="button"
-                    className={`p-2 rounded transition ${isEditMode ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-500 hover:bg-gray-600'} text-white`}
-                    onClick={() => setIsEditMode(!isEditMode)}
-                >
-                    {isEditMode ? "Désactiver le mode édition" : "Modifier les produits"}
-                </button>
 
                 <div className="flex mb-6 w-full">
                     <button
@@ -342,14 +323,13 @@ export default function ProductsPage() {
                             filteredAndSortedProducts.map((product) => (
                                 <div key={product.id}
                                      className="product-card p-4 border rounded-lg shadow-lg hover:shadow-xl transition-shadow">
-                                    <div className="flex items-center justify-center w-full" style={{height: '200px'}}>
+                                    <div className="flex items-center justify-center">
                                         <Image
                                             src={product.imgurl}
                                             alt={product.name}
                                             width={200}
                                             height={0}
-                                            style={{height: 'auto'}}
-                                            className="rounded-md mb-4 object-cover h-48"
+                                            className="rounded-md mb-4 object-cover"
                                         />
                                     </div>
                                     <div className="h-14 flex items-center">
@@ -384,24 +364,14 @@ export default function ProductsPage() {
                                         </div>
 
                                         <button
-                                            className="mr-4 py-2 px-4 rounded transition-colors flex items-center justify-center"
-                                            onClick={() => handleAddToCart(product)}
+                                            onClick={() => addToCart(product.id)}
+                                            className="mr-4 py-2 px-4 rounded transition-colors flex items-center justify-center bg-blue-500 text-white hover:bg-blue-600"
                                         >
                                             Ajouter
-                                            <FaShoppingCart className="h-8 w-8"/>
+                                            <FaShoppingCart className="h-8 w-8 ml-2" />
                                         </button>
 
                                     </div>
-
-                                    {isEditMode && (
-                                        <button
-                                            onClick={() => router.push(`/produits/edit/${product.id}`)}
-                                            className="bg-gray-500 text-white mt-4 py-2 px-4 rounded hover:bg-gray-600 transition-colors flex items-center justify-center w-full"
-                                        >
-                                            <FaEdit className="h-5 w-5 mr-2"/>
-                                            Modifier
-                                        </button>
-                                    )}
                                 </div>
                             ))
                         ) : (
