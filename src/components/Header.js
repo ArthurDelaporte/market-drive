@@ -10,6 +10,7 @@ import DialogCategory from './DialogCategory';
 import { getCookie, removeCookie } from "typescript-cookie";
 import { PUBLIC_PAGES } from '@/config/constants';
 import { toast, ToastContainer } from 'react-toastify';
+import "react-toastify/dist/ReactToastify.css";
 import { FaStream } from 'react-icons/fa';
 import { jwtDecode } from "jwt-decode";
 

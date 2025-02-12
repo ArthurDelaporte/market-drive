@@ -1,5 +1,3 @@
-// /api/auth/logout
-
 import { NextResponse } from "next/server";
 import { supabase } from "@/supabaseClient";
 

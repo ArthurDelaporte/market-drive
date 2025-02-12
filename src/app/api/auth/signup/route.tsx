@@ -23,6 +23,8 @@ export async function POST(request: NextRequest) {
         }
 
         if (data.user) {
+            console.log("✅ Utilisateur Supabase créé avec ID :", data.user.id);
+
             await prisma.users.create({
                 data: {
                     id: data.user.id,
@@ -33,6 +35,7 @@ export async function POST(request: NextRequest) {
                     role: 'client',
                 },
             });
+            console.log("✅ Utilisateur ajouté à la table users avec ID :", data.user.id);
 
             return NextResponse.json({ message: 'User successfully created', user: data.user }, { status: 201 });
         }

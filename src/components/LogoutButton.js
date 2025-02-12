@@ -1,29 +1,35 @@
 'use client';
 
 import { useRouter } from "next/navigation";
+import { removeCookie } from "typescript-cookie"; 
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
 export default function LogoutButton() {
     const router = useRouter();
 
     const handleLogout = async () => {
         try {
-            const res = await fetch("/api/auth/logout", {
-                method: "POST",
-            });
-
-            if (!res.ok) {
-                const data = await res.json();
-                alert(data.error || "Erreur inconnue");
-                return;
-            }
-
-            alert("Déconnexion réussie !");
-            router.push("/connexion");
+            // 1️⃣ Déconnecter de Supabase (supprime la session côté serveur)
+            await supabase.auth.signOut();
+    
+            // 2️⃣ Supprimer la session côté serveur (si le cookie est HttpOnly)
+            await fetch("/api/auth/logout", { method: "POST" });
+    
+            // 3️⃣ Supprimer les cookies d'authentification (frontend)
+            removeCookie("access_token");
+    
+            // 5️⃣ Rediriger vers la page de connexion
+            router.replace("/connexion");
         } catch (error) {
             console.error("Erreur lors de la déconnexion :", error.message);
             alert("Erreur lors de la déconnexion.");
         }
-    };
+    };    
 
     return (
         <button

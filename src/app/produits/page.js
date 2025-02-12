@@ -9,6 +9,8 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Header from "../../components/Header";
 import {auto} from "openai/_shims/registry";
+import { getCookie } from "typescript-cookie";
+import { jwtDecode } from "jwt-decode";
 
 export default function ProductsPage() {
     const router = useRouter();
@@ -25,6 +27,96 @@ export default function ProductsPage() {
     const [tempMaxPrice, setTempMaxPrice] = useState('');
     const [priceError, setPriceError] = useState(null);
     const [sortOption, setSortOption] = useState('');
+    const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
+    const [user, setUser] = useState(null);
+
+
+    useEffect(() => {
+        if (hasCheckedAuth) return;
+
+        const fetchUser = async () => {
+            try {
+                const accessToken = getCookie("access_token");
+
+                if (!accessToken) {
+                    toast.error("Vous n'êtes pas connectés. Veuillez vous connecter.", { toastId: "missing-token" });
+                    return;
+                }
+
+                try {
+                    const { exp } = jwtDecode(accessToken);
+                    const now = Date.now() / 1000;
+
+                    if (exp && exp < now) {
+                        removeCookie("access_token");
+                        setUser(null);
+                        return;
+                    }
+
+                    const response = await fetch("/api/auth/user", {
+                        method: "GET",
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                        },
+                    });
+
+                    if (!response.ok) {
+                        const { error } = await response.json();
+                        const messages = {
+                            "Access token expired": "Votre session a expiré. Veuillez vous reconnecter.",
+                            "Invalid access token": "Token invalide. Veuillez vous reconnecter.",
+                            "User not found in database": "Utilisateur introuvable.",
+                        };
+
+                        toast.error(messages[error] || "Une erreur inconnue est survenue.", { toastId: error || "unknown-error" });
+                        return;
+                    }
+
+                    const userData = await response.json();
+                    setUser(userData);
+                    setHasCheckedAuth(true);
+                } catch (decodeError) {
+                    toast.error("Erreur lors du décodage du token.", { toastId: "token-decode-error" });
+                    console.error("Token decode error:", decodeError);
+                }
+            } catch (error) {
+                toast.error("Erreur lors de la récupération de l'utilisateur.", { toastId: "fetch-error" });
+                console.error("Error fetching user:", error);
+            }
+        };
+
+        fetchUser();
+    }, [hasCheckedAuth]);
+
+
+    const addToCart = async (productId) => {
+        try {
+            if (!user) {
+                toast.error("Vous devez être connecté pour ajouter un produit au panier !");
+                return;
+            }
+    
+            const quantity = quantities[productId] || 1;
+    
+            const response = await fetch(`/api/user/${user.id}/carts`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ product_id: productId, quantity }),
+            });
+    
+            if (!response.ok) {
+                const { error } = await response.json();
+                toast.error(`Erreur : ${error}`);
+                return;
+            }
+    
+            toast.success("Produit ajouté au panier !");
+        } catch (error) {
+            console.error("❌ Erreur lors de l'ajout au panier :", error);
+            toast.error("Une erreur est survenue. Réessayez plus tard.");
+        }
+    };    
+
 
     // Récupérer le paramètre categoryId depuis l'URL
     const categoryId = searchParams.get('categoryId');
@@ -60,6 +152,8 @@ export default function ProductsPage() {
                 setLoading(false);
             }
         };
+
+
 
         fetchProducts();
     }, [categoryId, productName]);
@@ -269,9 +363,11 @@ export default function ProductsPage() {
                                         </div>
 
                                         <button
-                                            className="mr-4 py-2 px-4 rounded transition-colors flex items-center justify-center"
+                                            onClick={() => addToCart(product.id)}
+                                            className="mr-4 py-2 px-4 rounded transition-colors flex items-center justify-center bg-blue-500 text-white hover:bg-blue-600"
                                         >
-                                            <FaShoppingCart className="h-8 w-8"/>
+                                            Ajouter
+                                            <FaShoppingCart className="h-8 w-8 ml-2" />
                                         </button>
                                     </div>
                                 </div>
