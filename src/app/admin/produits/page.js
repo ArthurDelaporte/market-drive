@@ -3,14 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from 'next/image';
-import { FaShoppingCart, FaEdit, FaSlidersH } from 'react-icons/fa';
+import { FaEdit, FaSlidersH } from 'react-icons/fa';
 import Modal from 'react-modal';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import Header from "../../components/Header";
-import {auto} from "openai/_shims/registry";
-import { getCookie } from "typescript-cookie";
-import { jwtDecode } from "jwt-decode";
+import AdminHeader from "../../../components/AdminHeader";
 
 export default function ProductsPage() {
     const router = useRouter();
@@ -19,6 +16,8 @@ export default function ProductsPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [quantities, setQuantities] = useState({});
+    const [selectedProducts, setSelectedProducts] = useState(new Set());
+    const [isDeleteMode, setIsDeleteMode] = useState(false);
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
     const [isApplyFilterButtonDisabled, setIsApplyFilterButtonDisabled] = useState(false);
     const [minPrice, setMinPrice] = useState('');
@@ -27,134 +26,42 @@ export default function ProductsPage() {
     const [tempMaxPrice, setTempMaxPrice] = useState('');
     const [priceError, setPriceError] = useState(null);
     const [sortOption, setSortOption] = useState('');
-    const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
-    const [user, setUser] = useState(null);
-
-
-    useEffect(() => {
-        if (hasCheckedAuth) return;
-
-        const fetchUser = async () => {
-            try {
-                const accessToken = getCookie("access_token");
-
-                if (!accessToken) {
-                    toast.error("Vous n'êtes pas connectés. Veuillez vous connecter.", { toastId: "missing-token" });
-                    return;
-                }
-
-                try {
-                    const { exp } = jwtDecode(accessToken);
-                    const now = Date.now() / 1000;
-
-                    if (exp && exp < now) {
-                        removeCookie("access_token");
-                        setUser(null);
-                        return;
-                    }
-
-                    const response = await fetch("/api/auth/user", {
-                        method: "GET",
-                        headers: {
-                            Authorization: `Bearer ${accessToken}`,
-                        },
-                    });
-
-                    if (!response.ok) {
-                        const { error } = await response.json();
-                        const messages = {
-                            "Access token expired": "Votre session a expiré. Veuillez vous reconnecter.",
-                            "Invalid access token": "Token invalide. Veuillez vous reconnecter.",
-                            "User not found in database": "Utilisateur introuvable.",
-                        };
-
-                        toast.error(messages[error] || "Une erreur inconnue est survenue.", { toastId: error || "unknown-error" });
-                        return;
-                    }
-
-                    const userData = await response.json();
-                    setUser(userData);
-                    setHasCheckedAuth(true);
-                } catch (decodeError) {
-                    toast.error("Erreur lors du décodage du token.", { toastId: "token-decode-error" });
-                    console.error("Token decode error:", decodeError);
-                }
-            } catch (error) {
-                toast.error("Erreur lors de la récupération de l'utilisateur.", { toastId: "fetch-error" });
-                console.error("Error fetching user:", error);
-            }
-        };
-
-        fetchUser();
-    }, [hasCheckedAuth]);
-
-
-    const addToCart = async (productId) => {
-        try {
-            if (!user) {
-                toast.error("Vous devez être connecté pour ajouter un produit au panier !");
-                return;
-            }
-    
-            const quantity = quantities[productId] || 1;
-    
-            const response = await fetch(`/api/user/${user.id}/carts`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ product_id: productId, quantity }),
-            });
-    
-            if (!response.ok) {
-                const { error } = await response.json();
-                toast.error(`Erreur : ${error}`);
-                return;
-            }
-    
-            toast.success("Produit ajouté au panier !");
-        } catch (error) {
-            console.error("❌ Erreur lors de l'ajout au panier :", error);
-            toast.error("Une erreur est survenue. Réessayez plus tard.");
-        }
-    };    
-
 
     // Récupérer le paramètre categoryId depuis l'URL
     const categoryId = searchParams.get('categoryId');
     const productName = searchParams.get('productName');
 
-    useEffect(() => {
-        const fetchProducts = async () => {
-            try {
-                setLoading(true);
+    const fetchProducts = async () => {
+        try {
+            setLoading(true);
 
-                let url = `/api/products`;
-                const queryParams = new URLSearchParams();
+            let url = `/api/products`;
+            const queryParams = new URLSearchParams();
 
-                if (categoryId) {
-                    queryParams.append("categoryId", categoryId);
-                }
-
-                if (productName) {
-                    queryParams.append("productName", productName);
-                }
-
-                if (queryParams.toString()) {
-                    url += `?${queryParams.toString()}`;
-                }
-
-                const res = await fetch(url);
-                if (!res.ok) throw new Error('Erreur de récupération des produits');
-                const data = await res.json();
-                setProducts(data);
-                setLoading(false);
-            } catch (err) {
-                setError(err.message);
-                setLoading(false);
+            if (categoryId) {
+                queryParams.append("categoryId", categoryId);
             }
-        };
 
+            if (productName) {
+                queryParams.append("productName", productName);
+            }
 
+            if (queryParams.toString()) {
+                url += `?${queryParams.toString()}`;
+            }
 
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('Erreur de récupération des produits');
+            const data = await res.json();
+            setProducts(data);
+            setLoading(false);
+        } catch (err) {
+            setError(err.message);
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchProducts();
     }, [categoryId, productName]);
 
@@ -175,6 +82,47 @@ export default function ProductsPage() {
             setPriceError(null);
         }
     }, [tempMinPrice, tempMaxPrice]);
+
+    // 📌 **Gestion du mode suppression**
+    const toggleProductSelection = (productId) => {
+        setSelectedProducts((prevSelected) => {
+            const newSelection = new Set(prevSelected);
+            if (newSelection.has(productId)) {
+                newSelection.delete(productId);
+            } else {
+                newSelection.add(productId);
+            }
+            return newSelection;
+        });
+    };
+
+    const resetSelection = () => setSelectedProducts(new Set([]));
+
+    const handleDeleteSelectedProducts = async () => {
+        if (selectedProducts.size === 0) return;
+
+        const confirmed = window.confirm("Êtes-vous sûr de vouloir supprimer ces produits ?");
+        if (!confirmed) return;
+
+        try {
+            const res = await fetch('/api/products/batch', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productIds: Array.from(selectedProducts) }),
+            });
+
+            if (!res.ok) throw new Error("Erreur lors de la suppression");
+
+            // 🔄 Mettre à jour la liste des produits
+            await fetchProducts();
+            resetSelection();
+            setIsDeleteMode(false);
+            toast.success("Produits supprimés avec succès !");
+        } catch (error) {
+            toast.error("Une erreur est survenue lors de la suppression.");
+            console.error(error);
+        }
+    }
 
     const handleQuantityChange = (productId, quantity) => {
         setQuantities((prev) => ({ ...prev, [productId]: Math.max(1, quantity) }));
@@ -228,10 +176,50 @@ export default function ProductsPage() {
 
     return (
         <>
-            <Header />
+            <AdminHeader />
             <div className="ml-20 mr-20 pt-24 p-4">
                 <ToastContainer/>
                 <h1 className="text-2xl font-bold text-center mb-8">Nos Produits</h1>
+
+                <div className="flex mb-6 w-full space-x-4">
+                    <button type="button"
+                            className="bg-blue-500 text-white p-2 ml-0 rounded hover:bg-blue-600 transition"
+                            onClick={() => {
+                                router.push('/admin/produits/create');
+                            }}>
+                        Créer un produit
+                    </button>
+
+                    <button
+                        type="button"
+                        className={`p-2 rounded transition ${isDeleteMode ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-500 hover:bg-gray-600'} text-white hover:text-gray-100`}
+                        onClick={() => setIsDeleteMode(!isDeleteMode)}
+                    >
+                        {isDeleteMode ? "Désactiver le mode suppression" : "Supprimer des produits"}
+                    </button>
+
+                    {isDeleteMode && (
+                        <div className="space-x-4">
+                            <button
+                                type="button"
+                                className="p-2 rounded transition bg-gray-500 hover:bg-gray-600 text-white"
+                                disabled={selectedProducts.size === 0}
+                                onClick={resetSelection}
+                            >
+                                Annuler la sélection
+                            </button>
+
+                            <button
+                                type="button"
+                                className="p-2 rounded transition bg-red-500 hover:bg-red-600 text-white"
+                                disabled={selectedProducts.size === 0}
+                                onClick={handleDeleteSelectedProducts}
+                            >
+                                Supprimer la sélection
+                            </button>
+                        </div>
+                    )}
+                </div>
 
                 <div className="flex mb-6 w-full">
                     <button
@@ -322,6 +310,14 @@ export default function ProductsPage() {
                             filteredAndSortedProducts.map((product) => (
                                 <div key={product.id}
                                      className="product-card p-4 border rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+                                    {isDeleteMode && (
+                                        <input
+                                            type="checkbox"
+                                            className="h-5 w-5 mb-2"
+                                            checked={selectedProducts?.has(product.id) || false}
+                                            onChange={() => toggleProductSelection(product.id)}
+                                        />
+                                    )}
                                     <div className="flex items-center justify-center">
                                         <Image
                                             src={product.imgurl}
@@ -337,39 +333,45 @@ export default function ProductsPage() {
                                     <p className="text-lg font-bold text-green-600 mb-2">{product.totalPrice} €</p>
                                     <p className="text-lg font-bold text-blue-600 mb-2">{product.price} €/{product.unity}</p>
 
-                                    <div className="flex justify-between items-center mt-4">
-                                        <div className="flex flex-col items-center space-y-1 ml-4" style={{width: '70px'}}>
-                                            <button
-                                                onClick={() => increaseQuantity(product.id)}
-                                                className="bg-gray-300 text-gray-700 px-2 py-1 rounded w-full"
-                                            >
-                                                +
-                                            </button>
-                                            <input
-                                                type="number"
-                                                min="1"
-                                                value={quantities[product.id] || 1}
-                                                onChange={(e) => handleQuantityChange(product.id, parseInt(e.target.value) || 1)}
-                                                onFocus={(e) => e.target.select()}
-                                                className="border text-center w-full py-1 rounded text-[#212121]"
-                                            />
-                                            <button
-                                                onClick={() => decreaseQuantity(product.id)}
-                                                disabled={(quantities[product.id] || 1) <= 1}
-                                                className="bg-gray-300 text-gray-700 px-2 py-1 rounded w-full"
-                                            >
-                                                -
-                                            </button>
-                                        </div>
+                                    {/*<div className="flex justify-between items-center mt-4">*/}
+                                    {/*    <div className="flex flex-col items-center space-y-1 ml-4" style={{width: '70px'}}>*/}
+                                    {/*        <button*/}
+                                    {/*            onClick={() => increaseQuantity(product.id)}*/}
+                                    {/*            className="bg-gray-300 text-gray-700 px-2 py-1 rounded w-full"*/}
+                                    {/*        >*/}
+                                    {/*            +*/}
+                                    {/*        </button>*/}
+                                    {/*        <input*/}
+                                    {/*            type="number"*/}
+                                    {/*            min="1"*/}
+                                    {/*            value={quantities[product.id] || 1}*/}
+                                    {/*            onChange={(e) => handleQuantityChange(product.id, parseInt(e.target.value) || 1)}*/}
+                                    {/*            onFocus={(e) => e.target.select()}*/}
+                                    {/*            className="border text-center w-full py-1 rounded text-[#212121]"*/}
+                                    {/*        />*/}
+                                    {/*        <button*/}
+                                    {/*            onClick={() => decreaseQuantity(product.id)}*/}
+                                    {/*            disabled={(quantities[product.id] || 1) <= 1}*/}
+                                    {/*            className="bg-gray-300 text-gray-700 px-2 py-1 rounded w-full"*/}
+                                    {/*        >*/}
+                                    {/*            -*/}
+                                    {/*        </button>*/}
+                                    {/*    </div>*/}
 
-                                        <button
-                                            onClick={() => addToCart(product.id)}
-                                            className="mr-4 py-2 px-4 rounded transition-colors flex items-center justify-center bg-blue-500 text-white hover:bg-blue-600"
-                                        >
-                                            Ajouter
-                                            <FaShoppingCart className="h-8 w-8 ml-2" />
-                                        </button>
-                                    </div>
+                                    {/*    <button*/}
+                                    {/*        className="mr-4 py-2 px-4 rounded transition-colors flex items-center justify-center"*/}
+                                    {/*    >*/}
+                                    {/*        <FaShoppingCart className="h-8 w-8"/>*/}
+                                    {/*    </button>*/}
+                                    {/*</div>*/}
+
+                                    <button
+                                        onClick={() => router.push(`/admin/produits/edit/${product.id}`)}
+                                        className="bg-gray-500 text-white mt-4 py-2 px-4 rounded hover:bg-gray-600 transition-colors flex items-center justify-center w-full"
+                                    >
+                                        <FaEdit className="h-5 w-5 mr-2"/>
+                                        Modifier
+                                    </button>
                                 </div>
                             ))
                         ) : (

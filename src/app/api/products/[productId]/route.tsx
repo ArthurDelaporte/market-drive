@@ -128,3 +128,23 @@ export async function PUT(request: Request, context: { params: { productId: stri
         return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
     }
 }
+
+// DELETE handler: Supprimer un produit
+export async function DELETE(request: Request, context: { params: { productId: string } }) {
+    try {
+        const { productId } = await context.params;
+
+        if (!productId) {
+            return NextResponse.json({ error: 'Invalid product ID' }, { status: 400 });
+        }
+
+        const deletedProduct = await prisma.products.delete({
+            where: { id: productId },
+        });
+
+        return NextResponse.json(deletedProduct, { status: 200 });
+    } catch (error) {
+        console.error('Unhandled error deleting product:', error);
+        return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+    }
+}

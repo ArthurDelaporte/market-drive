@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import Header from "../../../../components/Header";
+import AdminHeader from "../../../../../components/AdminHeader";
 import Image from "next/image";
 import {getCookie} from "typescript-cookie";
 import { PRODUCTS_UNITIES } from "@/config/constants";
@@ -173,7 +173,7 @@ export default function EditProductPage() {
 
             if (!res.ok) throw new Error("Erreur lors de la mise à jour du produit");
 
-            router.push('/produits');
+            router.push('/admin/produits');
         } catch (err) {
             setError(err.message);
         } finally {
@@ -186,7 +186,7 @@ export default function EditProductPage() {
 
     return (
         <>
-            <Header/>
+            <AdminHeader/>
             <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] p-auto m-auto pt-20">
                 <div className="py-4 px-12 bg-white rounded-lg shadow-md w-full max-w-md">
                     <h1 className="text-2xl font-bold mb-6 text-center">Modifier le produit</h1>

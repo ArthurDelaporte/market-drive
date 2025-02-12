@@ -55,7 +55,6 @@ export default function Header() {
                 }
 
                 try {
-                    console.log(jwtDecode(accessToken))
                     const { exp } = jwtDecode(accessToken);
                     const now = Date.now() / 1000;
 
