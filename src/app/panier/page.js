@@ -104,7 +104,7 @@ export default function CartPage() {
         };
 
         fetchUser();
-    }, [hasCheckedAuth, fetchCart]);
+    }, [hasCheckedAuth]);
 
     const updateQuantity = async (productId, newQuantity) => {
         if (!user) return;
