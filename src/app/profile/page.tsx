@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import Profileform from '@/components/Profileform';
 import { getCookie } from 'typescript-cookie';
 import Header from '@/components/Header';
@@ -32,13 +32,9 @@ export default function ProfilePage() {
     if (token) setAccessToken(token);
   }, []);
 
-  useEffect(() => {
-    if (accessToken) {
-      fetchProfile();
-    }
-  }, [accessToken]);
+  const fetchProfile = useCallback(async () => {
+    if (!accessToken) return;
 
-  const fetchProfile = async () => {
     try {
       const response = await fetch('/api/auth/user', {
         method: 'GET',
@@ -56,7 +52,11 @@ export default function ProfilePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [accessToken]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const handleProfileUpdate = async (data: ProfileData) => {
     try {

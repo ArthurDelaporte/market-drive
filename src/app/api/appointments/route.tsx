@@ -145,7 +145,9 @@ export async function POST(req: NextRequest) {
         // ✅ Extraire les IDs uniques des produits
         const productIds = [...new Set(cartProducts.map((p: { product_id: string }) => p.product_id))] as string[];
 
-        if (productIds.length === 0) return "<p>Aucun produit dans le panier.</p>";
+        if (productIds.length === 0) {
+            return NextResponse.json({ error: "Aucun produit dans le panier." }, { status: 400 });
+        }
 
         // ✅ Récupérer les produits correspondants en BDD
         const products = await prisma.products.findMany({
