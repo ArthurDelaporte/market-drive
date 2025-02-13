@@ -1,16 +1,18 @@
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/prismaClient";
-import {isAuthenticatedUserAdmin} from "@/utils/auth";
+import { isAuthenticatedUserAdmin } from "@/utils/auth";
 
-export async function GET(req: NextRequest, context: { params: { orderId: string } }) {
+export async function GET(req: NextRequest) {
     try {
+        // Authentifier l'utilisateur
         const authenticatedUser = await isAuthenticatedUserAdmin(req);
-
         if (!authenticatedUser) {
             return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
         }
 
-        const { orderId } = await context.params;
+        // Extraire orderId depuis l'URL
+        const pathSegments = req.nextUrl.pathname.split('/');
+        const orderId = pathSegments[pathSegments.length - 1];
 
         if (!orderId) {
             return NextResponse.json({ error: "ID commande manquant" }, { status: 400 });
