@@ -1,16 +1,18 @@
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/prismaClient";
-import {getAuthenticatedUser} from "@/utils/auth";
+import { getAuthenticatedUser } from "@/utils/auth";
 
-export async function GET(req: NextRequest, context: { params: { userId: string } }) {
+export async function GET(req: NextRequest) {
     try {
+        // Authentifier l'utilisateur
         const authenticatedUser = await getAuthenticatedUser(req);
-
         if (!authenticatedUser) {
             return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
         }
 
-        const { userId } = await context.params;
+        // Extraire userId depuis l'URL
+        const pathSegments = req.nextUrl.pathname.split('/');
+        const userId = pathSegments[pathSegments.length - 2]; // `/user/[userId]/orders`
 
         if (!userId) {
             return NextResponse.json({ error: "ID utilisateur manquant" }, { status: 400 });

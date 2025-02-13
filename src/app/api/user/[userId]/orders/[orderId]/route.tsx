@@ -1,22 +1,19 @@
-import {NextRequest, NextResponse} from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/prismaClient";
 import { getAuthenticatedUser } from "@/utils/auth";
 
-export async function GET(req: NextRequest, context: { params: { userId: string, orderId: string } }) {
+export async function GET(req: NextRequest) {
     try {
+        // Authentifier l'utilisateur
         const authenticatedUser = await getAuthenticatedUser(req);
-
         if (!authenticatedUser) {
             return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
         }
 
-        const user = await getAuthenticatedUser(req);
-
-        if (!user) {
-            return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
-        }
-
-        const { userId, orderId } = await context.params;
+        // Extraire userId et orderId depuis l'URL
+        const pathSegments = req.nextUrl.pathname.split('/');
+        const userId = pathSegments[pathSegments.length - 4]; // `/user/[userId]/orders/[orderId]`
+        const orderId = pathSegments[pathSegments.length - 1];
 
         if (!userId || !orderId) {
             return NextResponse.json({ error: "ID utilisateur ou commande manquant" }, { status: 400 });
