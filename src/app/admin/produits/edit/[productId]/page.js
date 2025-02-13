@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import AdminHeader from "../../../../../components/AdminHeader";
+import Header from "../../../../../components/Header";
 import Image from "next/image";
 import {getCookie} from "typescript-cookie";
 import { PRODUCTS_UNITIES } from "@/config/constants";
@@ -192,7 +192,7 @@ export default function EditProductPage() {
 
     return (
         <>
-            <AdminHeader/>
+            <Header/>
             <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] p-auto m-auto pt-20">
                 <div className="py-4 px-12 bg-white rounded-lg shadow-md w-full max-w-md">
                     <h1 className="text-2xl font-bold mb-6 text-center">Modifier le produit</h1>
