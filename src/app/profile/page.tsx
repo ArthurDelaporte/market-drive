@@ -34,12 +34,6 @@ export default function ProfilePage() {
     if (token) setAccessToken(token);
   }, []);
 
-  useEffect(() => {
-    if (accessToken) {
-      fetchProfile();
-    }
-  }, [accessToken]);
-
   const fetchProfile = async () => {
     try {
       const response = await fetch('/api/auth/user', {
@@ -59,6 +53,12 @@ export default function ProfilePage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (accessToken) {
+      fetchProfile();
+    }
+  }, [accessToken, fetchProfile]);
 
   const handleProfileUpdate = async (data: any) => {
     try {

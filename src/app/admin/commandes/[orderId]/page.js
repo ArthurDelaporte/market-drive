@@ -10,8 +10,7 @@ import Header from "@/components/Header";
 import { PRODUCTS_STATUS } from "@/config/constants";
 
 export default function AdminOrderDetailsPage() {
-    const router = useRouter();
-    const { orderId } = useParams();
+        const { orderId } = useParams();
 
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -50,7 +49,7 @@ export default function AdminOrderDetailsPage() {
         };
 
         fetchOrder();
-    }, [accessToken, orderId]);
+    }, [accessToken, orderId, fetchProducts]);
 
     const fetchProducts = async (cartProducts) => {
         if (!cartProducts.length) return;

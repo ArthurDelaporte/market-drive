@@ -16,8 +16,7 @@ interface User {
 }
 
 export default function UserManagementPage() {
-  const router = useRouter();
-  const [users, setUsers] = useState<User[]>([]);
+    const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);

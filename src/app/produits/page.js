@@ -9,10 +9,8 @@ import { ToastContainer, toast } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
 import Header from "@/components/Header";
 import { getCookie } from "typescript-cookie";
-import { jwtDecode } from "jwt-decode";
 
 export default function ProductsPage() {
-    const router = useRouter();
     const searchParams = useSearchParams();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);

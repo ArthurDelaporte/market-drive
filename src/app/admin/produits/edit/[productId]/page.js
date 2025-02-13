@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import Header from "@/components/Header";
+import AdminHeader from "../../../../../components/AdminHeader";
 import Image from "next/image";
 import {getCookie} from "typescript-cookie";
 import { PRODUCTS_UNITIES } from "@/config/constants";
@@ -33,11 +33,7 @@ export default function EditProductPage() {
         const fetchProductAndCategories = async () => {
             try {
                 setLoading(true);
-                const res = await fetch(`/api/products/${productId}`, {
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                    }
-                });
+                const res = await fetch(`/api/products/${productId}`);
                 if (!res.ok) throw new Error('Erreur de récupération du produit');
                 const product = await res.json();
 
@@ -52,59 +48,31 @@ export default function EditProductPage() {
                 }
 
                 // 📌 **Charger les catégories de niveau 0**
-                const resCategories = await fetch('/api/categories/parent', {
-                    headers: {
-                        Authorization: `Bearer ${getCookie('access_token')}`,
-                    }
-                });
+                const resCategories = await fetch('/api/categories/parent');
                 if (!resCategories.ok) throw new Error('Erreur de récupération des catégories');
                 const dataCategories = await resCategories.json();
                 setCategoriesLevel0(dataCategories);
 
                 // 📌 **Gérer la hiérarchie des catégories**
                 if (product.category_id) {
-                    let currentCategory = await fetch(`/api/categories/${product.category_id}`, {
-                        headers: {
-                            Authorization: `Bearer ${getCookie('access_token')}`,
-                        }
-                    }).then(res => res.json());
+                    let currentCategory = await fetch(`/api/categories/${product.category_id}`).then(res => res.json());
                     setSelectedCategory2(currentCategory.id);
 
-                    const resLevel2 = await fetch(`/api/categories/parent/${currentCategory.category_parent}`, {
-                        headers: {
-                            Authorization: `Bearer ${getCookie('access_token')}`,
-                        }
-                    });
+                    const resLevel2 = await fetch(`/api/categories/parent/${currentCategory.category_parent}`);
                     setCategoriesLevel2(await resLevel2.json());
 
                     if (currentCategory.category_parent) {
-                        let parentCategory = await fetch(`/api/categories/${currentCategory.category_parent}`, {
-                            headers: {
-                                Authorization: `Bearer ${getCookie('access_token')}`,
-                            }
-                        }).then(res => res.json());
+                        let parentCategory = await fetch(`/api/categories/${currentCategory.category_parent}`).then(res => res.json());
                         setSelectedCategory1(parentCategory.id);
 
-                        const resLevel1 = await fetch(`/api/categories/parent/${parentCategory.category_parent}`, {
-                            headers: {
-                                Authorization: `Bearer ${getCookie('access_token')}`,
-                            }
-                        });
+                        const resLevel1 = await fetch(`/api/categories/parent/${parentCategory.category_parent}`);
                         setCategoriesLevel1(await resLevel1.json());
 
                         if (parentCategory.category_parent) {
-                            let grandParentCategory = await fetch(`/api/categories/${parentCategory.category_parent}`, {
-                                headers: {
-                                    Authorization: `Bearer ${getCookie('access_token')}`,
-                                }
-                            }).then(res => res.json());
+                            let grandParentCategory = await fetch(`/api/categories/${parentCategory.category_parent}`).then(res => res.json());
                             setSelectedCategory0(grandParentCategory.id);
 
-                            const resLevel0 = await fetch(`/api/categories/parent`, {
-                                headers: {
-                                    Authorization: `Bearer ${getCookie('access_token')}`,
-                                }
-                            });
+                            const resLevel0 = await fetch(`/api/categories/parent`);
                             setCategoriesLevel0(await resLevel0.json());
                         } else {
                             setSelectedCategory0(selectedCategory1);
@@ -129,7 +97,13 @@ export default function EditProductPage() {
         };
 
         fetchProductAndCategories();
-    }, [productId]);
+    }, [productId, 
+        selectedCategory0, 
+        selectedCategory1, 
+        selectedCategory2, 
+        categoriesLevel1, 
+        categoriesLevel2
+    ]);
 
     // 📌 Gérer la sélection d'une nouvelle image
     const handleImageChange = (e) => {
@@ -158,11 +132,7 @@ export default function EditProductPage() {
 
         if (!categoryId) return;
 
-        const res = await fetch(`/api/categories/parent/${categoryId}`, {
-            headers: {
-                Authorization: `Bearer ${getCookie('access_token')}`,
-            }
-        });
+        const res = await fetch(`/api/categories/parent/${categoryId}`);
         if (!res.ok) return;
         setCategoriesLevel1(await res.json());
     };
@@ -175,11 +145,7 @@ export default function EditProductPage() {
 
         if (!categoryId) return;
 
-        const res = await fetch(`/api/categories/parent/${categoryId}`, {
-            headers: {
-                Authorization: `Bearer ${getCookie('access_token')}`,
-            }
-        });
+        const res = await fetch(`/api/categories/parent/${categoryId}`);
         if (!res.ok) return;
         setCategoriesLevel2(await res.json());
     };
@@ -226,7 +192,7 @@ export default function EditProductPage() {
 
     return (
         <>
-            <Header/>
+            <AdminHeader/>
             <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] p-auto m-auto pt-20">
                 <div className="py-4 px-12 bg-white rounded-lg shadow-md w-full max-w-md">
                     <h1 className="text-2xl font-bold mb-6 text-center">Modifier le produit</h1>
