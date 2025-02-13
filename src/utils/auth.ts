@@ -62,7 +62,7 @@ export async function isAuthenticatedUserAdmin(req: NextRequest) {
 
     if (!user || "error" in user) return null;
 
-    if (user.role !== "admin") return null;
+    if ("role" in user && user.role !== "admin") return null;
 
     return user;
 }

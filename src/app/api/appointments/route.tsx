@@ -143,7 +143,7 @@ export async function POST(req: NextRequest) {
         })();
 
         // ✅ Extraire les IDs uniques des produits
-        const productIds = [...new Set(cartProducts.map((p: any) => p.product_id))] as string[];
+        const productIds = [...new Set(cartProducts.map((p: { product_id: string }) => p.product_id))] as string[];
 
         if (productIds.length === 0) return "<p>Aucun produit dans le panier.</p>";
 
@@ -159,7 +159,7 @@ export async function POST(req: NextRequest) {
         }));
 
         // ✅ Construire la liste HTML avec les infos complètes
-        const rows = cartProducts.map((p: any) => {
+        const rows = cartProducts.map((p: { product_id: string, quantity: number }) => {
             const product = productsWithTotalPrice.find(prod => prod.id === p.product_id);
             return product
                 ? `<tr>
@@ -176,7 +176,7 @@ export async function POST(req: NextRequest) {
                 </tr>`;
         }).join("");
 
-        const optionsDate = {
+        const optionsDate: Intl.DateTimeFormatOptions = {
             weekday: "long",
             year: "numeric",
             month: "long",
