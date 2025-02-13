@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from 'next/image';
 import { FaEdit, FaSlidersH } from 'react-icons/fa';
 import Modal from 'react-modal';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
 import Header from "@/components/Header";
 import {getCookie} from "typescript-cookie";
@@ -170,7 +170,6 @@ export default function ProductsPage() {
         <>
             <Header />
             <div className="ml-20 mr-20 pt-24 p-4">
-                <ToastContainer/>
                 <h1 className="text-2xl font-bold text-center mb-8">Nos Produits</h1>
 
                 <div className="flex mb-6 w-full space-x-4">

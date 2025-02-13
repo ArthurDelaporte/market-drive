@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import { getCookie } from "typescript-cookie";
 import "react-toastify/dist/ReactToastify.css";
 import CheckoutButton from "@/components/CheckoutButton";
@@ -15,49 +14,6 @@ export default function CartPage() {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [setError] = useState(null);
-
-    useEffect(() => {
-        if (hasCheckedAuth) return;
-
-        const fetchUser = async () => {
-            try {
-                const accessToken = getCookie("access_token");
-
-                if (!accessToken) {
-                    toast.error("Vous devez être connecté pour voir votre panier !");
-                    return;
-                }
-
-                try {
-                    const response = await fetch("/api/auth/user", {
-                        method: "GET",
-                        headers: {
-                            Authorization: `Bearer ${accessToken}`,
-                        },
-                    });
-
-                    if (!response.ok) {
-                        const { error } = await response.json();
-                        toast.error(`Erreur : ${error}`);
-                        return;
-                    }
-
-                    const userData = await response.json();
-                    setUser(userData);
-                    setHasCheckedAuth(true);
-                    fetchCart(userData.id);
-                } catch (decodeError) {
-                    toast.error("Erreur lors du décodage du token.");
-                    console.error("Token decode error:", decodeError);
-                }
-            } catch (error) {
-                console.error("Erreur lors de la récupération de l'utilisateur :", error);
-                toast.error("Impossible de récupérer l'utilisateur.");
-            }
-        };
-
-        fetchUser();
-    }, [hasCheckedAuth], fetchCart);
 
     const fetchProducts = async (cartProducts) => {
         if (!cartProducts.length) return;
@@ -96,7 +52,7 @@ export default function CartPage() {
                 throw new Error("Erreur lors de la récupération du panier");
             }
             const cartData = await response.json();
-            fetchProducts(cartData.products)
+            await fetchProducts(cartData.products)
             setCart(cartData || []);
         } catch (error) {
             console.error("Erreur récupération du panier :", error);
@@ -105,6 +61,49 @@ export default function CartPage() {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        if (hasCheckedAuth) return;
+
+        const fetchUser = async () => {
+            try {
+                const accessToken = getCookie("access_token");
+
+                if (!accessToken) {
+                    toast.error("Vous devez être connecté pour voir votre panier !");
+                    return;
+                }
+
+                try {
+                    const response = await fetch("/api/auth/user", {
+                        method: "GET",
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                        },
+                    });
+
+                    if (!response.ok) {
+                        const { error } = await response.json();
+                        toast.error(`Erreur : ${error}`);
+                        return;
+                    }
+
+                    const userData = await response.json();
+                    setUser(userData);
+                    setHasCheckedAuth(true);
+                    await fetchCart(userData.id);
+                } catch (decodeError) {
+                    toast.error("Erreur lors du décodage du token.");
+                    console.error("Token decode error:", decodeError);
+                }
+            } catch (error) {
+                console.error("Erreur lors de la récupération de l'utilisateur :", error);
+                toast.error("Impossible de récupérer l'utilisateur.");
+            }
+        };
+
+        fetchUser();
+    }, [hasCheckedAuth], fetchCart);
 
     const updateQuantity = async (productId, newQuantity) => {
         if (!user) return;
@@ -161,7 +160,6 @@ export default function CartPage() {
     return (
         <>
             <Header />
-            <ToastContainer />
             <div className="container mx-auto p-6 pt-24">
                 <h1 className="text-3xl font-bold mb-6 text-center">Mon Panier</h1>
 

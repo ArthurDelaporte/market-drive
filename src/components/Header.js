@@ -9,7 +9,7 @@ import LogoutButton from './LogoutButton';
 import DialogCategory from './DialogCategory';
 import { getCookie, removeCookie } from "typescript-cookie";
 import { PUBLIC_PAGES } from '@/config/constants';
-import { toast, ToastContainer } from 'react-toastify';
+import { toast } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
 import {FaStream, FaShoppingCart, FaProductHunt, FaUsers, FaShoppingBasket} from 'react-icons/fa';
 import { jwtDecode } from "jwt-decode";
@@ -129,7 +129,6 @@ export default function Header() {
 
     return (
         <>
-            <ToastContainer />
             <header className="text-white p-4 rounded-b-lg shadow-md fixed w-full z-50">
                 {/* Desktop Navigation */}
                 <div className="container mx-auto hidden md:block">
