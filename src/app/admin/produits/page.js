@@ -67,7 +67,7 @@ export default function ProductsPage() {
 
     useEffect(() => {
         fetchProducts();
-    }, [categoryId, productName, fetchProducts]);
+    }, [categoryId, productName]);
 
     useEffect(() => {
         if (tempMinPrice && tempMaxPrice && parseFloat(tempMinPrice) > parseFloat(tempMaxPrice)) {

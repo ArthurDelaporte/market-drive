@@ -15,7 +15,7 @@ export default function Accueil() {
               <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
                 <h2 className="text-xl font-semibold text-[#424242] mb-4">Choisissez vos produits</h2>
                 <p className="text-[#424242]">
-                  Parcourez notre large sélection de produits, de l&apos;épicerie aux produits frais, directement en ligne.
+                  Parcourez notre large sélection de produits, de l'épicerie aux produits frais, directement en ligne.
                 </p>
               </div>
             </section>
@@ -23,7 +23,7 @@ export default function Accueil() {
             <section className="mt-12 text-center">
               <h2 className="text-3xl font-bold text-[#F57C00]">Prêt à faire vos courses ?</h2>
               <p className="text-lg mt-2">
-                Rejoignez notre service dès aujourd&apos;hui et profitez de la simplicité d&apos;un drive pour vos courses.
+                Rejoignez notre service dès aujourd'hui et profitez de la simplicité d'un drive pour vos courses.
               </p>
               <button
                   type="button"

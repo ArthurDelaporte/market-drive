@@ -14,6 +14,7 @@ export default function AdminOrdersPage() {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const router = useRouter();
     const [accessToken, setAccessToken] = useState(null);
     const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
 

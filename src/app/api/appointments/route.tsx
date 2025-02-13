@@ -2,6 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/prismaClient";
 import { addDays, startOfDay, format } from "date-fns";
 import {getAuthenticatedUser} from "@/utils/auth";
+import {getCookie} from "typescript-cookie";
 
 const OPEN_HOUR = 9;
 const CLOSE_HOUR = 20;

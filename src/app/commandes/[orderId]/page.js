@@ -11,6 +11,7 @@ import {PRODUCTS_STATUS} from "@/config/constants";
 import AppointmentForm from "@/components/AppointmentForm";
 
 export default function OrderDetailsPage() {
+    const router = useRouter();
     const { orderId } = useParams();
     const searchParams = useSearchParams();
 
@@ -71,7 +72,7 @@ export default function OrderDetailsPage() {
         };
 
         fetchUserAndOrder();
-    }, [accessToken, orderId, fetchProducts]);
+    }, [accessToken, orderId]);
 
     const fetchProducts = async (cartProducts) => {
         if (!cartProducts.length) return;

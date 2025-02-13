@@ -9,7 +9,7 @@ import {useRouter} from "next/navigation";
 export default function AdminHomePage() {
     const router = useRouter();
     const [user, setUser] = useState(null);
-    const [stats] = useState({
+    const [stats, setStats] = useState({
         totalSales: '145,250€',
         activeUsers: '1,234',
         dailyOrders: '56',
