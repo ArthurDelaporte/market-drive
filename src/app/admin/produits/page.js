@@ -31,43 +31,44 @@ export default function ProductsPage() {
     const categoryId = searchParams.get('categoryId');
     const productName = searchParams.get('productName');
 
-    const fetchProducts = async () => {
-        try {
-            setLoading(true);
-
-            let url = `/api/products`;
-            const queryParams = new URLSearchParams();
-
-            if (categoryId) {
-                queryParams.append("categoryId", categoryId);
-            }
-
-            if (productName) {
-                queryParams.append("productName", productName);
-            }
-
-            if (queryParams.toString()) {
-                url += `?${queryParams.toString()}`;
-            }
-
-            const res = await fetch(url, {
-                headers: {
-                    Authorization: `Bearer ${getCookie('access_token')}`,
-                }
-            });
-            if (!res.ok) throw new Error('Erreur de récupération des produits');
-            const data = await res.json();
-            setProducts(data);
-            setLoading(false);
-        } catch (err) {
-            setError(err.message);
-            setLoading(false);
-        }
-    };
-
     useEffect(() => {
+
+        const fetchProducts = async () => {
+            try {
+                setLoading(true);
+    
+                let url = `/api/products`;
+                const queryParams = new URLSearchParams();
+    
+                if (categoryId) {
+                    queryParams.append("categoryId", categoryId);
+                }
+    
+                if (productName) {
+                    queryParams.append("productName", productName);
+                }
+    
+                if (queryParams.toString()) {
+                    url += `?${queryParams.toString()}`;
+                }
+    
+                const res = await fetch(url, {
+                    headers: {
+                        Authorization: `Bearer ${getCookie('access_token')}`,
+                    }
+                });
+                if (!res.ok) throw new Error('Erreur de récupération des produits');
+                const data = await res.json();
+                setProducts(data);
+                setLoading(false);
+            } catch (err) {
+                setError(err.message);
+                setLoading(false);
+            }
+        };
+
         fetchProducts();
-    }, [categoryId, productName, fetchProducts]);
+    }, [categoryId, productName]);
 
     useEffect(() => {
         if (tempMinPrice && tempMaxPrice && parseFloat(tempMinPrice) > parseFloat(tempMaxPrice)) {
