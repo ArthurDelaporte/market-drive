@@ -1,8 +1,8 @@
-"use client"; // Ajouté en haut du fichier
+"use client"; // Obligatoire pour utiliser useState et fetch côté client
 
 import { useState } from "react";
 
-const ChatGPTVersion = ({ basketItems }) => {
+const ChatGPTVersion = ({ basketItems = [] }) => {
   const [response, setResponse] = useState("");
 
   const fetchChatGPTResponse = async () => {
