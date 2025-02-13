@@ -26,6 +26,30 @@ export default function AdminOrderDetailsPage() {
     useEffect(() => {
         if (!accessToken || !orderId) return;
 
+        const fetchProducts = async (cartProducts) => {
+            if (!cartProducts.length) return;
+    
+            const productIds = [...new Set(cartProducts.map((p) => p.product_id))];
+    
+            try {
+                const response = await fetch("/api/products/batch", {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ productIds }),
+                });
+    
+                if (!response.ok) throw new Error("Impossible de récupérer les produits");
+    
+                const data = await response.json();
+                setProducts(data.products);
+            } catch (error) {
+                setError(error instanceof Error ? error.message : "Erreur lors de la récupération des produits");
+            }
+        };
+
         const fetchOrder = async () => {
             try {
                 // Récupérer les détails de la commande
@@ -49,31 +73,9 @@ export default function AdminOrderDetailsPage() {
         };
 
         fetchOrder();
-    }, [accessToken, orderId]);
+    }, [accessToken, orderId, fetchProducts]);
 
-    const fetchProducts = async (cartProducts) => {
-        if (!cartProducts.length) return;
-
-        const productIds = [...new Set(cartProducts.map((p) => p.product_id))];
-
-        try {
-            const response = await fetch("/api/products/batch", {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ productIds }),
-            });
-
-            if (!response.ok) throw new Error("Impossible de récupérer les produits");
-
-            const data = await response.json();
-            setProducts(data.products);
-        } catch (error) {
-            setError(error instanceof Error ? error.message : "Erreur lors de la récupération des produits");
-        }
-    };
+    
 
     if (!accessToken) return <p className="text-center p-4">Veuillez vous connecter.</p>;
     if (loading) return <p className="text-center p-4">Chargement...</p>;
