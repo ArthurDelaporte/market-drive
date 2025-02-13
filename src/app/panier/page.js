@@ -13,7 +13,6 @@ export default function CartPage() {
     const [cart, setCart] = useState([]);
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [setError] = useState(null);
 
     useEffect(() => {
         if (hasCheckedAuth) return;
@@ -79,7 +78,8 @@ export default function CartPage() {
             const data = await response.json();
             setProducts(data.products);
         } catch (error) {
-            setError(error instanceof Error ? error.message : "Erreur lors de la récupération des produits");
+            console.error("Erreur lors de la récupération des produits :", error);
+            toast.error("Erreur lors du chargement des produits.");
         }
     };
 

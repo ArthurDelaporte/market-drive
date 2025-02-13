@@ -36,7 +36,7 @@ export async function GET(req: NextRequest, context: { params: { userId: string 
                     },
                 },
             },
-            orderBy: { created_at: "desc" },
+            orderBy: { paid_at: "desc" },
         });
 
         return NextResponse.json({ orders });

@@ -10,7 +10,6 @@ import { fr } from "date-fns/locale";
 import { PRODUCTS_STATUS } from "@/config/constants";
 
 export default function OrdersPage() {
-    const [setUser] = useState(null);
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -40,8 +39,6 @@ export default function OrdersPage() {
                 if (userData.role === "admin") {
                     router.push("/admin/commandes");
                 }
-
-                setUser(userData);
                 setHasCheckedAuth(true);
 
                 fetchOrders(userData.id);
