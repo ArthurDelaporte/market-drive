@@ -12,3 +12,12 @@ export const PRODUCTS_UNITIES = [
     'kg', 'g', 'mg',
     'L', 'cL', 'mL',
 ]
+
+export const PRODUCTS_STATUS = {
+    'waiting': 'en attente',
+    'paid': 'payée',
+    'validated': 'validée et payée',
+    'prepared': 'préparée',
+    'finished': 'à récupérer',
+    'recovered': 'récupérée'
+}

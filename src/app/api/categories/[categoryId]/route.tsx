@@ -3,6 +3,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/prismaClient';
 import { NextRequest } from 'next/server';
+import {isAuthenticatedUserAdmin} from "@/utils/auth";
 
 // 📌 **GET Handler** : Récupérer une catégorie par ID
 export async function GET(request: NextRequest, context: { params: { categoryId: string } }) {
@@ -30,8 +31,13 @@ export async function GET(request: NextRequest, context: { params: { categoryId:
 
 // PUT handler: Modifier une catégorie
 export async function PUT(request: NextRequest, context: { params: { categoryId: string } }) {
-
     try {
+        const authenticatedUser = await isAuthenticatedUserAdmin(request);
+
+        if (!authenticatedUser) {
+            return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+        }
+
         const { categoryId } = await context.params;
 
         if (!categoryId) {
@@ -59,6 +65,12 @@ export async function PUT(request: NextRequest, context: { params: { categoryId:
 // DELETE handler: Supprimer une catégorie
 export async function DELETE(request: NextRequest, context: { params: { categoryId: string } }) {
     try {
+        const authenticatedUser = await isAuthenticatedUserAdmin(request);
+
+        if (!authenticatedUser) {
+            return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+        }
+
         const { categoryId } = await context.params;
 
         if (!categoryId) {

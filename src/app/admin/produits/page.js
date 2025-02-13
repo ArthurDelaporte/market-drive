@@ -6,8 +6,9 @@ import Image from 'next/image';
 import { FaEdit, FaSlidersH } from 'react-icons/fa';
 import Modal from 'react-modal';
 import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import AdminHeader from "../../../components/AdminHeader";
+import "react-toastify/dist/ReactToastify.css";
+import Header from "@/components/Header";
+import {getCookie} from "typescript-cookie";
 
 export default function ProductsPage() {
     const router = useRouter();
@@ -15,7 +16,6 @@ export default function ProductsPage() {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [quantities, setQuantities] = useState({});
     const [selectedProducts, setSelectedProducts] = useState(new Set());
     const [isDeleteMode, setIsDeleteMode] = useState(false);
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -50,7 +50,11 @@ export default function ProductsPage() {
                 url += `?${queryParams.toString()}`;
             }
 
-            const res = await fetch(url);
+            const res = await fetch(url, {
+                headers: {
+                    Authorization: `Bearer ${getCookie('access_token')}`,
+                }
+            });
             if (!res.ok) throw new Error('Erreur de récupération des produits');
             const data = await res.json();
             setProducts(data);
@@ -107,7 +111,10 @@ export default function ProductsPage() {
         try {
             const res = await fetch('/api/products/batch', {
                 method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    Authorization: `Bearer ${getCookie('access_token')}`,
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({ productIds: Array.from(selectedProducts) }),
             });
 
@@ -123,21 +130,6 @@ export default function ProductsPage() {
             console.error(error);
         }
     }
-
-    const handleQuantityChange = (productId, quantity) => {
-        setQuantities((prev) => ({ ...prev, [productId]: Math.max(1, quantity) }));
-    };
-
-    const increaseQuantity = (productId) => {
-        setQuantities((prev) => ({ ...prev, [productId]: (prev[productId] || 1) + 1 }));
-    };
-
-    const decreaseQuantity = (productId) => {
-        setQuantities((prev) => ({
-            ...prev,
-            [productId]: Math.max(1, (prev[productId] || 1) - 1),
-        }));
-    };
 
     const openFilterModal = () => {
         setTempMinPrice(minPrice);
@@ -176,7 +168,7 @@ export default function ProductsPage() {
 
     return (
         <>
-            <AdminHeader />
+            <Header />
             <div className="ml-20 mr-20 pt-24 p-4">
                 <ToastContainer/>
                 <h1 className="text-2xl font-bold text-center mb-8">Nos Produits</h1>

@@ -2,6 +2,7 @@
 
 import { NextResponse, NextRequest } from 'next/server';
 import prisma from '@/prismaClient';
+import {isAuthenticatedUserAdmin} from "@/utils/auth";
 
 // GET handler: Récupérer les catégories
 export async function GET() {
@@ -17,6 +18,12 @@ export async function GET() {
 // POST handler: Ajouter une ou plusieurs catégories
 export async function POST(request: NextRequest) {
     try {
+        const authenticatedUser = await isAuthenticatedUserAdmin(request);
+
+        if (!authenticatedUser) {
+            return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+        }
+
         const categories: { name: string; category_parent?: string }[] = await request.json();
 
         if (!categories.length) {

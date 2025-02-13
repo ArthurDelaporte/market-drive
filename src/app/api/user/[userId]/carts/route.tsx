@@ -1,15 +1,22 @@
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/prismaClient";
+import {getAuthenticatedUser} from "@/utils/auth";
 
 /**
  * ✅ 1️⃣ Récupérer le panier d'un utilisateur
  */
 export async function GET(req: NextRequest, context: { params: { userId: string } }) {
     try {
-        const { userId } = context.params;
+        const { userId } = await context.params;
 
         if (!userId) {
             return NextResponse.json({ error: "ID utilisateur manquant" }, { status: 400 });
+        }
+
+        const authenticatedUser = await getAuthenticatedUser(req);
+
+        if (!authenticatedUser) {
+            return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
         }
 
         // Vérifier si un panier "waiting" existe pour cet utilisateur
@@ -34,11 +41,17 @@ export async function GET(req: NextRequest, context: { params: { userId: string 
  */
 export async function POST(req: NextRequest, context: { params: { userId: string } }) {
     try {
-        const { userId } = context.params;
+        const { userId } = await context.params;
         const { product_id, quantity } = await req.json();
 
-        if (!userId || !product_id || !quantity) {
+        if (!userId || !product_id || !quantity || quantity <= 0) {
             return NextResponse.json({ error: "Données manquantes" }, { status: 400 });
+        }
+
+        const authenticatedUser = await getAuthenticatedUser(req);
+
+        if (!authenticatedUser) {
+            return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
         }
 
         // Vérifier si un panier existe
@@ -68,7 +81,7 @@ export async function POST(req: NextRequest, context: { params: { userId: string
         }
 
         // Mise à jour du panier
-        const cartProducts = cart.products as any[];
+        const cartProducts = Array.isArray(cart.products) ? cart.products : [];
         const existingProduct = cartProducts.find(p => p.product_id === product_id);
 
         if (existingProduct) {
@@ -77,11 +90,19 @@ export async function POST(req: NextRequest, context: { params: { userId: string
             cartProducts.push({ product_id, quantity });
         }
 
-        // Recalcul du total
+        const productIds = cartProducts.map(p => p.product_id);
+        const productsDetails = await prisma.products.findMany({
+            where: { id: { in: productIds } },
+            select: { id: true, price: true, quantity: true },
+        });
+
+        // 💰 **Recalcul du montant total du panier**
         const totalAmount = cartProducts.reduce((sum, item) => {
-            const productPrice = parseFloat(((product.price || 1) * (product.quantity || 0)).toFixed(2))
-            ;
-            return sum + (productPrice * item.quantity);
+            const product = productsDetails.find(p => p.id === item.product_id);
+            if (!product) return sum;
+
+            const productTotalPrice = ((product.price || 1) * (product.quantity || 0)).toFixed(2);
+            return parseFloat((sum + (item.quantity * productTotalPrice)).toFixed(2));
         }, 0);
 
         // Mise à jour du panier en base
@@ -102,11 +123,16 @@ export async function POST(req: NextRequest, context: { params: { userId: string
  */
 export async function PATCH(req: NextRequest, context: { params: { userId: string } }) {
     try {
-        const { userId } = context.params;
+        const { userId } = await context.params;
         const { product_id, quantity } = await req.json();
 
         if (!userId || !product_id || quantity === undefined) {
             return NextResponse.json({ error: "Données manquantes" }, { status: 400 });
+        }
+
+        const authenticatedUser = await getAuthenticatedUser(req);
+        if (!authenticatedUser) {
+            return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
         }
 
         const cart = await prisma.carts.findFirst({
@@ -117,7 +143,16 @@ export async function PATCH(req: NextRequest, context: { params: { userId: strin
             return NextResponse.json({ error: "Aucun panier trouvé" }, { status: 404 });
         }
 
-        const cartProducts = cart.products as any[];
+        // Vérifier si le produit existe
+        const product = await prisma.products.findUnique({
+            where: { id: product_id },
+        });
+
+        if (!product) {
+            return NextResponse.json({ error: "Produit introuvable" }, { status: 404 });
+        }
+
+        const cartProducts = Array.isArray(cart.products) ? cart.products : [];
         const productIndex = cartProducts.findIndex(p => p.product_id === product_id);
 
         if (productIndex === -1) {
@@ -126,9 +161,19 @@ export async function PATCH(req: NextRequest, context: { params: { userId: strin
 
         cartProducts[productIndex].quantity = quantity;
 
-        // Recalcul du total
+        const productIds = cartProducts.map(p => p.product_id);
+        const productsDetails = await prisma.products.findMany({
+            where: { id: { in: productIds } },
+            select: { id: true, price: true, quantity: true },
+        });
+
+        // 💰 **Recalcul du montant total du panier**
         const totalAmount = cartProducts.reduce((sum, item) => {
-            return sum + item.quantity;
+            const product = productsDetails.find(p => p.id === item.product_id);
+            if (!product) return sum;
+
+            const productTotalPrice = ((product.price || 1) * (product.quantity || 0)).toFixed(2);
+            return parseFloat((sum + (item.quantity * productTotalPrice)).toFixed(2));
         }, 0);
 
         const updatedCart = await prisma.carts.update({
@@ -148,11 +193,17 @@ export async function PATCH(req: NextRequest, context: { params: { userId: strin
  */
 export async function DELETE(req: NextRequest, context: { params: { userId: string } }) {
     try {
-        const { userId } = context.params;
+        const { userId } = await context.params;
         const { product_id } = await req.json();
 
         if (!userId || !product_id) {
-            return NextResponse.json({ error: "Données manquantes" }, { status: 400 });
+            return NextResponse.json({error: "Données manquantes"}, {status: 400});
+        }
+
+        const authenticatedUser = await getAuthenticatedUser(req);
+
+        if (!authenticatedUser) {
+            return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
         }
 
         const cart = await prisma.carts.findFirst({
@@ -163,12 +214,31 @@ export async function DELETE(req: NextRequest, context: { params: { userId: stri
             return NextResponse.json({ error: "Aucun panier trouvé" }, { status: 404 });
         }
 
-        let cartProducts = cart.products as any[];
+        // Vérifier si le produit existe
+        const product = await prisma.products.findUnique({
+            where: { id: product_id },
+        });
+
+        if (!product) {
+            return NextResponse.json({ error: "Produit introuvable" }, { status: 404 });
+        }
+
+        let cartProducts = Array.isArray(cart.products) ? cart.products : [];
         cartProducts = cartProducts.filter(p => p.product_id !== product_id);
 
-        // Recalcul du total
+        const productIds = cartProducts.map(p => p.product_id);
+        const productsDetails = await prisma.products.findMany({
+            where: { id: { in: productIds } },
+            select: { id: true, price: true, quantity: true },
+        });
+
+        // 💰 **Recalcul du montant total du panier**
         const totalAmount = cartProducts.reduce((sum, item) => {
-            return sum + item.quantity;
+            const product = productsDetails.find(p => p.id === item.product_id);
+            if (!product) return sum;
+
+            const productTotalPrice = ((product.price || 1) * (product.quantity || 0)).toFixed(2);
+            return parseFloat((sum + (item.quantity * productTotalPrice)).toFixed(2));
         }, 0);
 
         const updatedCart = await prisma.carts.update({

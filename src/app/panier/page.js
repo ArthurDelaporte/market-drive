@@ -7,15 +7,20 @@ import { ToastContainer, toast } from "react-toastify";
 import { getCookie } from "typescript-cookie";
 import { jwtDecode } from "jwt-decode";
 import "react-toastify/dist/ReactToastify.css";
+import CheckoutButton from "@/components/CheckoutButton";
 
 export default function CartPage() {
     const router = useRouter();
     const [user, setUser] = useState(null);
+    const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
     const [cart, setCart] = useState([]);
+    const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
+        if (hasCheckedAuth) return;
+
         const fetchUser = async () => {
             try {
                 const accessToken = getCookie("access_token");
@@ -26,14 +31,6 @@ export default function CartPage() {
                 }
 
                 try {
-                    /* const { exp } = jwtDecode(accessToken);
-                    const now = Date.now() / 1000;
-
-                    if (exp && exp < now) {
-                        toast.error("Votre session a expiré. Veuillez vous reconnecter.");
-                        return;
-                    } */
-
                     const response = await fetch("/api/auth/user", {
                         method: "GET",
                         headers: {
@@ -48,8 +45,8 @@ export default function CartPage() {
                     }
 
                     const userData = await response.json();
-                    console.log(userData.id)
                     setUser(userData);
+                    setHasCheckedAuth(true);
                     fetchCart(userData.id);
                 } catch (decodeError) {
                     toast.error("Erreur lors du décodage du token.");
@@ -62,7 +59,32 @@ export default function CartPage() {
         };
 
         fetchUser();
-    }, []);
+    }, [hasCheckedAuth]);
+
+    const fetchProducts = async (cartProducts) => {
+        if (!cartProducts.length) return;
+
+        // Extraire les IDs uniques des produits
+        const productIds = [...new Set(cartProducts.map((p) => p.product_id))];
+
+        try {
+            const response = await fetch("/api/products/batch", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${getCookie("access_token")}`,
+                },
+                body: JSON.stringify({ productIds }),
+            });
+
+            if (!response.ok) throw new Error("Impossible de récupérer les produits");
+
+            const data = await response.json();
+            setProducts(data.products);
+        } catch (error) {
+            setError(error instanceof Error ? error.message : "Erreur lors de la récupération des produits");
+        }
+    };
 
     const fetchCart = async (userId) => {
         try {
@@ -76,8 +98,8 @@ export default function CartPage() {
                 throw new Error("Erreur lors de la récupération du panier");
             }
             const cartData = await response.json();
-            console.log(cartData);
-            setCart(cartData.products || []);
+            fetchProducts(cartData.products)
+            setCart(cartData || []);
         } catch (error) {
             console.error("Erreur récupération du panier :", error);
             toast.error("Erreur lors du chargement du panier.");
@@ -92,7 +114,10 @@ export default function CartPage() {
         try {
             const response = await fetch(`/api/user/${user.id}/carts`, {
                 method: "PATCH",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    Authorization: `Bearer ${getCookie("access_token")}`,
+                    "Content-Type": "application/json"
+                },
                 body: JSON.stringify({ product_id: productId, quantity: newQuantity }),
             });
 
@@ -102,7 +127,7 @@ export default function CartPage() {
                 return;
             }
 
-            setCart(cart.map(item => item.product_id === productId ? { ...item, quantity: newQuantity } : item));
+            fetchCart(user.id);
         } catch (error) {
             console.error("Erreur mise à jour quantité :", error);
             toast.error("Impossible de mettre à jour la quantité.");
@@ -115,7 +140,10 @@ export default function CartPage() {
         try {
             const response = await fetch(`/api/user/${user.id}/carts`, {
                 method: "DELETE",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    Authorization: `Bearer ${getCookie("access_token")}`,
+                    "Content-Type": "application/json"
+                },
                 body: JSON.stringify({ product_id: productId }),
             });
 
@@ -125,15 +153,12 @@ export default function CartPage() {
                 return;
             }
 
-            setCart(cart.filter(item => item.product_id !== productId));
+            fetchCart(user.id);
         } catch (error) {
             console.error("Erreur suppression produit :", error);
             toast.error("Impossible de supprimer le produit.");
         }
     };
-
-    // Calcul du prix total
-    const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity || 0), 0);
 
     return (
         <>
@@ -159,51 +184,49 @@ export default function CartPage() {
                                 </tr>
                             </thead>
                             <tbody className="text-gray-600 text-sm font-light">
-                                {cart.map((item) => (
-                                    <tr key={item.product_id} className="border-b border-gray-200 hover:bg-gray-100">
-                                        <td className="px-6 py-3 text-left">{item.name}</td>
-                                        <td className="px-6 py-3 text-center flex items-center justify-center space-x-2">
-                                            <button
-                                                onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
-                                                disabled={item.quantity <= 1}
-                                                className="px-2 py-1 text-gray-700 bg-gray-200 rounded hover:bg-gray-300 transition"
-                                            >
-                                                -
-                                            </button>
-                                            <span className="px-2">{item.quantity}</span>
-                                            <button
-                                                onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
-                                                className="px-2 py-1 text-white bg-teal-500 rounded hover:bg-teal-600 transition"
-                                            >
-                                                +
-                                            </button>
-                                        </td>
-                                        <td className="px-6 py-3 text-right">{(item.price || 0).toFixed(2)} €</td>
-                                        <td className="px-6 py-3 text-right">{((item.price || 0) * item.quantity).toFixed(2)} €</td>
-                                        <td className="px-6 py-3 text-center">
-                                            <button
-                                                onClick={() => removeFromCart(item.product_id)}
-                                                className="px-4 py-2 text-sm font-bold text-white bg-red-500 rounded hover:bg-red-600 transition"
-                                            >
-                                                Supprimer
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
+                                {cart.products.map((item) => {
+                                    const product = products.find(prod => prod.id === item.product_id);
+                                    return product ? (
+                                        <tr key={product.id} className="border-b border-gray-200 hover:bg-gray-100">
+                                            <td className="px-6 py-3 text-left">{product.name}</td>
+                                            <td className="px-6 py-3 text-center flex items-center justify-center space-x-2">
+                                                <button
+                                                    onClick={() => updateQuantity(product.id, item.quantity - 1)}
+                                                    disabled={item.quantity <= 1}
+                                                    className="px-2 py-1 text-gray-700 bg-gray-200 rounded hover:bg-gray-300 transition"
+                                                >
+                                                    -
+                                                </button>
+                                                <span className="px-2">{item.quantity}</span>
+                                                <button
+                                                    onClick={() => updateQuantity(product.id, item.quantity + 1)}
+                                                    className="px-2 py-1 text-white bg-teal-500 rounded hover:bg-teal-600 transition"
+                                                >
+                                                    +
+                                                </button>
+                                            </td>
+                                            <td className="px-6 py-3 text-right">{(product.total_price || 0).toFixed(2)} €</td>
+                                            <td className="px-6 py-3 text-right">{(parseFloat((product.total_price || 0)) * item.quantity).toFixed(2)} €</td>
+                                            <td className="px-6 py-3 text-center">
+                                                <button
+                                                    onClick={() => removeFromCart(product.id)}
+                                                    className="px-4 py-2 text-sm font-bold text-white bg-red-500 rounded hover:bg-red-600 transition"
+                                                >
+                                                    Supprimer
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ) : null;
+                                })}
                             </tbody>
                         </table>
                     </div>
                 )}
 
-                {cart.length > 0 && (
+                {products.length > 0 && (
                     <div className="mt-6 flex justify-between items-center">
-                        <p className="text-xl font-bold">Total : {totalPrice.toFixed(2)} €</p>
-                        <button
-                            onClick={() => router.push("/checkout")}
-                            className="px-6 py-3 bg-green-500 text-white text-lg rounded hover:bg-green-600 transition"
-                        >
-                            Passer à la commande
-                        </button>
+                        <p className="text-xl font-bold">Total : {cart.amount.toFixed(2)} €</p>
+                        <CheckoutButton cart={cart} produits={products} currentUser={user}/>
                     </div>
                 )}
             </div>

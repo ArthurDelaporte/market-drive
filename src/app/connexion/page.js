@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Header from "../../components/Header";
+import Header from "@/components/Header";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -48,8 +48,8 @@ export default function LoginPage() {
         <>
             <Header />
             <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] pt-20">
-                <h1 className="text-2xl font-bold mb-4">Connexion</h1>
                 <form onSubmit={handleLogin} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full max-w-md">
+                    <h1 className="text-2xl font-bold mb-4">Connexion</h1>
                     <div className="mb-4">
                         <label className="block text-gray-700 text-sm font-bold mb-2">Email</label>
                         <input

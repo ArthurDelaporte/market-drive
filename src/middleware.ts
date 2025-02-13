@@ -12,6 +12,7 @@ export async function middleware(request: NextRequest) {
         pathname.startsWith("/_next/") || // Next.js fichiers statiques
         pathname.startsWith("/favicon.ico") || // Favicon
         pathname.startsWith("/public/") || // Ressources publiques
+        pathname.startsWith("/node_modules") ||
         pathname.endsWith(".css") || // Feuilles de style
         pathname.endsWith(".js") || // JavaScript
         pathname.endsWith(".png") || // Images

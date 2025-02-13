@@ -5,5 +5,4 @@ export interface User {
     email: string | null;
     birthdate: string | null;
     role: string | null;
-  }
-  
+}

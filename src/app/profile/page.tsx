@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import ProfileForm from '@/components/Profileform';
 import { getCookie } from 'typescript-cookie';
 import Header from '@/components/Header';
-import AdminHeader from '@/components/AdminHeader';
 
 interface User {
   id: string;
@@ -108,7 +107,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {user?.role === 'admin' ? <AdminHeader /> : <Header />}
+      <Header />
       
       <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8 pt-20">
         <div className="max-w-xl mx-auto bg-white shadow-md rounded-lg overflow-hidden">

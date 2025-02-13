@@ -74,3 +74,11 @@ model appointments {
   user users? @relation(fields: [user_id], references: [id])
   cart carts? @relation(fields: [cart_id], references: [id])
 }
+
+model tickets {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  name       String
+  email      String
+  message    String
+}

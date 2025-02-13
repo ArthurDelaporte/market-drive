@@ -3,12 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from 'next/image';
-import { FaShoppingCart, FaEdit, FaSlidersH } from 'react-icons/fa';
+import { FaShoppingCart, FaSlidersH } from 'react-icons/fa';
 import Modal from 'react-modal';
 import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import Header from "../../components/Header";
-import {auto} from "openai/_shims/registry";
+import "react-toastify/dist/ReactToastify.css";
+import Header from "@/components/Header";
 import { getCookie } from "typescript-cookie";
 import { jwtDecode } from "jwt-decode";
 
@@ -44,15 +43,6 @@ export default function ProductsPage() {
                 }
 
                 try {
-                    const { exp } = jwtDecode(accessToken);
-                    const now = Date.now() / 1000;
-
-                    if (exp && exp < now) {
-                        removeCookie("access_token");
-                        setUser(null);
-                        return;
-                    }
-
                     const response = await fetch("/api/auth/user", {
                         method: "GET",
                         headers: {
@@ -62,13 +52,7 @@ export default function ProductsPage() {
 
                     if (!response.ok) {
                         const { error } = await response.json();
-                        const messages = {
-                            "Access token expired": "Votre session a expiré. Veuillez vous reconnecter.",
-                            "Invalid access token": "Token invalide. Veuillez vous reconnecter.",
-                            "User not found in database": "Utilisateur introuvable.",
-                        };
-
-                        toast.error(messages[error] || "Une erreur inconnue est survenue.", { toastId: error || "unknown-error" });
+                        toast.error(`Erreur : ${error}`);
                         return;
                     }
 
@@ -100,7 +84,10 @@ export default function ProductsPage() {
     
             const response = await fetch(`/api/user/${user.id}/carts`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    Authorization: `Bearer ${getCookie("access_token")}`,
+                    "Content-Type": "application/json"
+                },
                 body: JSON.stringify({ product_id: productId, quantity }),
             });
     
@@ -152,8 +139,6 @@ export default function ProductsPage() {
                 setLoading(false);
             }
         };
-
-
 
         fetchProducts();
     }, [categoryId, productName]);

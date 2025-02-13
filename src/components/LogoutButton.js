@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { removeCookie } from "typescript-cookie"; 
 import { createClient } from "@supabase/supabase-js";
+import { FaSignOutAlt } from 'react-icons/fa';
 
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -34,8 +35,10 @@ export default function LogoutButton() {
     return (
         <button
             onClick={handleLogout}
-            className="logoutbutton bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            className="logoutbutton w-full px-4 py-2 text-left flex items-center gap-2
+            bg-red-500 hover:bg-red-700 text-white hover:text-gray-100"
         >
+            <FaSignOutAlt className="h-5 w-5" />
             Se déconnecter
         </button>
     );

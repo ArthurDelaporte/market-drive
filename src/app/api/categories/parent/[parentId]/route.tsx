@@ -1,9 +1,9 @@
 // /api/categories/parent/[parentId]/route.tsx
 
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import prisma from '@/prismaClient';
 
-export async function GET(request: Request, context: { params: { parentId: string } }) {
+export async function GET(request: NextRequest, context: { params: { parentId: string } }) {
     try {
         const { parentId } = await context.params;
 

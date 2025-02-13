@@ -1,32 +1,27 @@
 // /api/products/[productId]
 
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import prisma from '@/prismaClient';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/supabaseClient';
 import { PRODUCTS_UNITIES } from "@/config/constants";
+import {getAuthenticatedUser, isAuthenticatedUserAdmin} from "@/utils/auth";
 
 // ✅ Vérification des variables d'environnement
 if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     throw new Error('Les variables d\'environnement Supabase ne sont pas définies.');
 }
 
-// 📌 Initialisation du client Supabase
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 const BUCKET_NAME = 'product_images';
 
 // 📌 **GET Handler: Récupérer un produit par ID**
-export async function GET(request: Request, context: { params: { productId: string } }) {
-    const { productId } = await context.params;
-
-    if (!productId) {
-        return NextResponse.json({ error: 'ID du produit invalide' }, { status: 400 });
-    }
-
+export async function GET(request: NextRequest, context: { params: { productId: string } }) {
     try {
+        const { productId } = await context.params;
+
+        if (!productId) {
+            return NextResponse.json({ error: 'ID du produit invalide' }, { status: 400 });
+        }
+
         const product = await prisma.products.findUnique({ where: { id: productId } });
 
         if (!product) {
@@ -43,14 +38,20 @@ export async function GET(request: Request, context: { params: { productId: stri
 }
 
 // 📌 **PUT Handler: Modifier un produit (et gérer l’upload d’image)**
-export async function PUT(request: Request, context: { params: { productId: string } }) {
-    const { productId } = context.params;
-
-    if (!productId) {
-        return NextResponse.json({ error: 'ID du produit invalide' }, { status: 400 });
-    }
-
+export async function PUT(request: NextRequest, context: { params: { productId: string } }) {
     try {
+        const authenticatedUser = await isAuthenticatedUserAdmin(request);
+
+        if (!authenticatedUser) {
+            return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+        }
+
+        const { productId } = context.params;
+
+        if (!productId) {
+            return NextResponse.json({ error: 'ID du produit invalide' }, { status: 400 });
+        }
+
         const formData = await request.formData();
         const name = formData.get("name") as string;
         const unity = formData.get("unity") as string;
@@ -130,8 +131,14 @@ export async function PUT(request: Request, context: { params: { productId: stri
 }
 
 // DELETE handler: Supprimer un produit
-export async function DELETE(request: Request, context: { params: { productId: string } }) {
+export async function DELETE(request: NextRequest, context: { params: { productId: string } }) {
     try {
+        const authenticatedUser = await isAuthenticatedUserAdmin(request);
+
+        if (!authenticatedUser) {
+            return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+        }
+
         const { productId } = await context.params;
 
         if (!productId) {

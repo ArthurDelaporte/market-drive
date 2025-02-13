@@ -1,15 +1,16 @@
 // /api/products
 
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import prisma from '@/prismaClient';
 import { Prisma } from "@prisma/client";
 import { supabase } from '@/supabaseClient';
 import { PRODUCTS_UNITIES } from "@/config/constants";
+import {isAuthenticatedUserAdmin} from "@/utils/auth";
 
 const BUCKET_NAME = "product_images";
 
 // 📌 **GET Handler** : Récupérer la liste des produits
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
     try {
         const { searchParams } = new URL(req.url);
         const categoryId = searchParams.get("categoryId");
@@ -58,8 +59,14 @@ export async function GET(req: Request) {
 }
 
 // 📌 **POST Handler** : Ajouter un produit et uploader l’image après insertion
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
     try {
+        const authenticatedUser = await isAuthenticatedUserAdmin(req);
+
+        if (!authenticatedUser) {
+            return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+        }
+
         const formData = await req.formData();
         const name = formData.get("name") as string;
         const unity = formData.get("unity") as string;

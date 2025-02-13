@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { getCookie } from 'typescript-cookie';
 import { BarChart, Activity, Users, DollarSign } from "lucide-react";
-import AdminHeader from '@/components/AdminHeader';
+import Header from '@/components/Header';
 import {useRouter} from "next/navigation";
 
 export default function AdminHomePage() {
@@ -52,20 +52,25 @@ export default function AdminHomePage() {
 
     return (
         <>
-            <AdminHeader />
+            <Header />
             <div className="container mx-auto">
                 {/* Main Content */}
                 <main className="py-12 px-4">
                     {/* Stats Grid */}
-                    <div className="mt-12">
+                    <div className="md:mt-12 mt-24">
                         <button className="mb-5 mr-2" onClick={() => router.push(`/admin/produits`)}>
                             <p>Voir les produits</p>
                         </button>
-                        <button className="mb-5 mt-5"
+                        <button className="mb-5 mr-2"
                                 onClick={() => router.push(`/admin/users`)}
-                            >
-                                Voir les utilisateurs
-                            </button>
+                        >
+                            Voir les utilisateurs
+                        </button>
+                        <button className="mb-5 mr-2"
+                                onClick={() => router.push(`/admin/commandes`)}
+                        >
+                            Voir les commandes
+                        </button>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                             <div className="bg-white p-6 rounded-lg shadow-sm">
                                 <div className="flex justify-between items-center mb-4">

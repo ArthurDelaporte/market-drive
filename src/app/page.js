@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation';
-import Header from "../components/Header";
+import Header from "@/components/Header";
 
 export default function Accueil() {
   const router = useRouter();
@@ -10,8 +10,8 @@ export default function Accueil() {
       <>
         <Header />
         <div className="container mx-auto">
-          <main className="py-12 px-4">
-            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">
+          <main className="py-12 px-4 md:mt-12 mt-40">
+            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
                 <h2 className="text-xl font-semibold text-[#424242] mb-4">Choisissez vos produits</h2>
                 <p className="text-[#424242]">
