@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import ProfileForm from '@/components/Profileform';
+import Profileform from '@/components/Profileform';
 import { getCookie } from 'typescript-cookie';
 import Header from '@/components/Header';
 
@@ -15,12 +15,10 @@ interface User {
   created_at: Date;
 }
 
-interface ProfileFormProps {
-  user: User;
-  onSubmit: (data: any) => Promise<void>;
-  isAdmin: boolean;
-  className?: string; 
-  [key: string]: any;
+interface ProfileData {
+  name?: string;
+  email?: string;
+  password?: string;
 }
 
 export default function ProfilePage() {
@@ -60,7 +58,7 @@ export default function ProfilePage() {
     }
   };
 
-  const handleProfileUpdate = async (data: any) => {
+  const handleProfileUpdate = async (data: ProfileData) => {
     try {
       const response = await fetch('/api/auth/user', {
         method: 'PUT',
@@ -115,7 +113,7 @@ export default function ProfilePage() {
             <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8 text-gray-800">
               Mon Profil
             </h1>
-            <ProfileForm
+            <Profileform
               user={user}
               onSubmit={handleProfileUpdate}
               isAdmin={user?.role === 'admin'}

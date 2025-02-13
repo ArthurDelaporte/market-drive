@@ -35,7 +35,7 @@ export default function EditProductPage() {
                 setLoading(true);
                 const res = await fetch(`/api/products/${productId}`, {
                     headers: {
-                        Authorization: `Bearer ${accessToken}`,
+                        Authorization: `Bearer ${getCookie('accessToken')}`,
                     }
                 });
                 if (!res.ok) throw new Error('Erreur de récupération du produit');

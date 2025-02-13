@@ -4,18 +4,16 @@ import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import { toast } from "react-toastify";
 import { getCookie } from "typescript-cookie";
-import { jwtDecode } from "jwt-decode";
 import "react-toastify/dist/ReactToastify.css";
 import CheckoutButton from "@/components/CheckoutButton";
 
 export default function CartPage() {
-    const router = useRouter();
     const [user, setUser] = useState(null);
     const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
     const [cart, setCart] = useState([]);
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [setError] = useState(null);
 
     useEffect(() => {
         if (hasCheckedAuth) return;

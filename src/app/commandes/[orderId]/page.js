@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {useRouter, useParams, useSearchParams} from "next/navigation";
+import {useParams, useSearchParams} from "next/navigation";
 import { getCookie } from "typescript-cookie";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -11,7 +11,6 @@ import {PRODUCTS_STATUS} from "@/config/constants";
 import AppointmentForm from "@/components/AppointmentForm";
 
 export default function OrderDetailsPage() {
-    const router = useRouter();
     const { orderId } = useParams();
     const searchParams = useSearchParams();
 

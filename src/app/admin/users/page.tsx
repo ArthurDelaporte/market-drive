@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { getCookie } from 'typescript-cookie';
 import { Search } from 'lucide-react';
 import Header from '@/components/Header';
-import { useRouter } from 'next/navigation';
 
 interface User {
   id: string;
@@ -16,7 +15,6 @@ interface User {
 }
 
 export default function UserManagementPage() {
-  const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');

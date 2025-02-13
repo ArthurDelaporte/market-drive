@@ -10,7 +10,7 @@ import { fr } from "date-fns/locale";
 import { PRODUCTS_STATUS } from "@/config/constants";
 
 export default function OrdersPage() {
-    const [user, setUser] = useState(null);
+    const [setUser] = useState(null);
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);

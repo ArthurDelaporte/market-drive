@@ -106,7 +106,7 @@ export default function SignupPage() {
                                 Au moins un chiffre
                             </li>
                             <li className={passwordChecklist.special ? "text-green-600" : "text-red-600"}>
-                                Au moins un caractère spécial (!@#$%^&*(),.?":{}|)
+                                Au moins un caractère spécial (!@#$%^&*(),.?&#34;:{}|)
                             </li>
                         </ul>
                     </div>
@@ -147,7 +147,7 @@ export default function SignupPage() {
                         }`}
                         disabled={!isPasswordValid}
                     >
-                        S'inscrire
+                        S&#39;inscrire
                     </button>
                 </form>
                 <p className="text-sm mt-2">

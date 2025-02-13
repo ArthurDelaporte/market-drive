@@ -16,20 +16,25 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
+const title = "Drive Courses - Faites vos courses en ligne"
+const description = "Commandez vos courses en ligne et récupérez-les à votre drive. Livraison rapide et facile."
+
 export const metadata: Metadata = {
-  title: "Drive Courses - Faites vos courses en ligne",
-  description: "Commandez vos courses en ligne et récupérez-les à votre drive. Livraison rapide et facile.",
+  title: title,
+  description: description,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
 
     return (
-        <html lang="en">
+        <html lang="fr">
             <head>
+                <title>{title}</title>
+                <meta name="description" content={description}/>
                 <link rel="icon" href="/favicon.ico"/>
             </head>
             <body className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}>
-                <ToastContainer position="top-right" autoClose={3000} />
+                <ToastContainer position="top-right" autoClose={3000} pauseOnHover closeOnClick />
                 <main className="flex-grow mb-16">
                     {children}
                 </main>

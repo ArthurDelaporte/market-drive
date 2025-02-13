@@ -4,7 +4,7 @@ import { NextResponse, NextRequest } from 'next/server';
 import prisma from '@/prismaClient';
 import { supabase } from '@/supabaseClient';
 import { PRODUCTS_UNITIES } from "@/config/constants";
-import {getAuthenticatedUser, isAuthenticatedUserAdmin} from "@/utils/auth";
+import {isAuthenticatedUserAdmin} from "@/utils/auth";
 
 // ✅ Vérification des variables d'environnement
 if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {

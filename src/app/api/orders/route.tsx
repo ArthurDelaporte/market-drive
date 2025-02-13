@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/prismaClient";
-import {getAuthenticatedUser, isAuthenticatedUserAdmin} from "@/utils/auth";
+import {isAuthenticatedUserAdmin} from "@/utils/auth";
 
 export async function GET(req: NextRequest) {
     try {

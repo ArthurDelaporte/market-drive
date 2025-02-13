@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { getCookie } from "typescript-cookie";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -10,7 +10,6 @@ import Header from "@/components/Header";
 import { PRODUCTS_STATUS } from "@/config/constants";
 
 export default function AdminOrderDetailsPage() {
-    const router = useRouter();
     const { orderId } = useParams();
 
     const [order, setOrder] = useState(null);

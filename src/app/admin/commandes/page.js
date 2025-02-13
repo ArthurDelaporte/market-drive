@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { getCookie } from "typescript-cookie";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/Header";
 import { format } from "date-fns";
@@ -14,7 +13,6 @@ export default function AdminOrdersPage() {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const router = useRouter();
     const [accessToken, setAccessToken] = useState(null);
     const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
 
