@@ -81,8 +81,9 @@ export async function POST(req: NextRequest, context: { params: { userId: string
         }
 
         // Mise à jour du panier
-        const cartProducts = Array.isArray(cart.products) ? cart.products : [];
-        const existingProduct = cartProducts.find(p => p.product_id === product_id);
+        type CartProduct = { product_id: string; quantity: number };
+        const cartProducts: CartProduct[] = Array.isArray(cart.products) ? cart.products as CartProduct[] : [];
+        const existingProduct = cartProducts.find((p) => p.product_id === product_id);
 
         if (existingProduct) {
             existingProduct.quantity += quantity;
@@ -90,19 +91,20 @@ export async function POST(req: NextRequest, context: { params: { userId: string
             cartProducts.push({ product_id, quantity });
         }
 
-        const productIds = cartProducts.map(p => p.product_id);
+        const productIds = cartProducts.map((p: {product_id: string}) => p.product_id);
         const productsDetails = await prisma.products.findMany({
             where: { id: { in: productIds } },
             select: { id: true, price: true, quantity: true },
         });
 
         // 💰 **Recalcul du montant total du panier**
-        const totalAmount = cartProducts.reduce((sum, item) => {
-            const product = productsDetails.find(p => p.id === item.product_id);
+        const totalAmount = cartProducts.reduce((sum: number, item: { product_id: string; quantity: number }) => {
+            const product = productsDetails.find((p) => p.id === item.product_id);
+
             if (!product) return sum;
 
-            const productTotalPrice = ((product.price || 1) * (product.quantity || 0)).toFixed(2);
-            return parseFloat((sum + (item.quantity * productTotalPrice)).toFixed(2));
+            const productPrice = (product.price ?? 1) * (product.quantity ?? 0);
+            return parseFloat((sum + (item.quantity * productPrice)).toFixed(2));
         }, 0);
 
         // Mise à jour du panier en base
@@ -152,8 +154,9 @@ export async function PATCH(req: NextRequest, context: { params: { userId: strin
             return NextResponse.json({ error: "Produit introuvable" }, { status: 404 });
         }
 
-        const cartProducts = Array.isArray(cart.products) ? cart.products : [];
-        const productIndex = cartProducts.findIndex(p => p.product_id === product_id);
+        type CartProduct = { product_id: string; quantity: number };
+        const cartProducts: CartProduct[] = Array.isArray(cart.products) ? (cart.products as CartProduct[]) : [];
+        const productIndex = cartProducts.findIndex(p => p?.product_id === product_id);
 
         if (productIndex === -1) {
             return NextResponse.json({ error: "Produit introuvable dans le panier" }, { status: 404 });
@@ -172,7 +175,9 @@ export async function PATCH(req: NextRequest, context: { params: { userId: strin
             const product = productsDetails.find(p => p.id === item.product_id);
             if (!product) return sum;
 
-            const productTotalPrice = ((product.price || 1) * (product.quantity || 0)).toFixed(2);
+            // ✅ Assurez-vous que le calcul est bien en `number`
+            const productTotalPrice = (product.price || 1) * (product.quantity || 0);
+
             return parseFloat((sum + (item.quantity * productTotalPrice)).toFixed(2));
         }, 0);
 
@@ -223,7 +228,8 @@ export async function DELETE(req: NextRequest, context: { params: { userId: stri
             return NextResponse.json({ error: "Produit introuvable" }, { status: 404 });
         }
 
-        let cartProducts = Array.isArray(cart.products) ? cart.products : [];
+        type CartProduct = { product_id: string; quantity: number };
+        let cartProducts: CartProduct[] = Array.isArray(cart.products) ? cart.products as CartProduct[] : [];
         cartProducts = cartProducts.filter(p => p.product_id !== product_id);
 
         const productIds = cartProducts.map(p => p.product_id);
@@ -237,8 +243,9 @@ export async function DELETE(req: NextRequest, context: { params: { userId: stri
             const product = productsDetails.find(p => p.id === item.product_id);
             if (!product) return sum;
 
-            const productTotalPrice = ((product.price || 1) * (product.quantity || 0)).toFixed(2);
-            return parseFloat((sum + (item.quantity * productTotalPrice)).toFixed(2));
+            const productTotalPrice = (product.price || 1) * (product.quantity || 0);
+
+            return parseFloat((sum + (item.quantity * productTotalPrice).toFixed(2)));
         }, 0);
 
         const updatedCart = await prisma.carts.update({
