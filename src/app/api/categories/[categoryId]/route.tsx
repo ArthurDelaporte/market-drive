@@ -6,7 +6,7 @@ import { NextRequest } from 'next/server';
 import {isAuthenticatedUserAdmin} from "@/utils/auth";
 
 // 📌 **GET Handler** : Récupérer une catégorie par ID
-export async function GET(request: NextRequest, { params }: { params: { categoryId: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Record<string, string> }) {
     try {
         const { categoryId } = params;
 
