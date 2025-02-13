@@ -14,49 +14,6 @@ export default function CartPage() {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        if (hasCheckedAuth) return;
-
-        const fetchUser = async () => {
-            try {
-                const accessToken = getCookie("access_token");
-
-                if (!accessToken) {
-                    toast.error("Vous devez être connecté pour voir votre panier !");
-                    return;
-                }
-
-                try {
-                    const response = await fetch("/api/auth/user", {
-                        method: "GET",
-                        headers: {
-                            Authorization: `Bearer ${accessToken}`,
-                        },
-                    });
-
-                    if (!response.ok) {
-                        const { error } = await response.json();
-                        toast.error(`Erreur : ${error}`);
-                        return;
-                    }
-
-                    const userData = await response.json();
-                    setUser(userData);
-                    setHasCheckedAuth(true);
-                    fetchCart(userData.id);
-                } catch (decodeError) {
-                    toast.error("Erreur lors du décodage du token.");
-                    console.error("Token decode error:", decodeError);
-                }
-            } catch (error) {
-                console.error("Erreur lors de la récupération de l'utilisateur :", error);
-                toast.error("Impossible de récupérer l'utilisateur.");
-            }
-        };
-
-        fetchUser();
-    }, [hasCheckedAuth]);
-
     const fetchProducts = async (cartProducts) => {
         if (!cartProducts.length) return;
 
@@ -134,7 +91,7 @@ export default function CartPage() {
                     const userData = await response.json();
                     setUser(userData);
                     setHasCheckedAuth(true);
-                    await fetchCart(userData.id);
+                    fetchCart(userData.id);
                 } catch (decodeError) {
                     toast.error("Erreur lors du décodage du token.");
                     console.error("Token decode error:", decodeError);
@@ -146,7 +103,7 @@ export default function CartPage() {
         };
 
         fetchUser();
-    }, [hasCheckedAuth], fetchCart);
+    }, [hasCheckedAuth, fetchCart]);
 
     const updateQuantity = async (productId, newQuantity) => {
         if (!user) return;

@@ -64,7 +64,7 @@ export default function AdminOrderDetailsPage() {
                 setOrder(data.order);
 
                 // Récupérer les détails des produits
-                fetchProducts(data.order.products);
+                await fetchProducts(data.order.products);
             } catch (error) {
                 setError(error instanceof Error ? error.message : "Erreur de récupération des données");
             } finally {
@@ -73,7 +73,7 @@ export default function AdminOrderDetailsPage() {
         };
 
         fetchOrder();
-    }, [accessToken, orderId, fetchProducts]);
+    }, [accessToken, orderId]);
 
     
 

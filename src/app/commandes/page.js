@@ -22,6 +22,24 @@ export default function OrdersPage() {
         if (token) setAccessToken(token);
     }, []);
 
+    const fetchOrders = async (userId) => {
+        try {
+            const response = await fetch(`/api/user/${userId}/orders`, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                }
+            });
+            if (!response.ok) throw new Error("Impossible de récupérer les commandes");
+
+            const data = await response.json();
+            setOrders(data.orders);
+        } catch (error) {
+            setError(error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
         if (hasCheckedAuth) return;
 
@@ -51,25 +69,7 @@ export default function OrdersPage() {
         if (accessToken) {
             fetchUser();
         }
-    }, [accessToken, hasCheckedAuth, router]);
-
-    const fetchOrders = async (userId) => {
-        try {
-            const response = await fetch(`/api/user/${userId}/orders`, {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                }
-            });
-            if (!response.ok) throw new Error("Impossible de récupérer les commandes");
-
-            const data = await response.json();
-            setOrders(data.orders);
-        } catch (error) {
-            setError(error.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+    }, [accessToken, hasCheckedAuth, router, fetchOrders]);
 
     if (!accessToken) return <p className="text-center p-4">Veuillez vous connecter.</p>;
 
