@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from 'next/image';
 import { FaEdit, FaSlidersH } from 'react-icons/fa';
@@ -12,7 +12,6 @@ import {getCookie} from "typescript-cookie";
 
 export default function ProductsPage() {
     const router = useRouter();
-    const searchParams = useSearchParams();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -26,10 +25,23 @@ export default function ProductsPage() {
     const [tempMaxPrice, setTempMaxPrice] = useState('');
     const [priceError, setPriceError] = useState(null);
     const [sortOption, setSortOption] = useState('');
+    const [categoryId, setCategoryId] = useState('');
+    const [productName, setProductName] = useState('');
 
-    // Récupérer le paramètre categoryId depuis l'URL
-    const categoryId = searchParams.get('categoryId');
-    const productName = searchParams.get('productName');
+
+    function SearchParamsComponent({ setCategoryId, setProductName }) {
+        const searchParams = useSearchParams();
+        const categoryId = searchParams.get('categoryId');
+        const productName = searchParams.get('productName');
+    
+        useEffect(() => {
+            setCategoryId(categoryId || '');
+            setProductName(productName || '');
+        }, [categoryId, productName, setCategoryId, setProductName]);
+    
+        return null;
+    }
+    
 
     useEffect(() => {
 
@@ -170,6 +182,10 @@ export default function ProductsPage() {
     return (
         <>
             <Header />
+            <Suspense fallback={<p>Chargement des filtres...</p>}>
+                <SearchParamsComponent setCategoryId={setCategoryId} setProductName={setProductName} />
+            </Suspense>
+
             <div className="ml-20 mr-20 pt-24 p-4">
                 <h1 className="text-2xl font-bold text-center mb-8">Nos Produits</h1>
 
