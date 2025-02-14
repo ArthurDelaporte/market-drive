@@ -71,10 +71,16 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
         }
 
-        const { user_id, cart_id, date, time } = await req.json();
+        const { user_id, cart_id, date, time, is_retrait, address } = await req.json();
 
-        if (!user_id || !cart_id || !date || !time) {
+        if (!user_id || !cart_id || !date || !time || typeof is_retrait !== "boolean") {
             return NextResponse.json({ error: "Champs obligatoires manquants" }, { status: 400 });
+        }
+
+        let newAddress = address.trim()
+
+        if (!address) {
+            newAddress = "28, place de la Bourse, Palais Brongniart, 75002 Paris"
         }
 
         const cart_appointment_exists = await prisma.appointments.findMany({
@@ -96,8 +102,14 @@ export async function POST(req: NextRequest) {
         const formattedDate = format(appointmentDate, "yyyy-MM-dd");
 
         const today = startOfDay(new Date());
+
+        // ✅ Ajuster le fuseau horaire en ajoutant 1 ou 2 heures (selon l'heure d'été ou hiver)
+        const franceOffset = new Date().getTimezoneOffset() === -120 ? 2 : 1; // Vérifie si on est en heure d'été ou hiver
         const minDate = addDays(today, 1);
         const maxDate = addDays(today, 7);
+
+        minDate.setHours(franceOffset, 0, 0, 0);
+        maxDate.setHours(franceOffset, 0, 0, 0);
 
         if (appointmentDate < minDate || appointmentDate > maxDate) {
             return NextResponse.json({ error: "Date hors plage autorisée" }, { status: 400 });
@@ -185,18 +197,18 @@ export async function POST(req: NextRequest) {
             day: "numeric",
         };
 
-        const newFormattedDate = new Date(formattedDate).toLocaleDateString('fr-FR', optionsDate)
+        const newFormattedDate = new Date(formattedDate).toLocaleDateString('fr-FR', optionsDate);
 
-        // ToDo Remettre l'image une fois que le site est hébergé
         const html = `
-            <!--
             <center>
                 <img src="${process.env.NEXT_PUBLIC_API_URL}/img/logo/Logo_Gigadrive_color.png" alt="Logo GigaDrive"
                  style="width:80px; height: 80px;">
             </center>
-            --> <!-- Indisponible en local -->
             <h2>Bonjour ${user.firstname || "Client"},</h2>
-            <p>Votre rendez-vous pour récupérer votre commande est confirmé :</p>
+            ${is_retrait ?
+            '<p>Votre rendez-vous pour récupérer votre commande est confirmé :</p>' :
+            '<p>Votre rendez-vous pour la livraison de votre commande est confirmé :</p>'}
+            <p style="margin-left: 15px">📍 <strong>Adresse :</strong> ${newAddress}</p>
             <p style="margin-left: 15px">📅 <strong>Date :</strong> ${newFormattedDate}</p>
             <p style="margin-left: 15px">🕒 <strong>Heure :</strong> ${time}</p>
             <h3>🛒 Récapitulatif de votre commande :</h3>
@@ -231,7 +243,7 @@ export async function POST(req: NextRequest) {
         });
 
         const newAppointment = await prisma.appointments.create({
-            data: { user_id, cart_id, date: new Date(formattedDate), time },
+            data: { user_id, cart_id, date: new Date(formattedDate), time, is_retrait, address: newAddress },
         });
 
         await prisma.carts.update({

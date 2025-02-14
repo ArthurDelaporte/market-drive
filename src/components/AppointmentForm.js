@@ -8,6 +8,8 @@ export default function AppointmentForm({ user_id, cart_id }) {
     const [date, setDate] = useState("");
     const [availableSlots, setAvailableSlots] = useState([]);
     const [selectedTime, setSelectedTime] = useState("");
+    const [isRetrait, setIsRetrait] = useState(true);
+    const [address, setAddress] = useState("");
     const [error, setError] = useState("");
     const router = useRouter();
 
@@ -32,9 +34,13 @@ export default function AppointmentForm({ user_id, cart_id }) {
             return;
         }
 
+        if (!isRetrait && !address.trim()) {
+            setError("Veuillez entrer une adresse pour la livraison.");
+            return;
+        }
+
         // 📌 Séparer date et heure pour correspondre au modèle
         const formattedDate = format(new Date(date), "yyyy-MM-dd"); // Stocke YYYY-MM-DD
-        // const formattedTime = selectedTime;
 
         const res = await fetch("/api/appointments", {
             method: "POST",
@@ -42,7 +48,14 @@ export default function AppointmentForm({ user_id, cart_id }) {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${getCookie('access_token')}`
             },
-            body: JSON.stringify({ user_id, cart_id, date: formattedDate, time: selectedTime }),
+            body: JSON.stringify({
+                user_id,
+                cart_id,
+                date: formattedDate,
+                time: selectedTime,
+                is_retrait: Boolean(isRetrait),
+                address: isRetrait ? null : address.trim(),
+            }),
         });
 
         const data = await res.json();
@@ -61,6 +74,47 @@ export default function AppointmentForm({ user_id, cart_id }) {
             {error && <p className="text-red-500 mb-3">{error}</p>}
 
             <form onSubmit={handleSubmit}>
+                {/* ✅ Sélection entre Retrait et Livraison */}
+                <label className="block mb-2">Choisir un mode :</label>
+                <div className="flex flex-col items-center mb-4">
+                    <label className="flex items-center mb-0">
+                        <input
+                            type="radio"
+                            name="mode"
+                            value="retrait"
+                            checked={isRetrait}
+                            onChange={() => setIsRetrait(true)}
+                            className="mr-2"
+                        />
+                        Retrait en magasin
+                    </label>
+                    <label className="flex items-center mt-0">
+                        <input
+                            type="radio"
+                            name="mode"
+                            value="livraison"
+                            checked={!isRetrait}
+                            onChange={() => setIsRetrait(false)}
+                            className="mr-2"
+                        />
+                        Livraison à domicile
+                    </label>
+                </div>
+
+                {/* ✅ Champ Adresse si livraison sélectionnée */}
+                {!isRetrait && (
+                    <div className="mb-4">
+                        <label className="block mb-2">Adresse de livraison :</label>
+                        <input
+                            type="text"
+                            value={address}
+                            onChange={(e) => setAddress(e.target.value)}
+                            className="border p-2 rounded w-full"
+                            placeholder="Entrez votre adresse..."
+                        />
+                    </div>
+                )}
+
                 <label className="block mb-2">Sélectionner une date :</label>
                 <input
                     type="date"

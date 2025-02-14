@@ -7,7 +7,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import Link from "next/link";
 import Header from "@/components/Header";
-import { PRODUCTS_STATUS } from "@/config/constants";
+import { PRODUCTS_STATUS, STATUS_FLOW } from "@/config/constants";
 
 export default function AdminOrderDetailsPage() {
     const { orderId } = useParams();
@@ -73,14 +73,44 @@ export default function AdminOrderDetailsPage() {
         };
 
         fetchOrder();
-    }, [accessToken, orderId, fetchProducts]);
+    }, [accessToken, orderId]);
 
-    
+    /**
+     * 📌 Met à jour le statut de la commande
+     */
+    const handleStatusChange = async (newStatus) => {
+        try {
+            const response = await fetch(`/api/orders/${orderId}/status`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({ newStatus }),
+            });
+
+            if (!response.ok) {
+                const { error } = await response.json();
+                throw new Error(error || "Erreur lors de la mise à jour du statut.");
+            }
+
+            // Mise à jour locale de la commande
+            setOrder((prevOrder) => ({ ...prevOrder, status: newStatus }));
+        } catch (error) {
+            setError(error.message);
+        }
+    };
 
     if (!accessToken) return <p className="text-center p-4">Veuillez vous connecter.</p>;
     if (loading) return <p className="text-center p-4">Chargement...</p>;
     if (error) return <p className="text-center p-4 text-red-500">{error}</p>;
     if (!order) return <p className="text-center p-4">Commande introuvable.</p>;
+
+    // 🎯 Définition des statuts autorisés selon la logique business
+    let allowedStatuses = STATUS_FLOW[order.status] || [];
+    if (order.status === 'prepared' && order.appointments[0]) {
+        allowedStatuses = order.appointments[0].is_retrait ? ["recovery"] : ["delivery"];
+    }
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -94,14 +124,39 @@ export default function AdminOrderDetailsPage() {
                     <p><strong>Client :</strong> {order.users.firstname} {order.users.lastname}</p>
                     <p><strong>Email :</strong> {order.users.email}</p>
                     <p><strong>Payé le :</strong> {order.paid_at ? format(new Date(order.paid_at), "dd/MM/yyyy à HH'h'mm", { locale: fr }) : "Non payé"}</p>
-                    <p><strong>Statut :</strong> {PRODUCTS_STATUS[order.status]}</p>
+                    {/* 📌 Sélecteur pour modifier le statut */}
+                    <div className="flex flex-wrap items-center gap-2">
+                        <p><strong>Statut :</strong></p>
+                        <select
+                            value={order.status}
+                            onChange={(e) => handleStatusChange(e.target.value)}
+                            className="border p-2 rounded"
+                        >
+                            <option value={order.status}>{PRODUCTS_STATUS[order.status]}</option>
+                            {allowedStatuses.map((status) => (
+                                <option key={status} value={status}>
+                                    {PRODUCTS_STATUS[status]}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                     <p><strong>Montant total :</strong> {order.amount.toFixed(2).replace(".", ",")} €</p>
 
                     {order.appointments[0] ? (
-                        <p>
-                            <strong>Rendez-vous :</strong>
-                            {format(new Date(order.appointments[0].date), "dd/MM/yyyy", { locale: fr })} à {order.appointments[0].time.replace(':', 'h')}
-                        </p>
+                        <>
+                            <p>
+                                <strong>Rendez-vous : </strong>
+                                {format(new Date(order.appointments[0].date), "dd/MM/yyyy", {locale: fr})} à {order.appointments[0].time.replace(':', 'h')}
+                            </p>
+                            {order.appointments[0].is_retrait ? (
+                                <p><strong>Mode :</strong> Retrait en magasin</p>
+                            ) : (
+                                <>
+                                    <p><strong>Mode :</strong> Livraison à domicile</p>
+                                    <p><strong>Adresse :</strong> {order.appointments[0].address}</p>
+                                </>
+                            )}
+                        </>
                     ) : (
                         <p><strong>Rendez-vous :</strong> Non planifié</p>
                     )}

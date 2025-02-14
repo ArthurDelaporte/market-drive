@@ -70,6 +70,8 @@ model appointments {
   cart_id    String   @db.Uuid
   date       DateTime @db.Date
   time       String
+  is_retrait Boolean
+  address    String?  @default("28, place de la Bourse, Palais Brongniart, 75002 Paris")
 
   user users? @relation(fields: [user_id], references: [id])
   cart carts? @relation(fields: [cart_id], references: [id])

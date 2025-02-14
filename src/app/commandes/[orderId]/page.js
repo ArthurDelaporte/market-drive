@@ -118,10 +118,18 @@ export default function OrderDetailsPage() {
                     <p><strong>Montant total :</strong> {order.amount.toFixed(2).toString().replace('.',',')} €</p>
 
                     {order.appointments[0] ? (
-                        <p>
-                            <strong>Rendez-vous :</strong>
-                            {format(new Date(order.appointments[0].date), "dd/MM/yyyy", { locale: fr })} à {order.appointments[0].time.replace(':', 'h')}
-                        </p>
+                        <>
+                            <p>
+                                <strong>Mode :</strong> {order.appointments[0].is_retrait ? "Retrait en magasin" : "Livraison à domicile"}
+                            </p>
+                            <p>
+                                <strong>Adresse :</strong> {order.appointments[0].address}
+                            </p>
+                            <p>
+                                <strong>Rendez-vous :</strong>
+                                {format(new Date(order.appointments[0].date), "dd/MM/yyyy", {locale: fr})} à {order.appointments[0].time.replace(':', 'h')}
+                            </p>
+                        </>
                     ) : (
                         <p>
                             <strong>Rendez-vous :</strong> Non planifié -

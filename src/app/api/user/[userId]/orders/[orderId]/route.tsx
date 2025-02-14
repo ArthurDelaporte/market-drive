@@ -39,6 +39,8 @@ export async function GET(req: NextRequest, context: { params: { userId: string,
                     select: {
                         date: true,
                         time: true,
+                        is_retrait: true,
+                        address: true
                     },
                 },
             },

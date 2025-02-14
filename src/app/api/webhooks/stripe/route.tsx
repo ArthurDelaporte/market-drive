@@ -148,14 +148,11 @@ async function sendPaymentConfirmationEmail( req: NextRequest, email: string, fi
             </tr>`;
     }).join("");
 
-    // ToDo Remettre l'image une fois que le site est hébergé
     const html = `
-        <!--
         <center>
             <img src="${process.env.NEXT_PUBLIC_API_URL}/img/logo/Logo_Gigadrive_color.png" alt="Logo GigaDrive"
              style="width:80px; height: 80px;">
         </center>
-        --> <!-- Indisponible en local -->
         <h2>Bonjour ${firstname || "Client"},</h2>
         <p>Votre paiement a bien été reçu ! Merci pour votre commande.</p>
         <h3>🛒 Récapitulatif de votre commande :</h3>

@@ -34,6 +34,8 @@ export async function GET(req: NextRequest) {
                     select: {
                         date: true,
                         time: true,
+                        is_retrait: true,
+                        address: true
                     },
                 },
             },

@@ -40,6 +40,8 @@ export async function GET(req: NextRequest, context: { params: { orderId: string
                     select: {
                         date: true,
                         time: true,
+                        is_retrait: true,
+                        address: true
                     },
                 },
             },

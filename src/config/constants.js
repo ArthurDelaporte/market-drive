@@ -17,7 +17,18 @@ export const PRODUCTS_STATUS = {
     'waiting': 'en attente',
     'paid': 'payée',
     'validated': 'validée et payée',
+    'preparation': 'en préparation',
     'prepared': 'préparée',
-    'finished': 'à récupérer',
+    'delivery': 'en cours de livraison',
+    'delivered': 'livrée',
+    'recovery': 'à récupérer',
     'recovered': 'récupérée'
 }
+
+export const STATUS_FLOW = {
+    validated: ["preparation"],
+    preparation: ["prepared"],
+    prepared: ["delivery", "recovery"],
+    delivery: ["delivered"],
+    recovery: ["recovered"],
+};

@@ -96,6 +96,7 @@ export default function OrdersPage() {
                                 <th className="p-3 text-center">Montant</th>
                                 <th className="p-3 text-center">Statut</th>
                                 <th className="p-3 text-center">Rendez-vous</th>
+                                <th className="p-3 text-center">Mode</th>
                                 <th className="p-3 text-right">Action</th>
                             </tr>
                         </thead>
@@ -118,7 +119,7 @@ export default function OrdersPage() {
                                 <td className="p-3 text-center">{PRODUCTS_STATUS[order.status]}</td>
                                 <td className="p-3 text-center">{order.appointments[0] ?
                                     (
-                                        `${format(new Date(order.appointments[0].date), "dd/MM/yyyy", { locale: fr })} à ${order.appointments[0].time.replace(':', 'h')}`
+                                        `${order.appointments[0].is_retrait ? "Retrait en magasin le " : "Livraison à domicile le "}${format(new Date(order.appointments[0].date), "dd/MM/yyyy", {locale: fr})} à ${order.appointments[0].time.replace(':', 'h')}`
                                     ) : (
                                         <span>
                                             Non planifié -{" "}
