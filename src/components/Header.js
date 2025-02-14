@@ -136,7 +136,7 @@ export default function Header() {
                         <div className="flex items-center gap-3">
                             <Link href="/" className="flex-shrink-0">
                                 <Image
-                                    src="/img/logo/logo.png"
+                                    src="/img/logo/Logo.png"
                                     alt="GIGA Drive Logo"
                                     width={90}
                                     height={90}
