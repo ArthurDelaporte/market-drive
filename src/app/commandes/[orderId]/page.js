@@ -10,19 +10,26 @@ import Header from "@/components/Header";
 import {PRODUCTS_STATUS} from "@/config/constants";
 import AppointmentForm from "@/components/AppointmentForm";
 
+function SearchParamsHandler({ setAppointmentFormVisible }) {
+    const searchParams = useSearchParams();
+    const appointmentForm = searchParams.get('planifier') === 'true';
+
+    useEffect(() => {
+        setAppointmentFormVisible(appointmentForm);
+    }, [appointmentForm, setAppointmentFormVisible]);
+
+    return null;
+}
+
 export default function OrderDetailsPage() {
     const { orderId } = useParams();
-    const searchParams = useSearchParams();
-
-    const appointment_form = searchParams.get('planifier') || false;
-
+    const [appointmentFormVisible, setAppointmentFormVisible] = useState(false);
     const [user, setUser] = useState(null);
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [accessToken, setAccessToken] = useState(null);
     const [products, setProducts] = useState([]);
-    const [appointmentFormVisible, setAppointmentFormVisible] = useState(appointment_form);
 
     // Récupération du token au chargement
     useEffect(() => {
@@ -107,6 +114,10 @@ export default function OrderDetailsPage() {
     return (
         <div className="min-h-screen bg-gray-50">
             <Header />
+            <Suspense fallback={<p>Chargement des paramètres...</p>}>
+                <SearchParamsHandler setAppointmentFormVisible={setAppointmentFormVisible} />
+            </Suspense>
+
             <div className="container mx-auto px-4 py-8">
                 <center>
                     <h1 className="text-2xl font-bold mb-6 md:mt-12 mt-24 pt-12">Détails de la commande</h1>

@@ -1,16 +1,25 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Header from "@/components/Header";
 
+function SearchParamsHandler({ setRedirectTo }) {
+    const searchParams = useSearchParams();
+    const redirectParam = searchParams.get('redirect');
+
+    useEffect(() => {
+        setRedirectTo(redirectParam || '/');
+    }, [redirectParam, setRedirectTo]);
+
+    return null;
+}
+
 export default function LoginPage() {
     const router = useRouter();
-    const searchParams = useSearchParams();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-
-    const redirectTo = searchParams.get('redirect') || '/';
+    const [redirectTo, setRedirectTo] = useState('/');
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -28,14 +37,11 @@ export default function LoginPage() {
                 return;
             }
 
-            // Vérification du rôle de l'utilisateur
             const userRole = data.user?.role;
 
             if (userRole === 'admin') {
-                // Redirige vers le tableau de bord admin
                 router.push('/admin');
             } else {
-                // Redirige vers la page demandée ou la page d'accueil
                 router.push(redirectTo);
             }
         } catch (error) {
@@ -47,6 +53,9 @@ export default function LoginPage() {
     return (
         <>
             <Header />
+            <Suspense fallback={<p>Chargement des paramètres...</p>}>
+                <SearchParamsHandler setRedirectTo={setRedirectTo} />
+            </Suspense>
             <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] pt-20">
                 <form onSubmit={handleLogin} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full max-w-md">
                     <h1 className="text-2xl font-bold mb-4">Connexion</h1>
