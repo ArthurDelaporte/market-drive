@@ -13,6 +13,10 @@ export default function CartPage() {
     const [cart, setCart] = useState([]);
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [recipe, setRecipe] = useState(null);
+    const [isLoadingRecipe, setIsLoadingRecipe] = useState(false);
+    const [ingredientsInfo, setIngredientsInfo] = useState({});
+
 
 
     useEffect(() => {
@@ -158,6 +162,68 @@ export default function CartPage() {
         }
     };
 
+    // 🔹 Générer des recettes en utilisant GPT
+    const handleGenerateRecipe = async () => {
+        const categoryId = '';
+        const productName = '';
+
+        setIsLoadingRecipe(true);
+        setRecipe(null);
+
+        try {
+            // Récupérer tous les produits avec la même logique que dans ProductsPage
+            let url = `/api/products`;
+            const queryParams = new URLSearchParams();
+
+            // Pas de filtre, on récupère tout
+            if (categoryId) {
+                queryParams.append("categoryId", categoryId);
+            }
+            if (productName) {
+                queryParams.append("productName", productName);
+            }
+
+            if (queryParams.toString()) {
+                url += `?${queryParams.toString()}`;
+            }
+
+            // Appel API pour récupérer les produits
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('Erreur de récupération des produits');
+
+            const data = await res.json();
+
+            // Extraire uniquement les noms des produits
+            const productNames = data.map(product => product.name);
+
+            // Appel à l'API pour générer les recettes
+            const response = await fetch("/api/chatgpt/recette", {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${getCookie("access_token")}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ productNames }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.recipe) {
+                setRecipe(result.recipe);
+                toast.success("Recettes générées avec succès !");
+            } else {
+                toast.error(result.error || "Impossible de générer les recettes.");
+            }
+
+        } catch (error) {
+            console.error("Erreur lors de la génération des recettes:", error);
+            toast.error("Erreur lors de la génération des recettes.");
+        } finally {
+            setIsLoadingRecipe(false);
+        }
+    };
+
+
     return (
         <>
             <Header />
@@ -226,6 +292,63 @@ export default function CartPage() {
                         <CheckoutButton cart={cart} produits={products} currentUser={user}/>
                     </div>
                 )}
+                    <div className="flex justify-center mt-6">
+                        <button
+                            onClick={handleGenerateRecipe}
+                            className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition"
+                            disabled={isLoadingRecipe}
+                        >
+                            {isLoadingRecipe ? "Génération en cours..." : "Proposer des recettes 🍳"}
+                        </button>
+                    </div>
+                    {recipe && (
+                        <div className="mt-6 p-4 border border-gray-300 rounded-lg bg-gray-100">
+                            <h2 className="text-xl font-bold mb-4">🍽️ Recettes suggérées :</h2>
+                            <p className="whitespace-pre-wrap">{recipe}</p>
+
+                            {/* 🛒 Ingrédients disponibles */}
+                            <div className="mt-4">
+                                <h3 className="text-lg font-semibold">🛒 Ingrédients disponibles :</h3>
+                                <ul className="list-disc ml-6">
+                                    {ingredientsInfo?.disponibles?.length > 0 ? (
+                                        ingredientsInfo.disponibles.map((item, idx) => (
+                                            <li key={idx}>{item}</li>
+                                        ))
+                                    ) : (
+                                        <li>Aucun</li>
+                                    )}
+                                </ul>
+                            </div>
+
+                            {/* 🚚 Ingrédients manquants disponibles */}
+                            <div className="mt-4">
+                                <h3 className="text-lg font-semibold">🚚 Ingrédients manquants mais disponibles :</h3>
+                                <ul className="list-disc ml-6">
+                                    {ingredientsInfo?.manquantsDisponibles?.length > 0 ? (
+                                        ingredientsInfo.manquantsDisponibles.map((item, idx) => (
+                                            <li key={idx}>{item}</li>
+                                        ))
+                                    ) : (
+                                        <li>Aucun</li>
+                                    )}
+                                </ul>
+                            </div>
+
+                            {/* 🚫 Ingrédients indisponibles */}
+                            <div className="mt-4">
+                                <h3 className="text-lg font-semibold text-red-600">🚫 Ingrédients indisponibles :</h3>
+                                <ul className="list-disc ml-6">
+                                    {ingredientsInfo?.manquantsIndisponibles?.length > 0 ? (
+                                        ingredientsInfo.manquantsIndisponibles.map((item, idx) => (
+                                            <li key={idx}>{item}</li>
+                                        ))
+                                    ) : (
+                                        <li>Aucun</li>
+                                    )}
+                                </ul>
+                            </div>
+                        </div>
+                    )}
             </div>
         </>
     );
