@@ -1,12 +1,22 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
 
+function SearchParamsHandler({ setRedirectTo }) {
+    const searchParams = useSearchParams();
+    const redirectParam = searchParams.get('redirect');
+
+    useEffect(() => {
+        setRedirectTo(redirectParam || '/');
+    }, [redirectParam, setRedirectTo]);
+
+    return null;
+}
+
 export default function SignupPage() {
     const router = useRouter();
-    const searchParams = useSearchParams();
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -21,7 +31,7 @@ export default function SignupPage() {
         special: false,
     });
 
-    const redirectTo = searchParams.get('redirect') || '/';
+    const [redirectTo, setRedirectTo] = useState('/');
 
     const validatePassword = (password) => {
         return {
@@ -67,6 +77,10 @@ export default function SignupPage() {
     return (
         <>
             <Header />
+            <Suspense fallback={<p>Chargement des paramètres...</p>}>
+                <SearchParamsHandler setRedirectTo={setRedirectTo} />
+            </Suspense>
+
             <div className="flex flex-col items-center justify-center min-h-screen p-4 pt-24">
                 <h1 className="text-2xl font-bold mb-4">Inscription</h1>
                 <form
