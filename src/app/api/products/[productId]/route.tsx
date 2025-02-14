@@ -1,10 +1,8 @@
-// /api/products/[productId]
-
 import { NextResponse, NextRequest } from 'next/server';
 import prisma from '@/prismaClient';
 import { supabase } from '@/supabaseClient';
 import { PRODUCTS_UNITIES } from "@/config/constants";
-import {isAuthenticatedUserAdmin} from "@/utils/auth";
+import { isAuthenticatedUserAdmin } from "@/utils/auth";
 
 // ✅ Vérification des variables d'environnement
 if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
@@ -14,9 +12,11 @@ if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_A
 const BUCKET_NAME = 'product_images';
 
 // 📌 **GET Handler: Récupérer un produit par ID**
-export async function GET(request: NextRequest, context: { params: { productId: string } }) {
+export async function GET(request: NextRequest) {
     try {
-        const { productId } = await context.params;
+        // Extraire productId depuis l'URL
+        const pathSegments = request.nextUrl.pathname.split('/');
+        const productId = pathSegments[pathSegments.length - 1];
 
         if (!productId) {
             return NextResponse.json({ error: 'ID du produit invalide' }, { status: 400 });
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest, context: { params: { productId: 
 }
 
 // 📌 **PUT Handler: Modifier un produit (et gérer l’upload d’image)**
-export async function PUT(request: NextRequest, context: { params: { productId: string } }) {
+export async function PUT(request: NextRequest) {
     try {
         const authenticatedUser = await isAuthenticatedUserAdmin(request);
 
@@ -46,7 +46,9 @@ export async function PUT(request: NextRequest, context: { params: { productId: 
             return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
         }
 
-        const { productId } = context.params;
+        // Extraire productId depuis l'URL
+        const pathSegments = request.nextUrl.pathname.split('/');
+        const productId = pathSegments[pathSegments.length - 1];
 
         if (!productId) {
             return NextResponse.json({ error: 'ID du produit invalide' }, { status: 400 });
@@ -130,8 +132,8 @@ export async function PUT(request: NextRequest, context: { params: { productId: 
     }
 }
 
-// DELETE handler: Supprimer un produit
-export async function DELETE(request: NextRequest, context: { params: { productId: string } }) {
+// 🗑️ **DELETE Handler: Supprimer un produit**
+export async function DELETE(request: NextRequest) {
     try {
         const authenticatedUser = await isAuthenticatedUserAdmin(request);
 
@@ -139,7 +141,9 @@ export async function DELETE(request: NextRequest, context: { params: { productI
             return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
         }
 
-        const { productId } = await context.params;
+        // Extraire productId depuis l'URL
+        const pathSegments = request.nextUrl.pathname.split('/');
+        const productId = pathSegments[pathSegments.length - 1];
 
         if (!productId) {
             return NextResponse.json({ error: 'Invalid product ID' }, { status: 400 });

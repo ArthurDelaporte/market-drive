@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import {useParams, useSearchParams} from "next/navigation";
 import { getCookie } from "typescript-cookie";
 import { format } from "date-fns";
@@ -10,19 +10,26 @@ import Header from "@/components/Header";
 import {PRODUCTS_STATUS} from "@/config/constants";
 import AppointmentForm from "@/components/AppointmentForm";
 
+function SearchParamsHandler({ setAppointmentFormVisible }) {
+    const searchParams = useSearchParams();
+    const appointmentForm = searchParams.get('planifier') === 'true';
+
+    useEffect(() => {
+        setAppointmentFormVisible(appointmentForm);
+    }, [appointmentForm, setAppointmentFormVisible]);
+
+    return null;
+}
+
 export default function OrderDetailsPage() {
     const { orderId } = useParams();
-    const searchParams = useSearchParams();
-
-    const appointment_form = searchParams.get('planifier') || false;
-
+    const [appointmentFormVisible, setAppointmentFormVisible] = useState(false);
     const [user, setUser] = useState(null);
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [accessToken, setAccessToken] = useState(null);
     const [products, setProducts] = useState([]);
-    const [appointmentFormVisible, setAppointmentFormVisible] = useState(appointment_form);
 
     // Récupération du token au chargement
     useEffect(() => {
@@ -30,9 +37,35 @@ export default function OrderDetailsPage() {
         if (token) setAccessToken(token);
     }, []);
 
+
     // Récupération des infos utilisateur et de la commande
     useEffect(() => {
         if (!accessToken || !orderId) return;
+
+        const fetchProducts = async (cartProducts) => {
+            if (!cartProducts.length) return;
+    
+            // Extraire les IDs uniques des produits
+            const productIds = [...new Set(cartProducts.map((p) => p.product_id))];
+    
+            try {
+                const response = await fetch("/api/products/batch", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${accessToken}`,
+                    },
+                    body: JSON.stringify({ productIds }),
+                });
+    
+                if (!response.ok) throw new Error("Impossible de récupérer les produits");
+    
+                const data = await response.json();
+                setProducts(data.products);
+            } catch (error) {
+                setError(error instanceof Error ? error.message : "Erreur lors de la récupération des produits");
+            }
+        };
 
         const fetchUserAndOrder = async () => {
             try {
@@ -73,31 +106,6 @@ export default function OrderDetailsPage() {
         fetchUserAndOrder();
     }, [accessToken, orderId]);
 
-    const fetchProducts = async (cartProducts) => {
-        if (!cartProducts.length) return;
-
-        // Extraire les IDs uniques des produits
-        const productIds = [...new Set(cartProducts.map((p) => p.product_id))];
-
-        try {
-            const response = await fetch("/api/products/batch", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${accessToken}`,
-                },
-                body: JSON.stringify({ productIds }),
-            });
-
-            if (!response.ok) throw new Error("Impossible de récupérer les produits");
-
-            const data = await response.json();
-            setProducts(data.products);
-        } catch (error) {
-            setError(error instanceof Error ? error.message : "Erreur lors de la récupération des produits");
-        }
-    };
-
     if (!accessToken) return <p className="text-center p-4">Veuillez vous connecter.</p>;
     if (loading) return <p className="text-center p-4">Chargement...</p>;
     if (error) return <p className="text-center p-4 text-red-500">{error}</p>;
@@ -106,6 +114,10 @@ export default function OrderDetailsPage() {
     return (
         <div className="min-h-screen bg-gray-50">
             <Header />
+            <Suspense fallback={<p>Chargement des paramètres...</p>}>
+                <SearchParamsHandler setAppointmentFormVisible={setAppointmentFormVisible} />
+            </Suspense>
+
             <div className="container mx-auto px-4 py-8">
                 <center>
                     <h1 className="text-2xl font-bold mb-6 md:mt-12 mt-24 pt-12">Détails de la commande</h1>

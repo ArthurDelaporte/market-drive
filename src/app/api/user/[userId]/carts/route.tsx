@@ -1,13 +1,15 @@
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/prismaClient";
-import {getAuthenticatedUser} from "@/utils/auth";
+import { getAuthenticatedUser } from "@/utils/auth";
 
 /**
  * ✅ 1️⃣ Récupérer le panier d'un utilisateur
  */
-export async function GET(req: NextRequest, context: { params: { userId: string } }) {
+export async function GET(req: NextRequest) {
     try {
-        const { userId } = await context.params;
+        // Extraire userId depuis l'URL
+        const pathSegments = req.nextUrl.pathname.split('/');
+        const userId = pathSegments[pathSegments.length - 2];
 
         if (!userId) {
             return NextResponse.json({ error: "ID utilisateur manquant" }, { status: 400 });
@@ -39,9 +41,12 @@ export async function GET(req: NextRequest, context: { params: { userId: string 
 /**
  * ✅ 2️⃣ Ajouter un produit au panier ou en créer un nouveau
  */
-export async function POST(req: NextRequest, context: { params: { userId: string } }) {
+export async function POST(req: NextRequest) {
     try {
-        const { userId } = await context.params;
+        // Extraire userId depuis l'URL
+        const pathSegments = req.nextUrl.pathname.split('/');
+        const userId = pathSegments[pathSegments.length - 2];
+
         const { product_id, quantity } = await req.json();
 
         if (!userId || !product_id || !quantity || quantity <= 0) {
@@ -123,9 +128,11 @@ export async function POST(req: NextRequest, context: { params: { userId: string
 /**
  * ✅ 3️⃣ Mettre à jour la quantité d'un produit
  */
-export async function PATCH(req: NextRequest, context: { params: { userId: string } }) {
+export async function PATCH(req: NextRequest) {
     try {
-        const { userId } = await context.params;
+        const pathSegments = req.nextUrl.pathname.split('/');
+        const userId = pathSegments[pathSegments.length - 2];
+
         const { product_id, quantity } = await req.json();
 
         if (!userId || !product_id || quantity === undefined) {
@@ -175,9 +182,7 @@ export async function PATCH(req: NextRequest, context: { params: { userId: strin
             const product = productsDetails.find(p => p.id === item.product_id);
             if (!product) return sum;
 
-            // ✅ Assurez-vous que le calcul est bien en `number`
             const productTotalPrice = (product.price || 1) * (product.quantity || 0);
-
             return parseFloat((sum + (item.quantity * productTotalPrice)).toFixed(2));
         }, 0);
 
@@ -196,9 +201,11 @@ export async function PATCH(req: NextRequest, context: { params: { userId: strin
 /**
  * ✅ 4️⃣ Supprimer un produit du panier
  */
-export async function DELETE(req: NextRequest, context: { params: { userId: string } }) {
+export async function DELETE(req: NextRequest) {
     try {
-        const { userId } = await context.params;
+        const pathSegments = req.nextUrl.pathname.split('/');
+        const userId = pathSegments[pathSegments.length - 2];
+
         const { product_id } = await req.json();
 
         if (!userId || !product_id) {
@@ -245,7 +252,7 @@ export async function DELETE(req: NextRequest, context: { params: { userId: stri
 
             const productTotalPrice = (product.price || 1) * (product.quantity || 0);
 
-            return parseFloat((sum + (item.quantity * productTotalPrice).toFixed(2)));
+            return parseFloat((sum + (item.quantity * productTotalPrice)).toFixed(2));
         }, 0);
 
         const updatedCart = await prisma.carts.update({

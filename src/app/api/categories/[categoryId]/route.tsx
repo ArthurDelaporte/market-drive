@@ -1,14 +1,13 @@
-// /api/categories/[categoryId]
-
 import { NextResponse } from 'next/server';
 import prisma from '@/prismaClient';
 import { NextRequest } from 'next/server';
-import {isAuthenticatedUserAdmin} from "@/utils/auth";
+import { isAuthenticatedUserAdmin } from '@/utils/auth';
 
 // 📌 **GET Handler** : Récupérer une catégorie par ID
-export async function GET(request: NextRequest, context: { params: { categoryId: string } }) {
+export async function GET(request: NextRequest) {
     try {
-        const { categoryId } = await context.params;
+        const pathSegments = request.nextUrl.pathname.split('/');
+        const categoryId = pathSegments[pathSegments.length - 1]; // Récupérer l'ID depuis l'URL
 
         if (!categoryId) {
             return NextResponse.json({ error: 'ID de catégorie invalide' }, { status: 400 });
@@ -29,16 +28,16 @@ export async function GET(request: NextRequest, context: { params: { categoryId:
     }
 }
 
-// PUT handler: Modifier une catégorie
-export async function PUT(request: NextRequest, context: { params: { categoryId: string } }) {
+// 🛠️ **PUT Handler** : Modifier une catégorie
+export async function PUT(request: NextRequest) {
     try {
         const authenticatedUser = await isAuthenticatedUserAdmin(request);
-
         if (!authenticatedUser) {
             return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
         }
 
-        const { categoryId } = await context.params;
+        const pathSegments = request.nextUrl.pathname.split('/');
+        const categoryId = pathSegments[pathSegments.length - 1];
 
         if (!categoryId) {
             return NextResponse.json({ error: 'Invalid category ID' }, { status: 400 });
@@ -57,21 +56,21 @@ export async function PUT(request: NextRequest, context: { params: { categoryId:
 
         return NextResponse.json(updatedCategory, { status: 200 });
     } catch (error) {
-        console.error('Unhandled error updating category:', error);
+        console.error('Erreur lors de la modification de la catégorie:', error);
         return NextResponse.json({ error: (error as Error).message }, { status: 500 });
     }
 }
 
-// DELETE handler: Supprimer une catégorie
-export async function DELETE(request: NextRequest, context: { params: { categoryId: string } }) {
+// 🗑️ **DELETE Handler** : Supprimer une catégorie
+export async function DELETE(request: NextRequest) {
     try {
         const authenticatedUser = await isAuthenticatedUserAdmin(request);
-
         if (!authenticatedUser) {
             return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
         }
 
-        const { categoryId } = await context.params;
+        const pathSegments = request.nextUrl.pathname.split('/');
+        const categoryId = pathSegments[pathSegments.length - 1];
 
         if (!categoryId) {
             return NextResponse.json({ error: 'Invalid category ID' }, { status: 400 });
@@ -83,7 +82,7 @@ export async function DELETE(request: NextRequest, context: { params: { category
 
         return NextResponse.json(deletedCategory, { status: 200 });
     } catch (error) {
-        console.error('Unhandled error deleting category:', error);
+        console.error('Erreur lors de la suppression de la catégorie:', error);
         return NextResponse.json({ error: (error as Error).message }, { status: 500 });
     }
 }

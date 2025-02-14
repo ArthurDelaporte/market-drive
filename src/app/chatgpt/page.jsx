@@ -1,9 +1,10 @@
-"use client"; // Ajouté en haut du fichier
+"use client";
 
 import { useState } from "react";
 
-const ChatGPTVersion = ({ basketItems }) => {
+const ChatGPTVersion = () => {
   const [response, setResponse] = useState("");
+  const [basketItems] = useState([]); // Exemple de données
 
   const fetchChatGPTResponse = async () => {
     try {

@@ -14,8 +14,57 @@ export default function CartPage() {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
 
+
     useEffect(() => {
         if (hasCheckedAuth) return;
+
+        const fetchProducts = async (cartProducts) => {
+            if (!cartProducts.length) return;
+    
+            // Extraire les IDs uniques des produits
+            const productIds = [...new Set(cartProducts.map((p) => p.product_id))];
+    
+            try {
+                const response = await fetch("/api/products/batch", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${getCookie("access_token")}`,
+                    },
+                    body: JSON.stringify({ productIds }),
+                });
+    
+                if (!response.ok) throw new Error("Impossible de récupérer les produits");
+    
+                const data = await response.json();
+                setProducts(data.products);
+            } catch (error) {
+                console.error("Erreur lors de la récupération des produits :", error);
+                toast.error("Erreur lors du chargement des produits.");
+            }
+        };
+    
+        const fetchCart = async (userId) => {
+            try {
+                const response = await fetch(`/api/user/${userId}/carts`, {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${getCookie("access_token")}`,
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error("Erreur lors de la récupération du panier");
+                }
+                const cartData = await response.json();
+                await fetchProducts(cartData.products)
+                setCart(cartData || []);
+            } catch (error) {
+                console.error("Erreur récupération du panier :", error);
+                toast.error("Erreur lors du chargement du panier.");
+            } finally {
+                setLoading(false);
+            }
+        };
 
         const fetchUser = async () => {
             try {
@@ -56,97 +105,6 @@ export default function CartPage() {
 
         fetchUser();
     }, [hasCheckedAuth]);
-
-    const fetchProducts = async (cartProducts) => {
-        if (!cartProducts.length) return;
-
-        // Extraire les IDs uniques des produits
-        const productIds = [...new Set(cartProducts.map((p) => p.product_id))];
-
-        try {
-            const response = await fetch("/api/products/batch", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${getCookie("access_token")}`,
-                },
-                body: JSON.stringify({ productIds }),
-            });
-
-            if (!response.ok) throw new Error("Impossible de récupérer les produits");
-
-            const data = await response.json();
-            setProducts(data.products);
-        } catch (error) {
-            console.error("Erreur lors de la récupération des produits :", error);
-            toast.error("Erreur lors du chargement des produits.");
-        }
-    };
-
-    const fetchCart = async (userId) => {
-        try {
-            const response = await fetch(`/api/user/${userId}/carts`, {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${getCookie("access_token")}`,
-                }
-            });
-            if (!response.ok) {
-                throw new Error("Erreur lors de la récupération du panier");
-            }
-            const cartData = await response.json();
-            await fetchProducts(cartData.products)
-            setCart(cartData || []);
-        } catch (error) {
-            console.error("Erreur récupération du panier :", error);
-            toast.error("Erreur lors du chargement du panier.");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        if (hasCheckedAuth) return;
-
-        const fetchUser = async () => {
-            try {
-                const accessToken = getCookie("access_token");
-
-                if (!accessToken) {
-                    toast.error("Vous devez être connecté pour voir votre panier !");
-                    return;
-                }
-
-                try {
-                    const response = await fetch("/api/auth/user", {
-                        method: "GET",
-                        headers: {
-                            Authorization: `Bearer ${accessToken}`,
-                        },
-                    });
-
-                    if (!response.ok) {
-                        const { error } = await response.json();
-                        toast.error(`Erreur : ${error}`);
-                        return;
-                    }
-
-                    const userData = await response.json();
-                    setUser(userData);
-                    setHasCheckedAuth(true);
-                    await fetchCart(userData.id);
-                } catch (decodeError) {
-                    toast.error("Erreur lors du décodage du token.");
-                    console.error("Token decode error:", decodeError);
-                }
-            } catch (error) {
-                console.error("Erreur lors de la récupération de l'utilisateur :", error);
-                toast.error("Impossible de récupérer l'utilisateur.");
-            }
-        };
-
-        fetchUser();
-    }, [hasCheckedAuth], fetchCart);
 
     const updateQuantity = async (productId, newQuantity) => {
         if (!user) return;

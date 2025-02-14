@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from "next/navigation";
 import Image from 'next/image';
 import { FaShoppingCart, FaSlidersH } from 'react-icons/fa';
@@ -10,8 +10,20 @@ import "react-toastify/dist/ReactToastify.css";
 import Header from "@/components/Header";
 import { getCookie } from "typescript-cookie";
 
-export default function ProductsPage() {
+function SearchParamsHandler({ setCategoryId, setProductName }) {
     const searchParams = useSearchParams();
+    const category = searchParams.get('categoryId');
+    const product = searchParams.get('productName');
+
+    useEffect(() => {
+        setCategoryId(category || '');
+        setProductName(product || '');
+    }, [category, product, setCategoryId, setProductName]);
+
+    return null;
+}
+
+export default function ProductsPage() {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -26,6 +38,9 @@ export default function ProductsPage() {
     const [sortOption, setSortOption] = useState('');
     const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
     const [user, setUser] = useState(null);
+    const [categoryId, setCategoryId] = useState('');
+    const [productName, setProductName] = useState('');
+
 
 
     useEffect(() => {
@@ -102,10 +117,6 @@ export default function ProductsPage() {
         }
     };    
 
-
-    // Récupérer le paramètre categoryId depuis l'URL
-    const categoryId = searchParams.get('categoryId');
-    const productName = searchParams.get('productName');
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -212,6 +223,10 @@ export default function ProductsPage() {
     return (
         <>
             <Header />
+            <Suspense fallback={<p>Chargement des filtres...</p>}>
+                <SearchParamsHandler setCategoryId={setCategoryId} setProductName={setProductName} />
+            </Suspense>
+
             <div className="ml-20 mr-20 pt-24 p-4">
                 <h1 className="text-2xl font-bold text-center mb-8">Nos Produits</h1>
 

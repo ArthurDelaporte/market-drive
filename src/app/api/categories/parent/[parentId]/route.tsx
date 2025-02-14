@@ -1,11 +1,15 @@
-// /api/categories/parent/[parentId]/route.tsx
-
 import { NextResponse, NextRequest } from 'next/server';
 import prisma from '@/prismaClient';
 
-export async function GET(request: NextRequest, context: { params: { parentId: string } }) {
+export async function GET(request: NextRequest) {
     try {
-        const { parentId } = await context.params;
+        // Extraire parentId depuis l'URL
+        const pathSegments = request.nextUrl.pathname.split('/');
+        const parentId = pathSegments[pathSegments.length - 1];
+
+        if (!parentId) {
+            return NextResponse.json({ error: 'Parent ID is required' }, { status: 400 });
+        }
 
         const categories = await prisma.categories.findMany({
             where: { category_parent: parentId },
