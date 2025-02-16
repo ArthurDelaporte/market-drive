@@ -4,7 +4,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Search, X, User, Menu, ShoppingBag } from 'lucide-react';
+import { Search, X, User, Menu, ShoppingBag, Camera } from 'lucide-react';
 import LogoutButton from './LogoutButton';
 import DialogCategory from './DialogCategory';
 import { getCookie, removeCookie } from "typescript-cookie";
@@ -255,6 +255,13 @@ export default function Header() {
                                                                 </div>
                                                             </button>
                                                         </Link>
+                                                        <Link href="/analyse-image" className="block">
+                                                            <button
+                                                                className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-2">
+                                                                <Camera className="h-5 w-5"/>  {/* N'oubliez pas d'importer Camera de 'lucide-react' */}
+                                                                Analyse d'image
+                                                            </button>
+                                                        </Link>
                                                     </>
                                                 )}
                                                 <div className='block'>
@@ -370,6 +377,16 @@ export default function Header() {
                                                     <div className="flex items-center gap-2">
                                                         <ShoppingBag className="h-5 w-5"/>
                                                         Mes commandes
+                                                    </div>
+                                                </button>
+                                            </Link>
+
+                                            <Link href="/analyse-image">
+                                                <button
+                                                    className="px-4 py-2 rounded shadow transition btn-header w-full">
+                                                    <div className="flex items-center gap-2">
+                                                        <Camera className="h-5 w-5"/>
+                                                        Analyse d'image
                                                     </div>
                                                 </button>
                                             </Link>
