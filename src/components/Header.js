@@ -337,7 +337,7 @@ export default function Header() {
                     </div>
 
                     {/* Mobile Search Bar */}
-                    <form onSubmit={handleSearch} className="relative mb-4">
+                    <form ={handleSearch} className="relative mb-4">
                         <input
                             type="text"
                             placeholder="Rechercher un produit..."
