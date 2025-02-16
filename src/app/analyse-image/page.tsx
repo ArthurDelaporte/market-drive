@@ -39,7 +39,7 @@ export default function AnalyseImagePage() {
 
                 const userData = await response.json();
                 setUser(userData);
-            } catch (_) {
+            } catch {
                 toast.error("Vous devez être connecté pour accéder à cette page");
                 router.push("/connexion");
             }

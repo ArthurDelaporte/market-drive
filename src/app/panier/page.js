@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Header from "@/components/Header";
 import { toast } from "react-toastify";
 import { getCookie } from "typescript-cookie";
@@ -16,12 +16,9 @@ export default function CartPage() {
     const [recipe, setRecipe] = useState(null);
     const [isLoadingRecipe, setIsLoadingRecipe] = useState(false);
 
-    const fetchProducts = async (cartProducts) => {
+    const fetchProducts = useCallback(async (cartProducts) => {
         if (!cartProducts.length) return;
-
-        // Extraire les IDs uniques des produits
-        const productIds = [...new Set(cartProducts.map((p) => p.product_id))];
-
+    
         try {
             const response = await fetch("/api/products/batch", {
                 method: "POST",
@@ -29,20 +26,20 @@ export default function CartPage() {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${getCookie("access_token")}`,
                 },
-                body: JSON.stringify({ productIds }),
+                body: JSON.stringify({ productIds: [...new Set(cartProducts.map((p) => p.product_id))] }),
             });
-
+    
             if (!response.ok) throw new Error("Impossible de récupérer les produits");
-
+    
             const data = await response.json();
             setProducts(data.products);
         } catch (error) {
             console.error("Erreur lors de la récupération des produits :", error);
             toast.error("Erreur lors du chargement des produits.");
         }
-    };
+    }, []);
 
-    const fetchCart = async (userId) => {
+    const fetchCart = useCallback(async (userId) => {
         try {
             const response = await fetch(`/api/user/${userId}/carts`, {
                 method: "GET",
@@ -62,7 +59,7 @@ export default function CartPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [fetchProducts]);
 
 
 
