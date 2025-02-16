@@ -99,7 +99,9 @@ export default function AnalyseImagePage() {
         }
     };
 
-    const addToCart = async (productId) => {
+    const addToCart = async (productId: string) => {
+        if (!user) return; // Vérification de sécurité
+        
         try {
             const response = await fetch(`/api/user/${user.id}/carts`, {
                 method: "POST",
@@ -109,13 +111,13 @@ export default function AnalyseImagePage() {
                 },
                 body: JSON.stringify({ product_id: productId, quantity: 1 }),
             });
-
+    
             if (!response.ok) {
                 const { error } = await response.json();
                 toast.error(`Erreur : ${error}`);
                 return;
             }
-
+    
             toast.success("Produit ajouté au panier !");
         } catch (error) {
             console.error("Erreur lors de l'ajout au panier :", error);
