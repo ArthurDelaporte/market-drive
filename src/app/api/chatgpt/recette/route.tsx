@@ -9,6 +9,28 @@ interface CartProducts {
     }[];
 }
 
+interface CatalogProduct {
+    name: string | null;
+}
+
+interface Recipe {
+    name: string;
+    required_ingredients: string[];
+    preparation_time: string;
+    difficulty: string;
+    instructions: string[];
+}
+
+interface RecipeResult {
+    recipes: Recipe[];
+}
+
+interface CategorizedIngredients {
+    available: string[];
+    missing_available: string[];
+    missing_unavailable: string[];
+}
+
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: NextRequest) {
@@ -77,26 +99,33 @@ export async function POST(req: NextRequest) {
             ],
             response_format: { type: "json_object" }
         });
-
-        const result = JSON.parse(response.choices[0].message.content);
+        
+        const messageContent = response.choices[0].message.content;
+        if (!messageContent) {
+            return NextResponse.json({ error: "Erreur de génération de recette: réponse vide" }, { status: 500 });
+        }
+        
+        const result = JSON.parse(messageContent);
 
         // Récupérer tous les produits du catalogue
         const catalogProducts = await prisma.products.findMany({
             select: { name: true }
-        });
-        const catalogProductNames = new Set(catalogProducts.map(p => p.name.toLowerCase()));
-        const cartProductNames = new Set(productsInCart.map(p => p.name.toLowerCase()));
+        }) as CatalogProduct[];
+
+        const catalogProductNames = new Set(catalogProducts.map((p: CatalogProduct) => p.name?.toLowerCase() ?? ''));
+        const cartProductNames = new Set(productsInCart.map((p: CatalogProduct) => p.name?.toLowerCase() ?? ''));
 
         // Traiter chaque recette pour catégoriser les ingrédients
-        const processedRecipes = result.recipes.map(recipe => {
-            const categorizedIngredients = {
+        const processedRecipes = result.recipes.map((recipe: Recipe) => {
+            const categorizedIngredients: CategorizedIngredients = {
                 available: [],
                 missing_available: [],
                 missing_unavailable: []
             };
-
-            recipe.required_ingredients.forEach(ingredient => {
+        
+            recipe.required_ingredients.forEach((ingredient: string) => {
                 const ingredientName = ingredient.toLowerCase();
+                
                 if (cartProductNames.has(ingredientName)) {
                     categorizedIngredients.available.push(ingredient);
                 } else if (catalogProductNames.has(ingredientName)) {
@@ -105,7 +134,7 @@ export async function POST(req: NextRequest) {
                     categorizedIngredients.missing_unavailable.push(ingredient);
                 }
             });
-
+        
             return {
                 ...recipe,
                 ingredients: categorizedIngredients
