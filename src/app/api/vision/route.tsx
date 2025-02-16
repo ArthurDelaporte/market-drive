@@ -3,7 +3,31 @@ import { anthropic } from "@/lib/anthropic";
 import prisma from "@/prismaClient";
 import { jwtDecode } from "jwt-decode";
 
+interface ContentBlock {
+    type: "text";
+    text: string;
+}
+
+interface ImageAnalysis {
+    dish_type: string;
+    ingredients: string[];
+    potential_product_names: string[];
+}
+
+type AcceptedMimeType = "image/jpeg" | "image/png" | "image/gif" | "image/webp";
+
+
+function isValidMimeType(mimeType: string): mimeType is AcceptedMimeType {
+    return [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp"
+    ].includes(mimeType);
+}
+
 export async function POST(req: NextRequest) {
+    
     try {
         // Authentification (votre code existant)
         const accessToken = req.cookies.get("access_token")?.value;
@@ -26,6 +50,12 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Aucune image reçue" }, { status: 400 });
         }
 
+        if (!isValidMimeType(image.type)) {
+            return NextResponse.json({ 
+                error: "Format d'image non supporté. Utilisez JPEG, PNG, GIF ou WEBP." 
+            }, { status: 400 });
+        }
+
         // Convertir l'image en base64
         const arrayBuffer = await image.arrayBuffer();
         const base64Image = Buffer.from(arrayBuffer).toString('base64');
@@ -42,7 +72,7 @@ export async function POST(req: NextRequest) {
                             type: "image",
                             source: {
                                 type: "base64",
-                                media_type: image.type,
+                                media_type: image.type as AcceptedMimeType,
                                 data: base64Image
                             }
                         },
@@ -67,10 +97,10 @@ export async function POST(req: NextRequest) {
         });
         
         // Extraction du contenu JSON
-        const analysisText = response.content[0].text;
-        let analysis;
+        const analysisText = (response.content[0] as ContentBlock).text;
+        let analysis: ImageAnalysis;
+
         try {
-            // Parsez le texte JSON
             analysis = JSON.parse(analysisText);
         } catch {
             console.error("Erreur de parsing JSON:", analysisText);
@@ -91,20 +121,24 @@ export async function POST(req: NextRequest) {
         const availableProducts = await prisma.products.findMany({
             where: {
                 OR: [
-                    // Recherche par type de plat
-                    { name: { contains: analysis.dish_type, mode: 'insensitive' } },
-                    
-                    // Recherche par ingrédients
-                    ...analysis.ingredients.map(ingredient => ({
-                        name: { 
-                            contains: ingredient, 
-                            mode: 'insensitive' 
+                    {
+                        name: {
+                            contains: analysis.dish_type,
+                            mode: 'insensitive' as const
+                        }
+                    },
+                    ...analysis.ingredients.map((ingredient: string) => ({
+                        name: {
+                            contains: ingredient,
+                            mode: 'insensitive' as const
                         }
                     })),
-                    
-                    // Recherche par noms de produits potentiels
-                    ...(analysis.potential_product_names || []).map(productName => ({
-                        name: { contains: productName, mode: 'insensitive' }
+        
+                    ...(analysis.potential_product_names || []).map((productName: string) => ({
+                        name: {
+                            contains: productName,
+                            mode: 'insensitive' as const
+                        }
                     }))
                 ]
             },
