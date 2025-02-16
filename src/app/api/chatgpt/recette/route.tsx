@@ -3,19 +3,16 @@ import OpenAI from "openai";
 import prisma from "@/prismaClient";
 import { jwtDecode } from "jwt-decode";
 
-// Configuration de l'API OpenAI
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: NextRequest) {
     try {
-        // 🔑 Récupération manuelle du cookie côté serveur
         const accessToken = req.cookies.get("access_token")?.value;
 
         if (!accessToken) {
             return NextResponse.json({ error: "Utilisateur non authentifié" }, { status: 401 });
         }
 
-        // 🔍 Décodage du token JWT pour récupérer l'ID utilisateur
         const decoded = jwtDecode<{ sub: string }>(accessToken);
         const userId = decoded?.sub;
 
@@ -23,7 +20,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "ID utilisateur introuvable" }, { status: 400 });
         }
 
-        // 🔹 Recherche du panier de l'utilisateur
+        // Recherche du panier
         const cart = await prisma.carts.findFirst({
             where: { user_id: userId, status: "waiting" },
             select: { products: true },
@@ -33,73 +30,84 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Votre panier est vide." }, { status: 404 });
         }
 
-        // 🔹 Extraction des noms des produits dans le panier
+        // Récupération des produits
         const productIds = cart.products.map(p => p.product_id);
         const productsInCart = await prisma.products.findMany({
             where: { id: { in: productIds } },
             select: { name: true },
         });
 
-        // 🔹 Requête GPT pour obtenir des recettes
+        // Requête GPT avec format JSON structuré
         const response = await openai.chat.completions.create({
             model: "gpt-3.5-turbo",
             messages: [
                 {
                     role: "system",
-                    content: "Tu es un assistant culinaire. Propose 2 recettes en utilisant au mieux les ingrédients fournis.",
+                    content: `Tu es un assistant culinaire qui génère des recettes en JSON structuré. Utilise les ingrédients fournis quand c'est possible.`
                 },
                 {
                     role: "user",
-                    content: `Ingrédients disponibles : ${productsInCart.map(p => p.name).join(", ")}.  
-                    Propose 2 recettes. Pour chaque recette, indique :  
-                    - 🛒 Ingrédients disponibles (dans le panier)  
-                    - 🚚 Ingrédients manquants mais disponibles au magasin  
-                    - 🚫 Ingrédients totalement indisponibles (non vendus par le magasin)  
-                    - 🔍 Instructions étape par étape  
-
-                    🍽️ **Format attendu :**  
-                    1️⃣ **Nom de la recette 1**  
-                    - 🛒 **Disponibles :** ...  
-                    - 🚚 **Manquants disponibles :** ...  
-                    - 🚫 **Manquants indisponibles :** ...  
-                    - 🔍 **Instructions :** ...  
-
-                    2️⃣ **Nom de la recette 2**  
-                    - 🛒 **Disponibles :** ...  
-                    - 🚚 **Manquants disponibles :** ...  
-                    - 🚫 **Manquants indisponibles :** ...  
-                    - 🔍 **Instructions :** ...  
-
-                    Sois clair et concis.  
-                    Bon appétit ! 🍽️`
+                    content: `Génère 2 recettes en utilisant si possible ces ingrédients : ${productsInCart.map(p => p.name).join(", ")}.
+                    Pour chaque recette, liste TOUS les ingrédients nécessaires, qu'ils soient disponibles ou non.
+                    Format JSON attendu:
+                    {
+                        "recipes": [
+                            {
+                                "name": "Nom de la recette",
+                                "preparation_time": "temps en minutes",
+                                "difficulty": "niveau de difficulté",
+                                "required_ingredients": [
+                                    "ingrédient 1 avec quantité",
+                                    "ingrédient 2 avec quantité"
+                                ],
+                                "instructions": [
+                                    "étape 1",
+                                    "étape 2"
+                                ]
+                            }
+                        ]
+                    }`
                 }
             ],
+            response_format: { type: "json_object" }
         });
 
-        // 🔹 Récupération de la réponse GPT
-        const result = response.choices[0].message?.content;
+        const result = JSON.parse(response.choices[0].message.content);
 
-        // 🔍 Analyse des ingrédients manquants
-        const missingIngredients = result?.match(/Ingrédients manquants.*?: (.+)/g) || [];
-        const extractedItems = missingIngredients.flatMap(line => 
-            line.replace(/Ingrédients manquants.*?: /, '').split(',').map(item => item.trim())
-        );
+        // Récupérer tous les produits du catalogue
+        const catalogProducts = await prisma.products.findMany({
+            select: { name: true }
+        });
+        const catalogProductNames = new Set(catalogProducts.map(p => p.name.toLowerCase()));
+        const cartProductNames = new Set(productsInCart.map(p => p.name.toLowerCase()));
 
-        // 🔹 Vérification des ingrédients dans la base de données
-        const knownProducts = await prisma.products.findMany({ select: { name: true } });
-        const knownNames = new Set(knownProducts.map(p => p.name));
+        // Traiter chaque recette pour catégoriser les ingrédients
+        const processedRecipes = result.recipes.map(recipe => {
+            const categorizedIngredients = {
+                available: [],
+                missing_available: [],
+                missing_unavailable: []
+            };
 
-        const missingAvailable = extractedItems.filter(item => knownNames.has(item));
-        const missingUnavailable = extractedItems.filter(item => !knownNames.has(item));
+            recipe.required_ingredients.forEach(ingredient => {
+                const ingredientName = ingredient.toLowerCase();
+                if (cartProductNames.has(ingredientName)) {
+                    categorizedIngredients.available.push(ingredient);
+                } else if (catalogProductNames.has(ingredientName)) {
+                    categorizedIngredients.missing_available.push(ingredient);
+                } else {
+                    categorizedIngredients.missing_unavailable.push(ingredient);
+                }
+            });
 
-        // 🔹 Réponse finale
+            return {
+                ...recipe,
+                ingredients: categorizedIngredients
+            };
+        });
+
         return NextResponse.json({
-            recipe: result,
-            ingredients: {
-                produitsDansPanier: productsInCart.map(p => p.name),
-                manquantsDisponibles: missingAvailable,
-                manquantsIndisponibles: missingUnavailable
-            }
+            recipes: processedRecipes
         });
 
     } catch (error) {
