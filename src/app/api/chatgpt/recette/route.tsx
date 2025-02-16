@@ -21,10 +21,6 @@ interface Recipe {
     instructions: string[];
 }
 
-interface RecipeResult {
-    recipes: Recipe[];
-}
-
 interface CategorizedIngredients {
     available: string[];
     missing_available: string[];
