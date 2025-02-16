@@ -3,6 +3,12 @@ import OpenAI from "openai";
 import prisma from "@/prismaClient";
 import { jwtDecode } from "jwt-decode";
 
+interface CartProducts {
+    products: {
+        product_id: string;
+    }[];
+}
+
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: NextRequest) {
@@ -24,9 +30,9 @@ export async function POST(req: NextRequest) {
         const cart = await prisma.carts.findFirst({
             where: { user_id: userId, status: "waiting" },
             select: { products: true },
-        });
+        }) as CartProducts | null;
 
-        if (!cart || !cart.products.length) {
+        if (!cart?.products || cart.products.length === 0) {
             return NextResponse.json({ error: "Votre panier est vide." }, { status: 404 });
         }
 
