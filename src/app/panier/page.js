@@ -15,7 +15,6 @@ export default function CartPage() {
     const [loading, setLoading] = useState(true);
     const [recipe, setRecipe] = useState(null);
     const [isLoadingRecipe, setIsLoadingRecipe] = useState(false);
-    const [ingredientsInfo, setIngredientsInfo] = useState({});
 
     const fetchProducts = async (cartProducts) => {
         if (!cartProducts.length) return;
@@ -108,7 +107,7 @@ export default function CartPage() {
         };
 
         fetchUser();
-    }, [hasCheckedAuth]);
+    }, [hasCheckedAuth, fetchCart]);
 
     const updateQuantity = async (productId, newQuantity) => {
         if (!user) return;

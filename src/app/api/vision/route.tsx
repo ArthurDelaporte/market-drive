@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
         try {
             // Parsez le texte JSON
             analysis = JSON.parse(analysisText);
-        } catch (parseError) {
+        } catch (_) {
             console.error("Erreur de parsing JSON:", analysisText);
             return NextResponse.json({ 
                 error: "Impossible de traiter l'analyse", 
