@@ -9,12 +9,23 @@ import { useRouter } from 'next/navigation';
 import { ShoppingCart } from 'lucide-react';
 import Image from 'next/image';
 
+interface User {
+    id: string;
+}
+
+interface Product {
+    id: string;
+    name: string;
+    price: number;
+}
+
 export default function AnalyseImagePage() {
     const router = useRouter();
     const [isAnalyzing, setIsAnalyzing] = useState(false);
-    const [detectedProducts, setDetectedProducts] = useState([]);
-    const [user, setUser] = useState(null);
+    const [detectedProducts, setDetectedProducts] = useState<Product[]>([]);
+    const [user, setUser] = useState<User | null>(null);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    
 
     // Dans le useEffect pour vérifier l'authentification
     useEffect(() => {
@@ -48,7 +59,7 @@ export default function AnalyseImagePage() {
         checkAuth();
     }, [router]);
 
-    const handleImageUpload = async (event) => {
+    const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
 
