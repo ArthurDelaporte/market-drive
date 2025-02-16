@@ -225,6 +225,13 @@ export default function Header() {
                                                                 Mes commandes
                                                             </button>
                                                         </Link>
+                                                        <Link href="/analyse-image" className="block">
+                                                            <button
+                                                                className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-2">
+                                                                <Camera className="h-5 w-5"/>  {/* N'oubliez pas d'importer Camera de 'lucide-react' */}
+                                                                Analyse d&apos;image
+                                                            </button>
+                                                        </Link>
                                                     </>
                                                 ) : (
                                                     <>
@@ -380,7 +387,6 @@ export default function Header() {
                                                     </div>
                                                 </button>
                                             </Link>
-
                                             <Link href="/analyse-image">
                                                 <button
                                                     className="px-4 py-2 rounded shadow transition btn-header w-full">
