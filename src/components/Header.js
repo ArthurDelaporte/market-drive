@@ -259,7 +259,7 @@ export default function Header() {
                                                             <button
                                                                 className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-2">
                                                                 <Camera className="h-5 w-5"/>  {/* N'oubliez pas d'importer Camera de 'lucide-react' */}
-                                                                Analyse d'image
+                                                                Analyse d&apos;image
                                                             </button>
                                                         </Link>
                                                     </>
@@ -386,7 +386,7 @@ export default function Header() {
                                                     className="px-4 py-2 rounded shadow transition btn-header w-full">
                                                     <div className="flex items-center gap-2">
                                                         <Camera className="h-5 w-5"/>
-                                                        Analyse d'image
+                                                        Analyse d&apos;image
                                                     </div>
                                                 </button>
                                             </Link>

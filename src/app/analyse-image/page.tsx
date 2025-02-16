@@ -7,6 +7,7 @@ import Header from '@/components/Header';
 import { Camera } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { ShoppingCart } from 'lucide-react';
+import Image from 'next/image';
 
 export default function AnalyseImagePage() {
     const router = useRouter();
@@ -38,14 +39,14 @@ export default function AnalyseImagePage() {
 
                 const userData = await response.json();
                 setUser(userData);
-            } catch (error) {
+            } catch (_) {
                 toast.error("Vous devez être connecté pour accéder à cette page");
                 router.push("/connexion");
             }
         };
 
         checkAuth();
-    }, []);
+    }, [router]);
 
     const handleImageUpload = async (event) => {
         const file = event.target.files?.[0];
@@ -116,7 +117,7 @@ export default function AnalyseImagePage() {
         <>
             <Header />
             <div className="container mx-auto p-6 pt-24">
-                <h1 className="text-3xl font-bold text-center mb-8">Analyse d'image</h1>
+                <h1 className="text-3xl font-bold text-center mb-8">Analyse d&apos;image</h1>
 
                 <div className="max-w-2xl mx-auto">
                     <div className="text-center mb-8">
@@ -139,9 +140,11 @@ export default function AnalyseImagePage() {
 
                     {selectedImage && (
                         <div className="mb-6 flex justify-center">
-                            <img 
+                            <Image 
                                 src={selectedImage} 
                                 alt="Image uploadée" 
+                                width={800}
+                                height={600}
                                 className="max-w-full h-auto max-h-96 rounded-lg shadow-md object-cover"
                             />
                         </div>
