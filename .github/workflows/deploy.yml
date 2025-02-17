@@ -19,6 +19,9 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Build
+        run: npm run build
+
       - name: Deploy to VPS
         uses: appleboy/ssh-action@master
         with:
@@ -29,5 +32,5 @@ jobs:
             cd ~/market-drive
             git pull origin master
             npm install
-            # On ne fait pas le build ici car il nécessite les variables d'environnement
+            npm run build
             pm2 restart all
