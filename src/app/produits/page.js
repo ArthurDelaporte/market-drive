@@ -41,8 +41,6 @@ export default function ProductsPage() {
     const [categoryId, setCategoryId] = useState('');
     const [productName, setProductName] = useState('');
 
-
-
     useEffect(() => {
         if (hasCheckedAuth) return;
 
@@ -86,7 +84,7 @@ export default function ProductsPage() {
     }, [hasCheckedAuth]);
 
 
-    const addToCart = async (productId) => {
+    const addToCart = async (productId, productName) => {
         try {
             if (!user) {
                 toast.error("Vous devez être connecté pour ajouter un produit au panier !");
@@ -110,7 +108,7 @@ export default function ProductsPage() {
                 return;
             }
     
-            toast.success("Produit ajouté au panier !");
+            toast.success(`Produit "${productName}" ajouté au panier !`);
         } catch (error) {
             console.error("❌ Erreur lors de l'ajout au panier :", error);
             toast.error("Une erreur est survenue. Réessayez plus tard.");
@@ -167,6 +165,7 @@ export default function ProductsPage() {
             setIsApplyFilterButtonDisabled(true);
         } else {
             setPriceError(null);
+            setIsApplyFilterButtonDisabled(false);
         }
     }, [tempMinPrice, tempMaxPrice]);
 
@@ -201,6 +200,8 @@ export default function ProductsPage() {
     const resetFilters = () => {
         setTempMinPrice('');
         setTempMaxPrice('');
+        setPriceError(null);
+        setIsApplyFilterButtonDisabled(false);
     };
 
     const sortedProducts = [...products].sort((a, b) => {
@@ -227,7 +228,7 @@ export default function ProductsPage() {
                 <SearchParamsHandler setCategoryId={setCategoryId} setProductName={setProductName} />
             </Suspense>
 
-            <div className="ml-20 mr-20 pt-24 p-4">
+            <main className="ml-20 mr-20 pt-24 p-4" id="main-content">
                 <h1 className="text-2xl font-bold text-center mb-8">Nos Produits</h1>
 
                 <div className="flex mb-6 w-full">
@@ -235,15 +236,20 @@ export default function ProductsPage() {
                         type="button"
                         className="bg-gray-500 text-white w-[8vw] h-[42px] mr-4 rounded hover:bg-gray-600 transition flex items-center justify-center"
                         onClick={openFilterModal}
+                        aria-label="Ouvrir les filtres de prix"
+                        aria-haspopup="dialog"
                     >
-                        <FaSlidersH className="h-5 w-5 mr-2"/>
+                        <FaSlidersH className="h-5 w-5 mr-2" aria-hidden="true"/>
                         Filtres
                     </button>
                     <div className="">
+                        <label htmlFor="sort-select" className="sr-only">Trier les produits</label>
                         <select
+                            id="sort-select"
                             value={sortOption}
                             onChange={(e) => setSortOption(e.target.value)}
                             className="w-[20vw] h-[42px] p-2 border border-gray-300 rounded text-[#212121]"
+                            aria-label="Trier les produits"
                         >
                             <option value="">Trier par</option>
                             <option value="price-asc">Prix : Croissant</option>
@@ -254,40 +260,55 @@ export default function ProductsPage() {
 
                 <Modal
                     isOpen={isFilterModalOpen}
-                    onRequestClose={() => closeFilterModal}
+                    onRequestClose={closeFilterModal}
                     ariaHideApp={false}
-                    contentLabel="Filtres"
+                    contentLabel="Filtres de prix"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="filter-dialog-title"
                     className="w-full max-w-md mx-auto mt-20 bg-white p-6 rounded-lg shadow-lg"
                     overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-start"
                 >
-                    <h2 className="text-xl font-semibold mb-4">Filtres</h2>
+                    <h2 id="filter-dialog-title" className="text-xl font-semibold mb-4">Filtres</h2>
                     <div className="mb-4">
-                        <label className="block text-gray-700 font-medium mb-2">Prix minimum (€)</label>
+                        <label htmlFor="min-price" className="block text-gray-700 font-medium mb-2">Prix minimum (€)</label>
                         <input
+                            id="min-price"
                             type="number"
                             placeholder="Prix minimum"
                             value={tempMinPrice}
                             onChange={(e) => setTempMinPrice(e.target.value)}
                             className={`w-full p-2 border rounded ${priceError ? 'border-red-500' : 'border-gray-300'}`}
                             min="0"
+                            aria-invalid={priceError ? 'true' : 'false'}
+                            aria-describedby={priceError ? "price-error-message" : undefined}
                         />
                     </div>
                     <div className="mb-4">
-                        <label className="block text-gray-700 font-medium mb-2">Prix maximum (€)</label>
+                        <label htmlFor="max-price" className="block text-gray-700 font-medium mb-2">Prix maximum (€)</label>
                         <input
+                            id="max-price"
                             type="number"
                             placeholder="Prix maximum"
                             value={tempMaxPrice}
                             onChange={(e) => setTempMaxPrice(e.target.value)}
                             className={`w-full p-2 border rounded ${priceError ? 'border-red-500' : 'border-gray-300'}`}
                             min="0"
+                            aria-invalid={priceError ? 'true' : 'false'}
+                            aria-describedby={priceError ? "price-error-message" : undefined}
                         />
                     </div>
+                    {priceError && (
+                        <div id="price-error-message" className="mb-4 text-red-500" role="alert">
+                            {priceError}
+                        </div>
+                    )}
                     <div className="flex justify-end space-x-4">
                         <button
                             type="button"
                             className="bg-gray-400 text-white p-2 rounded hover:bg-gray-500 transition"
                             onClick={closeFilterModal}
+                            aria-label="Annuler et fermer le modal"
                         >
                             Annuler
                         </button>
@@ -295,6 +316,7 @@ export default function ProductsPage() {
                             type="button"
                             className="bg-yellow-500 text-white p-2 rounded hover:bg-yellow-600 transition"
                             onClick={resetFilters}
+                            aria-label="Réinitialiser les filtres de prix"
                         >
                             Reset
                         </button>
@@ -303,6 +325,8 @@ export default function ProductsPage() {
                             className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition"
                             onClick={applyFilters}
                             disabled={isApplyFilterButtonDisabled}
+                            aria-label="Appliquer les filtres de prix"
+                            aria-disabled={isApplyFilterButtonDisabled}
                         >
                             Appliquer
                         </button>
@@ -310,71 +334,83 @@ export default function ProductsPage() {
                 </Modal>
 
                 {loading ? (
-                    <div className="text-center py-8 text-lg font-semibold">Chargement...</div>
+                    <div className="text-center py-8 text-lg font-semibold" role="status">Chargement...</div>
                 ) : error ? (
-                    <div className="text-center py-8 text-red-500 text-lg">Erreur : {error}</div>
+                    <div className="text-center py-8 text-red-500 text-lg" role="alert">Erreur : {error}</div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" 
+                         role="region" 
+                         aria-label={`Liste de ${filteredAndSortedProducts.length} produits`}>
                         {filteredAndSortedProducts.length ? (
                             filteredAndSortedProducts.map((product) => (
-                                <div key={product.id}
-                                     className="product-card p-4 border rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+                                <article 
+                                    key={product.id}
+                                    className="product-card p-4 border rounded-lg shadow-lg hover:shadow-xl transition-shadow"
+                                    aria-labelledby={`product-name-${product.id}`}
+                                >
                                     <div className="flex items-center justify-center">
                                         <Image
                                             src={product.imgurl}
-                                            alt={product.name}
+                                            alt={`Image du produit ${product.name}`}
                                             width={200}
                                             height={0}
                                             className="rounded-md mb-4 object-cover"
                                         />
                                     </div>
                                     <div className="h-14 flex items-center">
-                                        <h2 className="text-xl font-semibold mb-2 line-clamp-two">{product.name}</h2>
+                                        <h2 id={`product-name-${product.id}`} className="text-xl font-semibold mb-2 line-clamp-two">{product.name}</h2>
                                     </div>
-                                    <p className="text-lg font-bold text-green-600 mb-2">{product.totalPrice} €</p>
-                                    <p className="text-lg font-bold text-blue-600 mb-2">{product.price} €/{product.unity}</p>
+                                    <p className="text-lg font-bold text-green-600 mb-2" aria-label={`Prix total: ${product.totalPrice} euros`}>{product.totalPrice} €</p>
+                                    <p className="text-lg font-bold text-blue-600 mb-2" aria-label={`Prix unitaire: ${product.price} euros par ${product.unity}`}>{product.price} €/{product.unity}</p>
 
                                     <div className="flex justify-between items-center mt-4">
-                                        <div className="flex flex-col items-center space-y-1 ml-4" style={{width: '70px'}}>
+                                        <div className="flex flex-col items-center space-y-1 ml-4" style={{width: '70px'}} role="group" aria-label={`Contrôle de quantité pour ${product.name}`}>
                                             <button
                                                 onClick={() => increaseQuantity(product.id)}
                                                 className="bg-gray-300 text-gray-700 px-2 py-1 rounded w-full"
+                                                aria-label={`Augmenter la quantité de ${product.name}`}
                                             >
                                                 +
                                             </button>
+                                            <label htmlFor={`quantity-${product.id}`} className="sr-only">Quantité de {product.name}</label>
                                             <input
+                                                id={`quantity-${product.id}`}
                                                 type="number"
                                                 min="1"
                                                 value={quantities[product.id] || 1}
                                                 onChange={(e) => handleQuantityChange(product.id, parseInt(e.target.value) || 1)}
                                                 onFocus={(e) => e.target.select()}
                                                 className="border text-center w-full py-1 rounded text-[#212121]"
+                                                aria-label={`Quantité de ${product.name}`}
                                             />
                                             <button
                                                 onClick={() => decreaseQuantity(product.id)}
                                                 disabled={(quantities[product.id] || 1) <= 1}
                                                 className="bg-gray-300 text-gray-700 px-2 py-1 rounded w-full"
+                                                aria-label={`Diminuer la quantité de ${product.name}`}
+                                                aria-disabled={(quantities[product.id] || 1) <= 1}
                                             >
                                                 -
                                             </button>
                                         </div>
 
                                         <button
-                                            onClick={() => addToCart(product.id)}
+                                            onClick={() => addToCart(product.id, product.name)}
                                             className="mr-4 py-2 px-4 rounded transition-colors flex items-center justify-center bg-blue-500 text-white hover:bg-blue-600"
+                                            aria-label={`Ajouter ${quantities[product.id] || 1} ${product.name} au panier`}
                                         >
                                             Ajouter
-                                            <FaShoppingCart className="h-8 w-8 ml-2" />
+                                            <FaShoppingCart className="h-8 w-8 ml-2" aria-hidden="true" />
                                         </button>
                                     </div>
-                                </div>
+                                </article>
                             ))
                         ) : (
-                            <p className="col-span-full text-center">Aucun produit correspondant trouvé</p>
+                            <p className="col-span-full text-center" role="status">Aucun produit correspondant trouvé</p>
                         )}
                     </div>
                 )}
-            </div>
+            </main>
         </>
     );
 }
