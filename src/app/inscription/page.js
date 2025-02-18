@@ -77,81 +77,94 @@ export default function SignupPage() {
     return (
         <>
             <Header />
-            <Suspense fallback={<p>Chargement des paramètres...</p>}>
+            <Suspense fallback={<p role="status" aria-live="polite">Chargement des paramètres...</p>}>
                 <SearchParamsHandler setRedirectTo={setRedirectTo} />
             </Suspense>
 
-            <div className="flex flex-col items-center justify-center min-h-screen p-4 pt-24">
+            <main className="flex flex-col items-center justify-center min-h-screen p-4 pt-24">
                 <h1 className="text-2xl font-bold mb-4">Inscription</h1>
                 <form
                     onSubmit={handleSignup}
                     className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full max-w-md"
+                    aria-labelledby="form-heading"
                 >
+                    <div id="form-heading" className="sr-only">Formulaire d'inscription</div>
                     <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2">Email</label>
+                        <label htmlFor="email" className="block text-gray-700 text-sm font-bold mb-2">Email</label>
                         <input
+                            id="email"
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                             required
+                            aria-required="true"
                         />
                     </div>
                     <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2">Mot de passe</label>
+                        <label htmlFor="password" className="block text-gray-700 text-sm font-bold mb-2">Mot de passe</label>
                         <input
+                            id="password"
                             type="password"
                             value={password}
                             onChange={handlePasswordChange}
                             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                             required
+                            aria-required="true"
+                            aria-describedby="password-requirements"
                         />
-                        <ul className="text-sm mt-2">
-                            <li className={passwordChecklist.length ? "text-green-600" : "text-red-600"}>
-                                Minimum 8 caractères
+                        <ul id="password-requirements" className="text-sm mt-2" aria-label="Exigences du mot de passe">
+                            <li className={passwordChecklist.length ? "text-green-600" : "text-red-600"} aria-live="polite">
+                                Minimum 8 caractères {passwordChecklist.length ? "✓" : "✗"}
                             </li>
-                            <li className={passwordChecklist.uppercase ? "text-green-600" : "text-red-600"}>
-                                Au moins une lettre majuscule
+                            <li className={passwordChecklist.uppercase ? "text-green-600" : "text-red-600"} aria-live="polite">
+                                Au moins une lettre majuscule {passwordChecklist.uppercase ? "✓" : "✗"}
                             </li>
-                            <li className={passwordChecklist.lowercase ? "text-green-600" : "text-red-600"}>
-                                Au moins une lettre minuscule
+                            <li className={passwordChecklist.lowercase ? "text-green-600" : "text-red-600"} aria-live="polite">
+                                Au moins une lettre minuscule {passwordChecklist.lowercase ? "✓" : "✗"}
                             </li>
-                            <li className={passwordChecklist.number ? "text-green-600" : "text-red-600"}>
-                                Au moins un chiffre
+                            <li className={passwordChecklist.number ? "text-green-600" : "text-red-600"} aria-live="polite">
+                                Au moins un chiffre {passwordChecklist.number ? "✓" : "✗"}
                             </li>
-                            <li className={passwordChecklist.special ? "text-green-600" : "text-red-600"}>
-                                Au moins un caractère spécial (!@#$%^&*(),.?&#34;:{}|)
+                            <li className={passwordChecklist.special ? "text-green-600" : "text-red-600"} aria-live="polite">
+                                Au moins un caractère spécial (!@#$%^&*(),.?":{}) {passwordChecklist.special ? "✓" : "✗"}
                             </li>
                         </ul>
                     </div>
                     <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2">Prénom</label>
+                        <label htmlFor="firstname" className="block text-gray-700 text-sm font-bold mb-2">Prénom</label>
                         <input
+                            id="firstname"
                             type="text"
                             value={firstname}
                             onChange={(e) => setFirstname(e.target.value)}
                             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                             required
+                            aria-required="true"
                         />
                     </div>
                     <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2">Nom</label>
+                        <label htmlFor="lastname" className="block text-gray-700 text-sm font-bold mb-2">Nom</label>
                         <input
+                            id="lastname"
                             type="text"
                             value={lastname}
                             onChange={(e) => setLastname(e.target.value)}
                             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                             required
+                            aria-required="true"
                         />
                     </div>
                     <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2">Date de naissance</label>
+                        <label htmlFor="birthdate" className="block text-gray-700 text-sm font-bold mb-2">Date de naissance</label>
                         <input
+                            id="birthdate"
                             type="date"
                             value={birthdate}
                             onChange={(e) => setBirthdate(e.target.value)}
                             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                             required
+                            aria-required="true"
                         />
                     </div>
                     <button
@@ -160,20 +173,21 @@ export default function SignupPage() {
                             !isPasswordValid && "opacity-50 cursor-not-allowed"
                         }`}
                         disabled={!isPasswordValid}
+                        aria-disabled={!isPasswordValid}
                     >
                         S&#39;inscrire
                     </button>
                 </form>
                 <p className="text-sm mt-2">
                     Déjà un compte ?{' '}
-                    <span
+                    <button
                         onClick={() => router.push(`/connexion?redirect=${encodeURIComponent(redirectTo)}`)}
                         className="text-blue-500 hover:underline"
                     >
                         Connectez-vous ici
-                    </span>
+                    </button>
                 </p>
-            </div>
+            </main>
         </>
     );
 }
