@@ -1,5 +1,9 @@
 name: Deploy to VPS
 
+permissions:
+  contents: read
+  actions: write
+
 on:
   push:
     branches: [ master ]
@@ -10,6 +14,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Fetch full history for proper git operations
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -44,38 +50,10 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          envs: |
-            DATABASE_URL,
-            NEXT_PUBLIC_SUPABASE_URL,
-            NEXT_PUBLIC_SUPABASE_ANON_KEY,
-            SUPABASE_SERVICE_ROLE_KEY,
-            NEXT_PUBLIC_API_URL,
-            OPENAI_API_KEY,
-            ANTHROPIC_API_KEY,
-            STRIPE_SECRET_KEY,
-            NEXT_PUBLIC_STRIPE_PUBLIC_KEY,
-            STRIPE_WEBHOOK_SECRET,
-            MAIL_HOST,
-            MAIL_USER,
-            MAIL_ADDRESS,
-            MAIL_PASS
           script: |
             cd ~/market-drive
-            export DATABASE_URL=$DATABASE_URL
-            export NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
-            export NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
-            export SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY
-            export NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
-            export OPENAI_API_KEY=$OPENAI_API_KEY
-            export ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
-            export STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY
-            export NEXT_PUBLIC_STRIPE_PUBLIC_KEY=$NEXT_PUBLIC_STRIPE_PUBLIC_KEY
-            export STRIPE_WEBHOOK_SECRET=$STRIPE_WEBHOOK_SECRET
-            export MAIL_HOST=$MAIL_HOST
-            export MAIL_USER=$MAIL_USER
-            export MAIL_ADDRESS=$MAIL_ADDRESS
-            export MAIL_PASS=$MAIL_PASS
-            git pull origin master
+            git fetch origin
+            git reset --hard origin/master
             npm ci
             npm run build
             pm2 restart market-drive
