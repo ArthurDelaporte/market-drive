@@ -17,16 +17,6 @@ jobs:
         with:
           fetch-depth: 0  # Fetch full history for proper git operations
 
-      - name: Debug SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          eval $(ssh-agent -s)  # Démarre l'agent SSH
-          ssh-add ~/.ssh/id_rsa  # Ajoute la clé privée
-          ssh-keygen -y -f ~/.ssh/id_rsa
-          ssh -vT git@github.com  # Test de connexion verbeux
-
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
