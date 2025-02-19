@@ -11,70 +11,71 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
+name: Setup Node.js
+uses: actions/setup-node@v3
+with:
+  node-version: '18'
+  cache: 'npm'
 
-      - name: Install dependencies
-        run: npm install
+name: Install dependencies
+run: npm ci
 
-      - name: Build
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-          NEXT_PUBLIC_STRIPE_PUBLIC_KEY: ${{ secrets.NEXT_PUBLIC_STRIPE_PUBLIC_KEY }}
-          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
-          MAIL_HOST: ${{ secrets.MAIL_HOST }}
-          MAIL_USER: ${{ secrets.MAIL_USER }}
-          MAIL_ADDRESS: ${{ secrets.MAIL_ADDRESS }}
-          MAIL_PASS: ${{ secrets.MAIL_PASS }}
-        run: npm run build
+name: Build
+env:
+  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+  NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+  NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+  STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+  NEXT_PUBLIC_STRIPE_PUBLIC_KEY: ${{ secrets.NEXT_PUBLIC_STRIPE_PUBLIC_KEY }}
+  STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+  MAIL_HOST: ${{ secrets.MAIL_HOST }}
+  MAIL_USER: ${{ secrets.MAIL_USER }}
+  MAIL_ADDRESS: ${{ secrets.MAIL_ADDRESS }}
+  MAIL_PASS: ${{ secrets.MAIL_PASS }}
+run: npm run build
 
-      - name: Deploy to VPS
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          envs: |
-            DATABASE_URL,
-            NEXT_PUBLIC_SUPABASE_URL,
-            NEXT_PUBLIC_SUPABASE_ANON_KEY,
-            SUPABASE_SERVICE_ROLE_KEY,
-            NEXT_PUBLIC_API_URL,
-            OPENAI_API_KEY,
-            ANTHROPIC_API_KEY,
-            STRIPE_SECRET_KEY,
-            NEXT_PUBLIC_STRIPE_PUBLIC_KEY,
-            STRIPE_WEBHOOK_SECRET,
-            MAIL_HOST,
-            MAIL_USER,
-            MAIL_ADDRESS,
-            MAIL_PASS
-          script: |
-            cd ~/market-drive
-            export DATABASE_URL=$DATABASE_URL
-            export NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
-            export NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
-            export SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY
-            export NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
-            export OPENAI_API_KEY=$OPENAI_API_KEY
-            export ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
-            export STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY
-            export NEXT_PUBLIC_STRIPE_PUBLIC_KEY=$NEXT_PUBLIC_STRIPE_PUBLIC_KEY
-            export STRIPE_WEBHOOK_SECRET=$STRIPE_WEBHOOK_SECRET
-            export MAIL_HOST=$MAIL_HOST
-            export MAIL_USER=$MAIL_USER
-            export MAIL_ADDRESS=$MAIL_ADDRESS
-            export MAIL_PASS=$MAIL_PASS
-            git pull origin master
-            npm install
-            npm run build
-            pm2 restart all
+name: Deploy to VPS
+uses: appleboy/ssh-action@master
+with:
+  host: ${{ secrets.HOST }}
+  username: ${{ secrets.USERNAME }}
+  key: ${{ secrets.SSH_PRIVATE_KEY }}
+  envs: |
+    DATABASE_URL,
+    NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    SUPABASE_SERVICE_ROLE_KEY,
+    NEXT_PUBLIC_API_URL,
+    OPENAI_API_KEY,
+    ANTHROPIC_API_KEY,
+    STRIPE_SECRET_KEY,
+    NEXT_PUBLIC_STRIPE_PUBLIC_KEY,
+    STRIPE_WEBHOOK_SECRET,
+    MAIL_HOST,
+    MAIL_USER,
+    MAIL_ADDRESS,
+    MAIL_PASS
+  script: |
+    cd ~/market-drive
+    export DATABASE_URL=$DATABASE_URL
+    export NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+    export NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
+    export SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY
+    export NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+    export OPENAI_API_KEY=$OPENAI_API_KEY
+    export ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
+    export STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY
+    export NEXT_PUBLIC_STRIPE_PUBLIC_KEY=$NEXT_PUBLIC_STRIPE_PUBLIC_KEY
+    export STRIPE_WEBHOOK_SECRET=$STRIPE_WEBHOOK_SECRET
+    export MAIL_HOST=$MAIL_HOST
+    export MAIL_USER=$MAIL_USER
+    export MAIL_ADDRESS=$MAIL_ADDRESS
+    export MAIL_PASS=$MAIL_PASS
+    git pull origin master
+    npm ci
+    npm run build
+    pm2 restart market-drive
