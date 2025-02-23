@@ -381,23 +381,23 @@ export default function CartPage() {
     return (
         <>
             <Header />
-            <div className="container mx-auto p-6 pt-24">
+            <main className="container mx-auto p-6 pt-24">
                 <h1 className="text-3xl font-bold mb-6 text-center">Mon Panier</h1>
-
+    
                 {loading ? (
-                    <p className="text-center text-lg text-gray-500">Chargement du panier...</p>
+                    <p className="text-center text-lg text-gray-500" role="status" aria-live="polite">Chargement du panier...</p>
                 ) : cart.length === 0 ? (
                     <p className="text-center text-lg text-gray-500">Votre panier est vide.</p>
                 ) : (
                     <div className="bg-white shadow-md rounded-lg overflow-hidden">
-                        <table className="min-w-full bg-white">
+                        <table className="min-w-full bg-white" aria-label="Contenu du panier">
                             <thead className="bg-teal-500 text-white uppercase text-sm leading-normal">
                                 <tr>
-                                    <th className="text-left px-6 py-3">Produit</th>
-                                    <th className="text-center px-6 py-3">Quantité</th>
-                                    <th className="text-right px-6 py-3">Prix</th>
-                                    <th className="text-right px-6 py-3">Total</th>
-                                    <th className="text-center px-6 py-3">Action</th>
+                                    <th scope="col" className="text-left px-6 py-3">Produit</th>
+                                    <th scope="col" className="text-center px-6 py-3">Quantité</th>
+                                    <th scope="col" className="text-right px-6 py-3">Prix</th>
+                                    <th scope="col" className="text-right px-6 py-3">Total</th>
+                                    <th scope="col" className="text-center px-6 py-3">Action</th>
                                 </tr>
                             </thead>
                             <tbody className="text-gray-600 text-sm font-light">
@@ -411,13 +411,16 @@ export default function CartPage() {
                                                     onClick={() => updateQuantity(product.id, item.quantity - 1)}
                                                     disabled={item.quantity <= 1}
                                                     className="px-2 py-1 text-gray-700 bg-gray-200 rounded hover:bg-gray-300 transition"
+                                                    aria-label={`Diminuer la quantité de ${product.name}`}
+                                                    aria-disabled={item.quantity <= 1}
                                                 >
                                                     -
                                                 </button>
-                                                <span className="px-2">{item.quantity}</span>
+                                                <span className="px-2" aria-live="polite">{item.quantity}</span>
                                                 <button
                                                     onClick={() => updateQuantity(product.id, item.quantity + 1)}
                                                     className="px-2 py-1 text-white bg-teal-500 rounded hover:bg-teal-600 transition"
+                                                    aria-label={`Augmenter la quantité de ${product.name}`}
                                                 >
                                                     +
                                                 </button>
@@ -428,6 +431,7 @@ export default function CartPage() {
                                                 <button
                                                     onClick={() => removeFromCart(product.id)}
                                                     className="px-4 py-2 text-sm font-bold text-white bg-red-500 rounded hover:bg-red-600 transition"
+                                                    aria-label={`Supprimer ${product.name} du panier`}
                                                 >
                                                     Supprimer
                                                 </button>
@@ -439,119 +443,123 @@ export default function CartPage() {
                         </table>
                     </div>
                 )}
-
+    
                 {products.length > 0 && (
                     <div className="mt-6 flex justify-between items-center">
-                        <p className="text-xl font-bold">Total : {cart.amount.toFixed(2)} €</p>
+                        <p className="text-xl font-bold" aria-live="polite" aria-atomic="true">Total : {cart.amount.toFixed(2)} €</p>
                         <CheckoutButton cart={cart} produits={products} currentUser={user}/>
                     </div>
                 )}
-                    <div className="flex justify-center mt-6">
-                        <button
-                            onClick={handleGenerateRecipe}
-                            className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition"
-                            disabled={isLoadingRecipe}
-                        >
-                            {isLoadingRecipe ? "Génération en cours..." : "Proposer des recettes 🍳"}
-                        </button>
-                    </div>
-                    {recipe && (
-                        <div className="mt-6 p-4 border border-gray-300 rounded-lg bg-gray-100">
-                            <h2 className="text-xl font-bold mb-4">🍽️ Recettes suggérées :</h2>
-                            
-                            {recipe.map((recette, index) => (
-                                <div key={index} className="mb-6 p-4 bg-white rounded-lg">
-                                    <h3 className="text-lg font-bold mb-2">{recette.name}</h3>
-                                    
-                                    <div className="mb-4">
-                                        <h4 className="font-semibold">⏱️ Temps de préparation :</h4>
-                                        <p>{recette.preparation_time}</p>
-                                    </div>
-
-                                    <div className="mb-4">
-                                        <h4 className="font-semibold">📝 Difficulté :</h4>
-                                        <p>{recette.difficulty}</p>
-                                    </div>
-
-                                    <div className="mb-4">
-                                        <h4 className="font-semibold">📝 Ingrédients nécessaires :</h4>
-                                        <ul className="list-disc ml-6">
-                                            {recette.required_ingredients.map((ingredient, idx) => (
-                                                <li key={idx}>{ingredient}</li>
-                                            ))}
-                                        </ul>
-                                    </div>
-
-                                    <div className="mb-4">
-                                        <h4 className="font-semibold">🛒 Ingrédients disponibles dans votre panier :</h4>
-                                        <ul className="list-disc ml-6 text-green-600">
-                                            {recette.ingredients.available.length > 0 ? (
-                                                recette.ingredients.available.map((ingredient, idx) => (
-                                                    <li key={idx}>{ingredient}</li>
-                                                ))
-                                            ) : (
-                                                <li>Aucun ingrédient du panier utilisé</li>
-                                            )}
-                                        </ul>
-                                    </div>
-
-                                    <div className="mb-4">
-                                        <h4 className="font-semibold">🚚 Ingrédients manquants mais disponibles :</h4>
-                                        <ul className="list-disc ml-6 text-orange-600">
-                                            {recette.ingredients.missing_available.length > 0 ? (
-                                                recette.ingredients.missing_available.map((ingredient, idx) => (
-                                                    <li key={idx} className="flex items-center justify-between">
-                                                        <span>{ingredient}</span>
-                                                        <button 
-                                                            onClick={() => findAndAddProductToCart(ingredient)}
-                                                            className="ml-2 px-2 py-1 bg-teal-500 text-white rounded-md hover:bg-teal-600"
-                                                        >
-                                                            Ajouter au panier
-                                                        </button>
-                                                    </li>
-                                                ))
-                                            ) : (
-                                                <li>Aucun ingrédient supplémentaire nécessaire</li>
-                                            )}
-                                        </ul>
-
-                                        {/* Bouton pour tout ajouter */}
-                                        {recette.ingredients.missing_available.length > 0 && (
-                                            <button 
-                                                onClick={() => addAllMissingToCart(recette.ingredients.missing_available)}
-                                                className="mt-4 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600"
-                                            >
-                                                Ajouter tous les ingrédients manquants au panier
-                                            </button>
-                                        )}
-                                    </div>
-
-                                    <div className="mb-4">
-                                        <h4 className="font-semibold">❌ Ingrédients non disponibles :</h4>
-                                        <ul className="list-disc ml-6 text-red-600">
-                                            {recette.ingredients.missing_unavailable.length > 0 ? (
-                                                recette.ingredients.missing_unavailable.map((ingredient, idx) => (
-                                                    <li key={idx}>{ingredient}</li>
-                                                ))
-                                            ) : (
-                                                <li>Tous les ingrédients sont disponibles</li>
-                                            )}
-                                        </ul>
-                                    </div>
-
-                                    <div className="mb-4">
-                                        <h4 className="font-semibold">📋 Instructions :</h4>
-                                        <ol className="list-decimal ml-6">
-                                            {recette.instructions.map((step, stepIndex) => (
-                                                <li key={stepIndex}>{step}</li>
-                                            ))}
-                                        </ol>
-                                    </div>
+                <div className="flex justify-center mt-6">
+                    <button
+                        onClick={handleGenerateRecipe}
+                        className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition"
+                        disabled={isLoadingRecipe}
+                        aria-busy={isLoadingRecipe}
+                    >
+                        {isLoadingRecipe ? "Génération en cours..." : "Proposer des recettes 🍳"}
+                    </button>
+                </div>
+    
+                {recipe && (
+                    <section className="mt-6 p-4 border border-gray-300 rounded-lg bg-gray-100" aria-labelledby="recipe-section">
+                        <h2 id="recipe-section" className="text-xl font-bold mb-4">🍽️ Recettes suggérées :</h2>
+                        
+                        {recipe.map((recette, index) => (
+                            <article key={index} className="mb-6 p-4 bg-white rounded-lg" aria-labelledby={`recipe-${index}`}>
+                                <h3 id={`recipe-${index}`} className="text-lg font-bold mb-2">{recette.name}</h3>
+                                
+                                <div className="mb-4">
+                                    <h4 className="font-semibold">⏱️ Temps de préparation :</h4>
+                                    <p>{recette.preparation_time}</p>
                                 </div>
-                            ))}
-                        </div>
-                    )}
-            </div>
+    
+                                <div className="mb-4">
+                                    <h4 className="font-semibold">📝 Difficulté :</h4>
+                                    <p>{recette.difficulty}</p>
+                                </div>
+    
+                                <div className="mb-4">
+                                    <h4 id={`ingredients-${index}`} className="font-semibold">📝 Ingrédients nécessaires :</h4>
+                                    <ul className="list-disc ml-6" aria-labelledby={`ingredients-${index}`}>
+                                        {recette.required_ingredients.map((ingredient, idx) => (
+                                            <li key={idx}>{ingredient}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+    
+                                <div className="mb-4">
+                                    <h4 id={`available-ingredients-${index}`} className="font-semibold">🛒 Ingrédients disponibles dans votre panier :</h4>
+                                    <ul className="list-disc ml-6 text-green-600" aria-labelledby={`available-ingredients-${index}`}>
+                                        {recette.ingredients.available.length > 0 ? (
+                                            recette.ingredients.available.map((ingredient, idx) => (
+                                                <li key={idx}>{ingredient}</li>
+                                            ))
+                                        ) : (
+                                            <li>Aucun ingrédient du panier utilisé</li>
+                                        )}
+                                    </ul>
+                                </div>
+    
+                                <div className="mb-4">
+                                    <h4 id={`missing-ingredients-${index}`} className="font-semibold">🚚 Ingrédients manquants mais disponibles :</h4>
+                                    <ul className="list-disc ml-6 text-orange-600" aria-labelledby={`missing-ingredients-${index}`}>
+                                        {recette.ingredients.missing_available.length > 0 ? (
+                                            recette.ingredients.missing_available.map((ingredient, idx) => (
+                                                <li key={idx} className="flex items-center justify-between">
+                                                    <span>{ingredient}</span>
+                                                    <button 
+                                                        onClick={() => findAndAddProductToCart(ingredient)}
+                                                        className="ml-2 px-2 py-1 bg-teal-500 text-white rounded-md hover:bg-teal-600"
+                                                        aria-label={`Ajouter ${ingredient} au panier`}
+                                                    >
+                                                        Ajouter au panier
+                                                    </button>
+                                                </li>
+                                            ))
+                                        ) : (
+                                            <li>Aucun ingrédient supplémentaire nécessaire</li>
+                                        )}
+                                    </ul>
+                                </div>
+    
+                                {recette.ingredients.missing_available.length > 0 && (
+                                    <button 
+                                        onClick={() => addAllMissingToCart(recette.ingredients.missing_available)}
+                                        className="mt-4 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600"
+                                        aria-label="Ajouter tous les ingrédients manquants au panier"
+                                    >
+                                        Ajouter tous les ingrédients manquants au panier
+                                    </button>
+                                )}
+    
+                                <div className="mb-4">
+                                    <h4 className="font-semibold" id={`unavailable-ingredients-${index}`}>❌ Ingrédients non disponibles :</h4>
+                                    <ul className="list-disc ml-6 text-red-600" aria-labelledby={`unavailable-ingredients-${index}`}>
+                                        {recette.ingredients.missing_unavailable.length > 0 ? (
+                                            recette.ingredients.missing_unavailable.map((ingredient, idx) => (
+                                                <li key={idx}>{ingredient}</li>
+                                            ))
+                                        ) : (
+                                            <li>Tous les ingrédients sont disponibles</li>
+                                        )}
+                                    </ul>
+                                </div>
+    
+                                <div className="mb-4">
+                                    <h4 className="font-semibold" id={`instructions-${index}`}>📋 Instructions :</h4>
+                                    <ol className="list-decimal ml-6" aria-labelledby={`instructions-${index}`}>
+                                        {recette.instructions.map((step, stepIndex) => (
+                                            <li key={stepIndex}>{step}</li>
+                                        ))}
+                                    </ol>
+                                </div>
+                            </article>
+                        ))}
+                    </section>
+                )}
+            </main>
         </>
     );
-}
+    }
+    
