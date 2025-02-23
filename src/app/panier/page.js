@@ -447,7 +447,7 @@ export default function CartPage() {
                 {products.length > 0 && (
                     <div className="mt-6 flex justify-between items-center">
                         <p className="text-xl font-bold" aria-live="polite" aria-atomic="true">Total : {cart.amount.toFixed(2)} €</p>
-                        <CheckoutButton cart={cart} produits={products} currentUser={user}/>
+                        <CheckoutButton cart={cart} currentUser={user}/>
                     </div>
                 )}
                 <div className="flex justify-center mt-6">
