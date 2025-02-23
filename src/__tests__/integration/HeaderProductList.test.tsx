@@ -23,7 +23,20 @@ jest.mock('react-toastify', () => ({
 // Mock pour next/image
 jest.mock('next/image', () => ({
   __esModule: true,
-  default: (props: any) => <img {...props} />
+  default: ({ src, alt, width, height, ...props }: { 
+    src: string, 
+    alt: string, 
+    width?: number, 
+    height?: number 
+  }) => (
+    <img 
+      src={src} 
+      alt={alt} 
+      width={width} 
+      height={height} 
+      {...props} 
+    />
+  )
 }));
 
 // Mock pour les icônes
