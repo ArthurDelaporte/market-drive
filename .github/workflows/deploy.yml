@@ -70,8 +70,8 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd ~/market-drive
-            git fetch origin
-            git reset --hard origin/master
+            git fetch https://github.com/ArthurDelaporte/market-drive master
+            git reset --hard FETCH_HEAD
             npm ci
             npm run build
             pm2 restart market-drive
