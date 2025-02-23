@@ -88,7 +88,7 @@ export default function SignupPage() {
                     className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full max-w-md"
                     aria-labelledby="form-heading"
                 >
-                    <div id="form-heading" className="sr-only">Formulaire d'inscription</div>
+                    <div id="form-heading" className="sr-only">Formulaire d&apos;inscription</div>
                     <div className="mb-4">
                         <label htmlFor="email" className="block text-gray-700 text-sm font-bold mb-2">Email</label>
                         <input
@@ -127,7 +127,7 @@ export default function SignupPage() {
                                 Au moins un chiffre {passwordChecklist.number ? "✓" : "✗"}
                             </li>
                             <li className={passwordChecklist.special ? "text-green-600" : "text-red-600"} aria-live="polite">
-                                Au moins un caractère spécial (!@#$%^&*(),.?":{}) {passwordChecklist.special ? "✓" : "✗"}
+                                Au moins un caractère spécial (!@#$%^&*(),.?&quot;:{}) {passwordChecklist.special ? "✓" : "✗"}
                             </li>
                         </ul>
                     </div>

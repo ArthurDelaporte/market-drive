@@ -99,7 +99,7 @@ export default function LoginPage() {
                         />
                         {!email && (
                             <span id="email-error" className="sr-only">
-                                L'email est requis
+                                L&apos;email est requis
                             </span>
                         )}
                     </div>
