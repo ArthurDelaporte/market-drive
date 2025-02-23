@@ -2,6 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import Stripe from "stripe";
 import prisma from "@/prismaClient";
 import { headers } from "next/headers";
+import { sendEmail } from "@/utils/email";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
     apiVersion: "2025-01-27.acacia",
@@ -173,16 +174,6 @@ async function sendPaymentConfirmationEmail( req: NextRequest, email: string, fi
         <p>Merci pour votre confiance et à bientôt !</p>
     `;
 
-    const authHeader = req.headers.get("authorization");
-    const access_token = authHeader?.split(" ")[1];
-
     // 🔗 Envoyer l'e-mail via l'API d'envoi d'e-mail
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/send-email`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${access_token}`
-        },
-        body: JSON.stringify({ to: email, subject, html }),
-    });
+    await sendEmail(email, subject, html);
 }

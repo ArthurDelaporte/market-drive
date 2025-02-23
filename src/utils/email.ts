@@ -1,4 +1,38 @@
-export async function sendStatusUpdateEmail(access_token: string, email: string, firstname: string | null, status: string) {
+import nodemailer from "nodemailer";
+
+const transporter = nodemailer.createTransport({
+    host: process.env.MAIL_HOST,
+    port: parseInt(process.env.MAIL_PORT || "465", 10),
+    secure: true,
+    auth: {
+        user: process.env.MAIL_ADDRESS,
+        pass: process.env.MAIL_PASS,
+    },
+});
+
+/**
+ * 📧 Fonction d'envoi d'email
+ */
+export async function sendEmail(to: string, subject: string, html: string) {
+    try {
+        const info = await transporter.sendMail({
+            from: `"Support" <${process.env.MAIL_ADDRESS}>`,
+            to,
+            subject,
+            html,
+        });
+
+        return { data: info, error: null };
+    } catch (error) {
+        console.error("❌ Erreur d'envoi d'email :", error);
+        return { data: null, error };
+    }
+}
+
+/**
+ * 📧 Fonction d'envoi d'email pour le changement de status d'une commande
+ */
+export async function sendStatusUpdateEmail(email: string, firstname: string | null, status: string) {
     const subject = "Mise à jour de votre commande";
 
     const STATUS_MESSAGES: Record<string, string> = {
@@ -22,12 +56,5 @@ export async function sendStatusUpdateEmail(access_token: string, email: string,
         <p>Merci pour votre confiance et à bientôt !</p>
     `;
 
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/send-email`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${access_token}`,
-        },
-        body: JSON.stringify({ to: email, subject, html }),
-    });
+    await sendEmail(email, subject, html);
 }
