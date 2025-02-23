@@ -6,28 +6,19 @@ import {getCookie} from "typescript-cookie";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY);
 
-export default function CheckoutButton({ cart, produits, currentUser }) {
+export default function CheckoutButton({ cart, currentUser }) {
     const [loading, setLoading] = useState(false);
 
     const handleCheckout = async () => {
         setLoading(true);
 
-        const cartItems = cart.products.map((item) => {
-            const produit = produits.find((prod) => prod.id === item.product_id);
-            return {
-                'name': produit.name,
-                'total_price': produit.total_price,
-                'quantity': item.quantity,
-            }
-        })
-
         const res = await fetch("/api/checkout/session", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${getCookie('access_token')}`
+                Authorization: `Bearer ${getCookie("access_token")}`,
             },
-            body: JSON.stringify({ items: cartItems, userId: currentUser.id, cartId: cart.id }),
+            body: JSON.stringify({ cartId: cart.id, userId: currentUser.id }),
         });
 
         const { sessionId } = await res.json();
