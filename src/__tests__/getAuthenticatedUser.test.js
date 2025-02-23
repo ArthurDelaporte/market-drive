@@ -66,6 +66,8 @@ describe('getAuthenticatedUser', () => {
     jwtDecode.mockReturnValue({ 
       exp: Math.floor(Date.now() / 1000) - 3600 // expiré il y a 1 heure
     });
+
+    const userOrResponse = await getAuthenticatedUser(mockRequest);
     expect(NextResponse.json).toHaveBeenCalledWith(
       { error: "Access token expired" },
       { status: 401 }
@@ -106,6 +108,7 @@ describe('getAuthenticatedUser', () => {
       throw new Error('Invalid token');
     });
 
+    const userOrResponse = await getAuthenticatedUser(mockRequest);
     expect(NextResponse.json).toHaveBeenCalledWith(
       { error: "Invalid access token" },
       { status: 401 }
@@ -124,6 +127,7 @@ describe('getAuthenticatedUser', () => {
       error: new Error('Authentication error')
     });
 
+    const userOrResponse = await getAuthenticatedUser(mockRequest);
     expect(NextResponse.json).toHaveBeenCalledWith(
       { error: "Invalid or expired access token" },
       { status: 401 }
