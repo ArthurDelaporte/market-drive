@@ -2,6 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/prismaClient";
 import { addDays, startOfDay, format } from "date-fns";
 import {getAuthenticatedUser} from "@/utils/auth";
+import { sendEmail } from "@/utils/email";
 
 const OPEN_HOUR = 9;
 const CLOSE_HOUR = 20;
@@ -229,18 +230,7 @@ export async function POST(req: NextRequest) {
             <p>Merci et à bientôt !</p>
         `;
 
-        const authHeader = req.headers.get("authorization");
-        const access_token = authHeader?.split(" ")[1];
-
-        // Envoyer l'e-mail via l'API
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/send-email`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${access_token}`
-            },
-            body: JSON.stringify({ to: user.email, subject, html }),
-        });
+        await sendEmail(user.email || '', subject, html);
 
         const newAppointment = await prisma.appointments.create({
             data: { user_id, cart_id, date: new Date(formattedDate), time, is_retrait, address: newAddress },
