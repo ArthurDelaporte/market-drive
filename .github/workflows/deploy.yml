@@ -24,8 +24,17 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           eval $(ssh-agent -s)  # Démarre l'agent SSH
           ssh-add ~/.ssh/id_rsa  # Ajoute la clé privée
+            
+          # Affiche la clé publique
+          echo "Clé publique :"
           ssh-keygen -y -f ~/.ssh/id_rsa
-          ssh -vT git@github.com  # Test de connexion verbeux
+            
+          # Génère le fingerprint
+          echo "Fingerprint de la clé :"
+          ssh-keygen -lf ~/.ssh/id_rsa
+            
+          # Test de connexion verbeux
+          ssh -vvv -T git@github.com
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
