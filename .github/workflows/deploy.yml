@@ -19,22 +19,21 @@ jobs:
 
       - name: Debug SSH
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          eval $(ssh-agent -s)  # Démarre l'agent SSH
-          ssh-add ~/.ssh/id_rsa  # Ajoute la clé privée
+            mkdir -p ~/.ssh
+            echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+            chmod 600 ~/.ssh/id_rsa
+            eval $(ssh-agent -s)
+            ssh-add ~/.ssh/id_rsa
             
-          # Affiche la clé publique
-          echo "Clé publique :"
-          ssh-keygen -y -f ~/.ssh/id_rsa
+            echo "Clé publique :"
+            ssh-keygen -y -f ~/.ssh/id_rsa
             
-          # Génère le fingerprint
-          echo "Fingerprint de la clé :"
-          ssh-keygen -lf ~/.ssh/id_rsa
+            echo "Type de clé :"
+            ssh-keygen -lf ~/.ssh/id_rsa
             
-          # Test de connexion verbeux
-          ssh -vvv -T git@github.com
+            ssh -vvv git@github.com || true
+            
+            ssh-add -l
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
