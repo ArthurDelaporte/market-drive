@@ -5,15 +5,6 @@ import ProductsPage from '../../app/produits/page';
 import React from 'react';
 import '@testing-library/jest-dom';
 
-// Fonctions helper pour les tests avec types sécurisés
-const jestStringContaining = (text: string) => {
-  return (jest as any).stringContaining(text);
-};
-
-const jestAny = (type: any) => {
-  return (jest as any).any(type);
-};
-
 // Mock react-modal
 jest.mock('react-modal', () => {
   return function MockModal({ children, isOpen }: { children: React.ReactNode; isOpen: boolean }) {
@@ -177,12 +168,25 @@ describe('ProductsPage Integration', () => {
     const addToCartButton = screen.getByText('Ajouter');
     fireEvent.click(addToCartButton);
 
+    // Simplifié au maximum avec ts-ignore sur toute l'assertion
     await waitFor(() => {
       // @ts-ignore
-      expect(global.fetch).toHaveBeenCalledWith(
-        jestStringContaining('/api/user/user1/carts'),
-        jestAny(Object)
-      );
+      expect(global.fetch).toHaveBeenCalled();
+      
+      // Vérification manuelle que l'URL contient la chaîne recherchée
+      const fetchCalls = (global.fetch as any).mock.calls;
+      let foundCorrectCall = false;
+      
+      // @ts-ignore - Ignorer les erreurs TypeScript pour le code de vérification
+      for (const call of fetchCalls) {
+        if (typeof call[0] === 'string' && call[0].includes('/api/user/user1/carts')) {
+          foundCorrectCall = true;
+          break;
+        }
+      }
+      
+      // @ts-ignore
+      expect(foundCorrectCall).toBe(true);
     });
   });
 });
