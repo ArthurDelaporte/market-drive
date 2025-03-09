@@ -5,9 +5,6 @@ import React from 'react';
 // Import pour éviter la référence triple slash
 import '@testing-library/jest-dom';
 
-// Type sécurisé pour les objets mock
-type MockFn = jest.Mock<any, any>;
-
 // Mock react-modal
 jest.mock('react-modal', () => {
   return function MockModal({ children, isOpen }: { children: React.ReactNode; isOpen: boolean }) {
@@ -110,22 +107,43 @@ describe('ProductsPage Integration', () => {
     }
   ];
 
+  // Sauvegarde du fetch original pour restauration
+  const originalFetch = global.fetch;
+
   beforeEach(() => {
     jest.clearAllMocks();
-    (global.fetch as MockFn) = jest.fn((url: string) => {
-      if (url.includes('/api/auth/user')) {
+    
+    // Utiliser Object.defineProperty pour éviter les problèmes de typage
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mockFetchImplementation = (url: string | URL | Request, init?: RequestInit): Promise<any> => {
+      const urlString = url.toString();
+      if (urlString.includes('/api/auth/user')) {
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve({ id: 'user1', role: 'user' })
         });
       }
-      if (url.includes('/api/products')) {
+      if (urlString.includes('/api/products')) {
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve(mockProducts)
         });
       }
       return Promise.reject(new Error('Not Found'));
+    };
+
+    // Remplacer la fonction fetch de manière sûre
+    Object.defineProperty(global, 'fetch', {
+      value: jest.fn(mockFetchImplementation),
+      writable: true
+    });
+  });
+
+  // Restaurer fetch après les tests
+  afterAll(() => {
+    Object.defineProperty(global, 'fetch', {
+      value: originalFetch,
+      writable: true
     });
   });
 
@@ -177,11 +195,14 @@ describe('ProductsPage Integration', () => {
       expect(global.fetch).toHaveBeenCalled();
       
       // Vérification manuelle que l'URL contient la chaîne recherchée
-      const fetchCalls = (global.fetch as MockFn).mock.calls;
       let foundCorrectCall = false;
       
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const fetchCalls = (global.fetch as jest.Mock).mock.calls;
+      
       for (const call of fetchCalls) {
-        if (typeof call[0] === 'string' && call[0].includes('/api/user/user1/carts')) {
+        const url = call[0]?.toString() || '';
+        if (url.includes('/api/user/user1/carts')) {
           foundCorrectCall = true;
           break;
         }
