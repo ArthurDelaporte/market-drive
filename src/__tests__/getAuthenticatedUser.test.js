@@ -54,8 +54,8 @@ describe('getAuthenticatedUser', () => {
   });
 
   it('should return null when no token is provided', async () => {
-    const userOrResponse = await getAuthenticatedUser(mockRequest);
-    expect(userOrResponse).toBeNull();
+    const result = await getAuthenticatedUser(mockRequest);
+    expect(result).toBeNull();
   });
 
   it('should return error response when token is expired', async () => {
@@ -67,7 +67,7 @@ describe('getAuthenticatedUser', () => {
       exp: Math.floor(Date.now() / 1000) - 3600 // expiré il y a 1 heure
     });
 
-    const userOrResponse = await getAuthenticatedUser(mockRequest);
+    await getAuthenticatedUser(mockRequest);
     expect(NextResponse.json).toHaveBeenCalledWith(
       { error: "Access token expired" },
       { status: 401 }
@@ -97,8 +97,8 @@ describe('getAuthenticatedUser', () => {
     };
     prisma.users.findUnique.mockResolvedValue(mockPrismaUser);
 
-    const userOrResponse = await getAuthenticatedUser(mockRequest);
-    expect(userOrResponse).toEqual(mockPrismaUser);
+    const result = await getAuthenticatedUser(mockRequest);
+    expect(result).toEqual(mockPrismaUser);
   });
 
   it('should handle invalid token format', async () => {
@@ -108,7 +108,7 @@ describe('getAuthenticatedUser', () => {
       throw new Error('Invalid token');
     });
 
-    const userOrResponse = await getAuthenticatedUser(mockRequest);
+    await getAuthenticatedUser(mockRequest);
     expect(NextResponse.json).toHaveBeenCalledWith(
       { error: "Invalid access token" },
       { status: 401 }
@@ -127,7 +127,7 @@ describe('getAuthenticatedUser', () => {
       error: new Error('Authentication error')
     });
 
-    const userOrResponse = await getAuthenticatedUser(mockRequest);
+    await getAuthenticatedUser(mockRequest);
     expect(NextResponse.json).toHaveBeenCalledWith(
       { error: "Invalid or expired access token" },
       { status: 401 }

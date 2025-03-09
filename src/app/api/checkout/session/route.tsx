@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
             if (!Array.isArray(cartProducts)) {
                 throw new Error("Format de produits invalide");
             }
-        } catch (error) {
+        } catch (parseError) {
             return NextResponse.json({ error: "Erreur de format des produits." }, { status: 500 });
         }
 
@@ -98,8 +98,8 @@ export async function POST(req: NextRequest) {
         });
 
         return NextResponse.json({ sessionId: session.id });
-    } catch (error) {
-        console.error("Erreur Stripe:", error);
+    } catch (stripeError) {
+        console.error("Erreur Stripe:", stripeError);
         return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
     }
 }
