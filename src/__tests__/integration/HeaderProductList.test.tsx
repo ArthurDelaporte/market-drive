@@ -1,9 +1,12 @@
-/// <reference types="@testing-library/jest-dom" />
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { act } from 'react';
 import ProductsPage from '../../app/produits/page';
 import React from 'react';
+// Import pour éviter la référence triple slash
 import '@testing-library/jest-dom';
+
+// Type sécurisé pour les objets mock
+type MockFn = jest.Mock<any, any>;
 
 // Mock react-modal
 jest.mock('react-modal', () => {
@@ -29,7 +32,7 @@ jest.mock('next/image', () => ({
     alt: string, 
     width?: number, 
     height?: number,
-    [key: string]: any
+    [key: string]: unknown
   }) => {
     // Créer un div au lieu d'une balise img pour éviter l'avertissement
     return (
@@ -109,7 +112,7 @@ describe('ProductsPage Integration', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (global.fetch as any) = jest.fn((url: string) => {
+    (global.fetch as MockFn) = jest.fn((url: string) => {
       if (url.includes('/api/auth/user')) {
         return Promise.resolve({
           ok: true,
@@ -132,9 +135,9 @@ describe('ProductsPage Integration', () => {
     });
 
     await waitFor(() => {
-      // @ts-ignore
+      // @ts-expect-error - Jest DOM types issue
       expect(screen.getByText('Produit Test')).toBeInTheDocument();
-      // @ts-ignore
+      // @ts-expect-error - Jest DOM types issue
       expect(screen.getByText('10 €/pièce')).toBeInTheDocument();
     });
   });
@@ -150,7 +153,7 @@ describe('ProductsPage Integration', () => {
 
     // Vérifier que le modal est affiché
     await waitFor(() => {
-      // @ts-ignore
+      // @ts-expect-error - Jest DOM types issue
       expect(screen.getByText('Prix minimum (€)')).toBeInTheDocument();
     });
   });
@@ -161,23 +164,22 @@ describe('ProductsPage Integration', () => {
     });
 
     await waitFor(() => {
-      // @ts-ignore
+      // @ts-expect-error - Jest DOM types issue
       expect(screen.getByText('Produit Test')).toBeInTheDocument();
     });
 
     const addToCartButton = screen.getByText('Ajouter');
     fireEvent.click(addToCartButton);
 
-    // Simplifié au maximum avec ts-ignore sur toute l'assertion
+    // Simplifié au maximum sans utiliser de matchers complexes
     await waitFor(() => {
-      // @ts-ignore
+      // @ts-expect-error - Jest mock types issue
       expect(global.fetch).toHaveBeenCalled();
       
       // Vérification manuelle que l'URL contient la chaîne recherchée
-      const fetchCalls = (global.fetch as any).mock.calls;
+      const fetchCalls = (global.fetch as MockFn).mock.calls;
       let foundCorrectCall = false;
       
-      // @ts-ignore - Ignorer les erreurs TypeScript pour le code de vérification
       for (const call of fetchCalls) {
         if (typeof call[0] === 'string' && call[0].includes('/api/user/user1/carts')) {
           foundCorrectCall = true;
@@ -185,7 +187,7 @@ describe('ProductsPage Integration', () => {
         }
       }
       
-      // @ts-ignore
+      // @ts-expect-error - Jest assertion types issue
       expect(foundCorrectCall).toBe(true);
     });
   });
