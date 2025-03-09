@@ -115,7 +115,7 @@ describe('ProductsPage Integration', () => {
     
     // Utiliser Object.defineProperty pour éviter les problèmes de typage
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const mockFetchImplementation = (url: string | URL | Request, init?: RequestInit): Promise<any> => {
+    const mockFetchImplementation = (url: string | URL | Request): Promise<any> => {
       const urlString = url.toString();
       if (urlString.includes('/api/auth/user')) {
         return Promise.resolve({
