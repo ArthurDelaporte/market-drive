@@ -22,9 +22,6 @@ export async function PATCH(req: NextRequest) {
             return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
         }
 
-        const authHeader = req.headers.get("authorization");
-        const access_token = authHeader?.split(" ")[1] || "";
-
         const pathSegments = req.nextUrl.pathname.split('/');
         const orderId = pathSegments[pathSegments.length - 2];
 
@@ -86,7 +83,7 @@ export async function PATCH(req: NextRequest) {
         });
 
         if (users?.email) {
-            await sendStatusUpdateEmail(access_token, users.email, users.firstname, newStatus);
+            await sendStatusUpdateEmail(users.email, users.firstname, newStatus);
         }
 
         return NextResponse.json({ message: "Statut mis à jour", updatedCart }, { status: 200 });
